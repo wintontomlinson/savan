@@ -5,7 +5,8 @@ Credits: @ab_devs
 
 import json
 import re
-from flask import Flask, jsonify, request, make_response
+import os
+from flask import Flask, jsonify, request, make_response, render_template, send_from_directory
 
 from helpers import jiosaavn_fetch
 from models import (
@@ -20,7 +21,12 @@ from models import (
     build_search_playlists,
 )
 
-app = Flask(__name__)
+app = Flask(
+    __name__,
+    template_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates'),
+    static_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static'),
+    static_url_path='/static'
+)
 
 
 def _cors(response):
@@ -53,6 +59,11 @@ def err(msg, code=400):
 
 @app.route("/")
 def home():
+    return render_template("index.html")
+
+
+@app.route("/api")
+def api_info():
     return jsonify({
         "success": True,
         "message": "JioSaavn API — Credits: @ab_devs",
