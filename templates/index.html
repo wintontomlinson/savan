@@ -3,249 +3,375 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#0a0a0a">
+    <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Savan — Premium Music</title>
+    <title>Savan Music</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Mobile Top Bar -->
-    <header class="mobile-header" id="mobileHeader">
-        <div class="mobile-header-left">
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" class="brand-icon">
-                <circle cx="12" cy="12" r="11" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                <polygon points="10,7.5 17,12 10,16.5" fill="currentColor"/>
-            </svg>
-            <span class="brand-text">Savan</span>
-        </div>
-    </header>
 
-    <div class="app">
-        <!-- Sidebar -->
-        <aside class="sidebar">
+    <!-- ═══════════ NOW PLAYING (Full Screen Overlay) ═══════════ -->
+    <div class="now-playing" id="nowPlaying">
+        <div class="np-bg" id="npBg"></div>
+        <div class="np-overlay"></div>
+        <button class="np-close" id="npClose">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="5 12 12 19 19 12"/></svg>
+        </button>
+
+        <div class="np-content">
+            <div class="np-album-wrapper">
+                <div class="np-album-art" id="npAlbumArt">
+                    <img src="" alt="" id="npImg">
+                </div>
+                <div class="np-badge" id="npBadge">
+                    <span class="badge-dot"></span>
+                    <span>Lossless</span>
+                </div>
+            </div>
+
+            <div class="np-info">
+                <h2 class="np-title" id="npTitle">Not Playing</h2>
+                <p class="np-artist" id="npArtist">—</p>
+            </div>
+
+            <!-- Progress -->
+            <div class="np-progress">
+                <div class="np-progress-bar" id="npProgressBar">
+                    <div class="np-progress-filled" id="npProgressFilled"></div>
+                    <div class="np-progress-knob" id="npProgressKnob"></div>
+                </div>
+                <div class="np-times">
+                    <span id="npCurrentTime">0:00</span>
+                    <span id="npTotalTime">-0:00</span>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="np-controls">
+                <button class="np-btn" id="npShuffle">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+                </button>
+                <button class="np-btn" id="npPrev">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+                </button>
+                <button class="np-btn np-play-btn" id="npPlayBtn">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor" id="npPlayIcon"><path d="M8 5v14l11-7z"/></svg>
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor" id="npPauseIcon" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                </button>
+                <button class="np-btn" id="npNext">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+                </button>
+                <button class="np-btn" id="npRepeat">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                </button>
+            </div>
+
+            <!-- Volume -->
+            <div class="np-volume">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" opacity="0.5"><path d="M3 9v6h4l5 5V4L7 9H3z"/></svg>
+                <div class="np-volume-bar" id="npVolumeBar">
+                    <div class="np-volume-filled" id="npVolumeFilled"></div>
+                    <div class="np-volume-knob" id="npVolumeKnob"></div>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" opacity="0.5"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            </div>
+
+            <!-- Lyrics Toggle -->
+            <div class="np-extras">
+                <button class="np-extra-btn" id="npLyricsBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 10h16M4 14h10M4 18h7"/></svg>
+                    <span>Lyrics</span>
+                </button>
+                <button class="np-extra-btn" id="npQueueBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                    <span>Queue</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Lyrics Panel -->
+        <div class="np-lyrics-panel" id="npLyricsPanel">
+            <div class="np-lyrics-content" id="npLyricsContent">
+                <p class="lyrics-placeholder">Lyrics not available for this track</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ MAIN APP ═══════════ -->
+    <div class="app-container">
+        <!-- Sidebar (Desktop) -->
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-brand">
-                <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor" class="brand-icon">
-                    <circle cx="12" cy="12" r="11" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                    <polygon points="10,7.5 17,12 10,16.5" fill="currentColor"/>
-                </svg>
-                <span class="brand-text">Savan</span>
+                <div class="brand-logo">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+                    </svg>
+                </div>
+                <span class="brand-name">Savan</span>
             </div>
 
             <nav class="sidebar-nav">
-                <a href="#" class="nav-item active" data-page="home">
-                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                    <span>Home</span>
-                </a>
-                <a href="#" class="nav-item" data-page="search">
-                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <span>Search</span>
-                </a>
-                <a href="#" class="nav-item" data-page="browse">
-                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                <button class="sidebar-tab active" data-page="listen">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    <span>Listen Now</span>
+                </button>
+                <button class="sidebar-tab" data-page="browse">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
                     <span>Browse</span>
-                </a>
+                </button>
+                <button class="sidebar-tab" data-page="radio">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
+                    <span>Radio</span>
+                </button>
+                <button class="sidebar-tab" data-page="search">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <span>Search</span>
+                </button>
             </nav>
 
-            <div class="sidebar-divider"></div>
-
-            <div class="sidebar-queue">
-                <div class="queue-header">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                    <span>Queue</span>
-                    <span class="queue-count" id="queueCount">0</span>
-                </div>
-                <div class="queue-content" id="queueContent">
-                    <div class="queue-empty">
-                        <p>Play a song to start your queue</p>
-                    </div>
-                    <ul class="queue-list" id="queueList"></ul>
+            <div class="sidebar-section">
+                <h4>Queue</h4>
+                <div class="sidebar-queue" id="sidebarQueue">
+                    <p class="queue-empty-msg">Play something to start</p>
                 </div>
             </div>
         </aside>
 
         <!-- Main Content -->
-        <main class="main-content" id="mainContent">
-            <!-- Home Page -->
-            <section class="page active" id="homePage">
-                <div class="page-top-gradient"></div>
-                <div class="page-inner">
-                    <div class="hero-section">
-                        <h1 class="greeting" id="greeting">Good Evening</h1>
-                        <p class="greeting-sub">What would you like to listen to today?</p>
+        <main class="main" id="mainContent">
+            <!-- ─── Listen Now ─────────────────────────────────── -->
+            <section class="page active" id="listenPage">
+                <div class="page-scroll">
+                    <!-- Hero Banner -->
+                    <div class="hero-banner" id="heroBanner">
+                        <div class="hero-gradient"></div>
+                        <div class="hero-inner">
+                            <span class="hero-label">FEATURED</span>
+                            <h1 class="hero-title" id="heroTitle">Discover New Music</h1>
+                            <p class="hero-desc" id="heroDesc">Stream unlimited songs in highest quality</p>
+                            <button class="hero-btn" id="heroPlayBtn">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                                Play
+                            </button>
+                        </div>
+                        <div class="hero-art" id="heroArt"></div>
                     </div>
 
-                    <!-- Quick Picks -->
-                    <div class="section" id="quickPicksSection">
-                        <div class="section-header">
-                            <h2>Quick Picks</h2>
-                            <span class="section-badge">For You</span>
+                    <!-- Top Picks -->
+                    <section class="content-section">
+                        <div class="section-head">
+                            <h2>Top Picks For You</h2>
+                            <button class="link-btn" onclick="switchPage('search')">See All</button>
                         </div>
-                        <div class="quick-picks-grid" id="quickPicksGrid">
-                            <!-- Filled by JS -->
-                        </div>
-                    </div>
+                        <div class="scroll-row" id="topPicksRow"></div>
+                    </section>
 
-                    <!-- Trending Now -->
-                    <div class="section" id="trendingSection">
-                        <div class="section-header">
-                            <h2>Trending Now</h2>
-                            <button class="see-all-btn" onclick="switchPage('search')">See All</button>
+                    <!-- Recently Played / Trending -->
+                    <section class="content-section">
+                        <div class="section-head">
+                            <h2>Trending Right Now</h2>
+                            <button class="link-btn" onclick="switchPage('browse')">See All</button>
                         </div>
-                        <div class="horizontal-scroll">
-                            <div class="cards-row" id="trendingGrid">
-                                <!-- Filled by JS -->
-                            </div>
-                        </div>
-                    </div>
+                        <div class="scroll-row" id="trendingRow"></div>
+                    </section>
 
-                    <!-- New Releases -->
-                    <div class="section" id="newReleasesSection">
-                        <div class="section-header">
-                            <h2>New Releases</h2>
-                            <button class="see-all-btn" onclick="switchPage('search')">See All</button>
+                    <!-- Made For You -->
+                    <section class="content-section">
+                        <div class="section-head">
+                            <h2>Made For You</h2>
                         </div>
-                        <div class="horizontal-scroll">
-                            <div class="cards-row" id="newReleasesGrid">
-                                <!-- Filled by JS -->
-                            </div>
-                        </div>
-                    </div>
+                        <div class="scroll-row" id="madeForYouRow"></div>
+                    </section>
 
-                    <!-- Top Artists -->
-                    <div class="section" id="topArtistsSection">
-                        <div class="section-header">
-                            <h2>Top Artists</h2>
+                    <!-- Artists -->
+                    <section class="content-section">
+                        <div class="section-head">
+                            <h2>Favourite Artists</h2>
                         </div>
-                        <div class="horizontal-scroll">
-                            <div class="cards-row" id="topArtistsGrid">
-                                <!-- Filled by JS -->
-                            </div>
-                        </div>
-                    </div>
+                        <div class="scroll-row artist-row" id="artistsRow"></div>
+                    </section>
                 </div>
             </section>
 
-            <!-- Search Page -->
-            <section class="page" id="searchPage">
-                <div class="page-inner">
-                    <div class="search-container">
-                        <div class="search-input-wrapper">
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                            <input type="text" id="searchInput" placeholder="Songs, artists, albums..." autocomplete="off">
-                            <button class="search-clear" id="searchClear">&times;</button>
-                        </div>
-                    </div>
-                    <div class="search-results" id="searchResults">
-                        <div class="search-placeholder">
-                            <div class="search-placeholder-icon">
-                                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                            </div>
-                            <h2>Discover Music</h2>
-                            <p>Search for songs, artists, or albums</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Browse Page -->
+            <!-- ─── Browse ─────────────────────────────────────── -->
             <section class="page" id="browsePage">
-                <div class="page-inner">
-                    <div class="browse-header">
+                <div class="page-scroll">
+                    <div class="page-title-bar">
                         <h1>Browse</h1>
-                        <p>Explore music by categories</p>
                     </div>
 
-                    <!-- Genre Categories -->
-                    <div class="section">
-                        <div class="section-header">
-                            <h2>Genres & Moods</h2>
+                    <!-- Categories -->
+                    <section class="content-section">
+                        <div class="section-head">
+                            <h2>Browse by Category</h2>
                         </div>
-                        <div class="genres-grid" id="genresGrid">
-                            <div class="genre-card" style="--genre-color: #E13300" onclick="searchGenre('Bollywood Hits')">
-                                <span class="genre-name">Bollywood</span>
-                                <div class="genre-art">🎬</div>
+                        <div class="category-grid" id="categoryGrid">
+                            <div class="cat-card" style="--cat-bg: linear-gradient(135deg, #fc3c44, #a11d5c)" onclick="searchGenre('Bollywood Hits 2024')">
+                                <span>Bollywood</span><div class="cat-emoji">🎬</div>
                             </div>
-                            <div class="genre-card" style="--genre-color: #1E3264" onclick="searchGenre('Pop Songs')">
-                                <span class="genre-name">Pop</span>
-                                <div class="genre-art">🎤</div>
+                            <div class="cat-card" style="--cat-bg: linear-gradient(135deg, #5856d6, #1c1ca8)" onclick="searchGenre('Pop Hits')">
+                                <span>Pop</span><div class="cat-emoji">🎤</div>
                             </div>
-                            <div class="genre-card" style="--genre-color: #8400E7" onclick="searchGenre('Hip Hop Rap')">
-                                <span class="genre-name">Hip-Hop</span>
-                                <div class="genre-art">🎧</div>
+                            <div class="cat-card" style="--cat-bg: linear-gradient(135deg, #ff9500, #cc5500)" onclick="searchGenre('Hip Hop Rap')">
+                                <span>Hip-Hop</span><div class="cat-emoji">🎧</div>
                             </div>
-                            <div class="genre-card" style="--genre-color: #056952" onclick="searchGenre('Romantic Songs')">
-                                <span class="genre-name">Romance</span>
-                                <div class="genre-art">💕</div>
+                            <div class="cat-card" style="--cat-bg: linear-gradient(135deg, #ff2d55, #a8003a)" onclick="searchGenre('Romantic Hindi Songs')">
+                                <span>Romance</span><div class="cat-emoji">💕</div>
                             </div>
-                            <div class="genre-card" style="--genre-color: #E8115B" onclick="searchGenre('Party Songs')">
-                                <span class="genre-name">Party</span>
-                                <div class="genre-art">🎉</div>
+                            <div class="cat-card" style="--cat-bg: linear-gradient(135deg, #30d158, #0a7a1f)" onclick="searchGenre('Punjabi Songs')">
+                                <span>Punjabi</span><div class="cat-emoji">🎵</div>
                             </div>
-                            <div class="genre-card" style="--genre-color: #148A08" onclick="searchGenre('Punjabi Songs')">
-                                <span class="genre-name">Punjabi</span>
-                                <div class="genre-art">🎵</div>
+                            <div class="cat-card" style="--cat-bg: linear-gradient(135deg, #5ac8fa, #007aff)" onclick="searchGenre('Party Dance Songs')">
+                                <span>Party</span><div class="cat-emoji">🎉</div>
                             </div>
-                            <div class="genre-card" style="--genre-color: #E61E32" onclick="searchGenre('Sad Songs')">
-                                <span class="genre-name">Sad</span>
-                                <div class="genre-art">😢</div>
+                            <div class="cat-card" style="--cat-bg: linear-gradient(135deg, #af52de, #5e17a8)" onclick="searchGenre('Sad Songs Hindi')">
+                                <span>Sad</span><div class="cat-emoji">🥀</div>
                             </div>
-                            <div class="genre-card" style="--genre-color: #477D95" onclick="searchGenre('Devotional Songs')">
-                                <span class="genre-name">Devotional</span>
-                                <div class="genre-art">🙏</div>
+                            <div class="cat-card" style="--cat-bg: linear-gradient(135deg, #64d2ff, #0066cc)" onclick="searchGenre('Chill Lofi')">
+                                <span>Chill</span><div class="cat-emoji">🌊</div>
                             </div>
-                            <div class="genre-card" style="--genre-color: #BA5D07" onclick="searchGenre('Chill Vibes')">
-                                <span class="genre-name">Chill</span>
-                                <div class="genre-art">🌊</div>
+                            <div class="cat-card" style="--cat-bg: linear-gradient(135deg, #ffd60a, #b8860b)" onclick="searchGenre('Devotional Bhajan')">
+                                <span>Devotional</span><div class="cat-emoji">🙏</div>
                             </div>
-                            <div class="genre-card" style="--genre-color: #503750" onclick="searchGenre('Classical Music')">
-                                <span class="genre-name">Classical</span>
-                                <div class="genre-art">🎻</div>
+                            <div class="cat-card" style="--cat-bg: linear-gradient(135deg, #ff6482, #bf004c)" onclick="searchGenre('Tamil Songs')">
+                                <span>Tamil</span><div class="cat-emoji">🎶</div>
                             </div>
-                            <div class="genre-card" style="--genre-color: #0D73EC" onclick="searchGenre('Workout Gym Songs')">
-                                <span class="genre-name">Workout</span>
-                                <div class="genre-art">💪</div>
+                            <div class="cat-card" style="--cat-bg: linear-gradient(135deg, #32ade6, #004080)" onclick="searchGenre('Telugu Songs')">
+                                <span>Telugu</span><div class="cat-emoji">🎵</div>
                             </div>
-                            <div class="genre-card" style="--genre-color: #1DB954" onclick="searchGenre('Indie Music')">
-                                <span class="genre-name">Indie</span>
-                                <div class="genre-art">🎸</div>
+                            <div class="cat-card" style="--cat-bg: linear-gradient(135deg, #ff375f, #800020)" onclick="searchGenre('Workout Gym Pump')">
+                                <span>Workout</span><div class="cat-emoji">💪</div>
                             </div>
-                            <div class="genre-card" style="--genre-color: #DC148C" onclick="searchGenre('Tamil Songs')">
-                                <span class="genre-name">Tamil</span>
-                                <div class="genre-art">🎶</div>
+                            <div class="cat-card" style="--cat-bg: linear-gradient(135deg, #bf5af2, #6e2dc5)" onclick="searchGenre('Sufi Music')">
+                                <span>Sufi</span><div class="cat-emoji">✨</div>
                             </div>
-                            <div class="genre-card" style="--genre-color: #FF6437" onclick="searchGenre('Telugu Songs')">
-                                <span class="genre-name">Telugu</span>
-                                <div class="genre-art">🎵</div>
+                            <div class="cat-card" style="--cat-bg: linear-gradient(135deg, #63e6be, #087f5b)" onclick="searchGenre('Indie Music India')">
+                                <span>Indie</span><div class="cat-emoji">🎸</div>
                             </div>
-                            <div class="genre-card" style="--genre-color: #2D46B9" onclick="searchGenre('Sufi Songs')">
-                                <span class="genre-name">Sufi</span>
-                                <div class="genre-art">✨</div>
+                            <div class="cat-card" style="--cat-bg: linear-gradient(135deg, #748ffc, #364fc7)" onclick="searchGenre('Classical Raaga')">
+                                <span>Classical</span><div class="cat-emoji">🎻</div>
                             </div>
-                            <div class="genre-card" style="--genre-color: #777777" onclick="searchGenre('Lo-fi')">
-                                <span class="genre-name">Lo-fi</span>
-                                <div class="genre-art">🌙</div>
+                            <div class="cat-card" style="--cat-bg: linear-gradient(135deg, #868e96, #343a40)" onclick="searchGenre('90s Hindi Retro')">
+                                <span>Retro</span><div class="cat-emoji">📻</div>
                             </div>
+                        </div>
+                    </section>
+
+                    <!-- Moods & Activities -->
+                    <section class="content-section">
+                        <div class="section-head">
+                            <h2>Moods & Activities</h2>
+                        </div>
+                        <div class="moods-wrap" id="moodsWrap">
+                            <button class="mood-pill" onclick="searchGenre('Happy Vibes Songs')">😊 Happy</button>
+                            <button class="mood-pill" onclick="searchGenre('Romantic Love Songs')">❤️ Love</button>
+                            <button class="mood-pill" onclick="searchGenre('Sad Emotional Songs')">💔 Heartbreak</button>
+                            <button class="mood-pill" onclick="searchGenre('Energetic Hype Songs')">⚡ Energy</button>
+                            <button class="mood-pill" onclick="searchGenre('Peaceful Calm Music')">☮️ Peace</button>
+                            <button class="mood-pill" onclick="searchGenre('Focus Study Music')">🧠 Focus</button>
+                            <button class="mood-pill" onclick="searchGenre('Night Drive Songs')">🌃 Night</button>
+                            <button class="mood-pill" onclick="searchGenre('Rain Monsoon Songs')">🌧️ Rain</button>
+                            <button class="mood-pill" onclick="searchGenre('Morning Refresh Songs')">🌅 Morning</button>
+                            <button class="mood-pill" onclick="searchGenre('Throwback Old Songs')">⏪ Throwback</button>
+                        </div>
+                    </section>
+                </div>
+            </section>
+
+            <!-- ─── Radio ──────────────────────────────────────── -->
+            <section class="page" id="radioPage">
+                <div class="page-scroll">
+                    <div class="page-title-bar">
+                        <h1>Radio</h1>
+                        <p class="page-subtitle">Handpicked stations for every mood</p>
+                    </div>
+
+                    <section class="content-section">
+                        <div class="section-head">
+                            <h2>Stations For You</h2>
+                        </div>
+                        <div class="radio-grid" id="radioGrid">
+                            <div class="radio-card" onclick="searchAndPlay('Arijit Singh')">
+                                <div class="radio-art" style="--radio-bg: linear-gradient(135deg, #1a1a2e, #16213e)">
+                                    <span class="radio-emoji">🎙️</span>
+                                </div>
+                                <div class="radio-info">
+                                    <h4>Arijit Singh Radio</h4>
+                                    <p>Soulful melodies & hits</p>
+                                </div>
+                            </div>
+                            <div class="radio-card" onclick="searchAndPlay('AP Dhillon')">
+                                <div class="radio-art" style="--radio-bg: linear-gradient(135deg, #0f3443, #34e89e)">
+                                    <span class="radio-emoji">🔥</span>
+                                </div>
+                                <div class="radio-info">
+                                    <h4>AP Dhillon Radio</h4>
+                                    <p>Punjabi vibes</p>
+                                </div>
+                            </div>
+                            <div class="radio-card" onclick="searchAndPlay('Pritam')">
+                                <div class="radio-art" style="--radio-bg: linear-gradient(135deg, #667eea, #764ba2)">
+                                    <span class="radio-emoji">🎬</span>
+                                </div>
+                                <div class="radio-info">
+                                    <h4>Bollywood Hits</h4>
+                                    <p>Chart-toppers from films</p>
+                                </div>
+                            </div>
+                            <div class="radio-card" onclick="searchAndPlay('Diljit Dosanjh')">
+                                <div class="radio-art" style="--radio-bg: linear-gradient(135deg, #f093fb, #f5576c)">
+                                    <span class="radio-emoji">🎤</span>
+                                </div>
+                                <div class="radio-info">
+                                    <h4>Diljit Radio</h4>
+                                    <p>Pure Punjabi energy</p>
+                                </div>
+                            </div>
+                            <div class="radio-card" onclick="searchAndPlay('Shreya Ghoshal')">
+                                <div class="radio-art" style="--radio-bg: linear-gradient(135deg, #a18cd1, #fbc2eb)">
+                                    <span class="radio-emoji">🎵</span>
+                                </div>
+                                <div class="radio-info">
+                                    <h4>Shreya Ghoshal Radio</h4>
+                                    <p>Angelic voice, divine songs</p>
+                                </div>
+                            </div>
+                            <div class="radio-card" onclick="searchAndPlay('Lo-fi Chill Beats')">
+                                <div class="radio-art" style="--radio-bg: linear-gradient(135deg, #2c3e50, #3498db)">
+                                    <span class="radio-emoji">🌙</span>
+                                </div>
+                                <div class="radio-info">
+                                    <h4>Lo-fi Chill</h4>
+                                    <p>Relaxing beats for studying</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </section>
+
+            <!-- ─── Search ─────────────────────────────────────── -->
+            <section class="page" id="searchPage">
+                <div class="page-scroll">
+                    <div class="search-bar-wrap">
+                        <div class="search-bar">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <input type="text" id="searchInput" placeholder="Artists, Songs, Albums" autocomplete="off" spellcheck="false">
+                            <button class="search-x" id="searchClear">&times;</button>
                         </div>
                     </div>
 
-                    <!-- Browse by Mood -->
-                    <div class="section">
-                        <div class="section-header">
-                            <h2>Moods</h2>
-                        </div>
-                        <div class="moods-grid">
-                            <button class="mood-chip" onclick="searchGenre('Happy Songs')">😊 Happy</button>
-                            <button class="mood-chip" onclick="searchGenre('Romantic Songs')">❤️ Romantic</button>
-                            <button class="mood-chip" onclick="searchGenre('Sad Songs')">😔 Sad</button>
-                            <button class="mood-chip" onclick="searchGenre('Energetic Songs')">⚡ Energetic</button>
-                            <button class="mood-chip" onclick="searchGenre('Peaceful Songs')">🕊️ Peaceful</button>
-                            <button class="mood-chip" onclick="searchGenre('Motivational Songs')">🔥 Motivational</button>
-                            <button class="mood-chip" onclick="searchGenre('Rain Songs')">🌧️ Rainy</button>
-                            <button class="mood-chip" onclick="searchGenre('Night Drive Songs')">🌃 Night Drive</button>
+                    <div class="search-results" id="searchResults">
+                        <div class="search-empty">
+                            <div class="search-empty-icon">
+                                <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.3"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            </div>
+                            <h3>Search Savan</h3>
+                            <p>Find songs, artists, albums and more</p>
                         </div>
                     </div>
                 </div>
@@ -253,92 +379,62 @@
         </main>
     </div>
 
-    <!-- Bottom Player Bar -->
-    <div class="player-bar" id="playerBar">
-        <div class="player-progress-top" id="playerProgressTop">
-            <div class="player-progress-filled-top" id="playerProgressFilledTop"></div>
+    <!-- ═══════════ MINI PLAYER (Bottom Bar) ═══════════ -->
+    <div class="mini-player" id="miniPlayer">
+        <div class="mini-progress" id="miniProgress">
+            <div class="mini-progress-fill" id="miniProgressFill"></div>
         </div>
-        <div class="player-inner">
-            <div class="player-left">
-                <div class="player-album-art" id="playerAlbumArt">
-                    <img src="" alt="" id="playerImg">
-                    <div class="player-art-placeholder">
-                        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" opacity="0.3"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+        <div class="mini-inner" id="miniInner">
+            <div class="mini-left">
+                <div class="mini-art" id="miniArt">
+                    <img src="" alt="" id="miniImg">
+                    <div class="mini-art-placeholder">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" opacity="0.3"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
                     </div>
                 </div>
-                <div class="player-song-info">
-                    <span class="player-song-name" id="playerSongName">Savan Music</span>
-                    <span class="player-artist-name" id="playerArtistName">Play a song to begin</span>
+                <div class="mini-info">
+                    <span class="mini-title" id="miniTitle">Savan Music</span>
+                    <span class="mini-artist" id="miniArtist">Tap to play</span>
                 </div>
             </div>
-            <div class="player-center">
-                <div class="player-controls">
-                    <button class="control-btn" id="btnShuffle" title="Shuffle">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
-                    </button>
-                    <button class="control-btn" id="btnPrev" title="Previous">
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-                    </button>
-                    <button class="control-btn play-btn" id="btnPlay" title="Play">
-                        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" id="playIcon"><path d="M8 5v14l11-7z"/></svg>
-                        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" id="pauseIcon" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-                    </button>
-                    <button class="control-btn" id="btnNext" title="Next">
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
-                    </button>
-                    <button class="control-btn" id="btnRepeat" title="Repeat">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-                    </button>
-                </div>
-                <div class="progress-container">
-                    <span class="progress-time" id="currentTime">0:00</span>
-                    <div class="progress-bar" id="progressBar">
-                        <div class="progress-filled" id="progressFilled"></div>
-                        <div class="progress-thumb" id="progressThumb"></div>
-                    </div>
-                    <span class="progress-time" id="totalTime">0:00</span>
-                </div>
-            </div>
-            <div class="player-right">
-                <button class="control-btn" id="btnVolume" title="Volume">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="volumeIcon"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            <div class="mini-controls">
+                <button class="mini-btn" id="miniPlayBtn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" id="miniPlayIcon"><path d="M8 5v14l11-7z"/></svg>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" id="miniPauseIcon" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                 </button>
-                <div class="volume-bar" id="volumeBar">
-                    <div class="volume-filled" id="volumeFilled"></div>
-                    <div class="volume-thumb" id="volumeThumb"></div>
-                </div>
+                <button class="mini-btn" id="miniNextBtn">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Mobile Bottom Navigation -->
-    <nav class="mobile-bottom-nav" id="mobileBottomNav">
-        <button class="mobile-tab active" data-page="home">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            <span>Home</span>
+    <!-- ═══════════ MOBILE BOTTOM TAB BAR ═══════════ -->
+    <nav class="tab-bar" id="tabBar">
+        <button class="tab active" data-page="listen">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span>Listen</span>
         </button>
-        <button class="mobile-tab" data-page="search">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <span>Search</span>
-        </button>
-        <button class="mobile-tab" data-page="browse">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <button class="tab" data-page="browse">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
             <span>Browse</span>
+        </button>
+        <button class="tab" data-page="radio">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49"/></svg>
+            <span>Radio</span>
+        </button>
+        <button class="tab" data-page="search">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span>Search</span>
         </button>
     </nav>
 
-    <!-- Audio Element -->
+    <!-- Audio -->
     <audio id="audioPlayer" preload="auto"></audio>
 
-    <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="loader">
-            <div class="loader-ring"></div>
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" class="loader-icon">
-                <circle cx="12" cy="12" r="11" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                <polygon points="10,7.5 17,12 10,16.5" fill="currentColor"/>
-            </svg>
-        </div>
+    <!-- Loader -->
+    <div class="loader-overlay" id="loaderOverlay">
+        <div class="loader-spinner"></div>
     </div>
 
     <script src="/static/app.js"></script>

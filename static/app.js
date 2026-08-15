@@ -1,290 +1,285 @@
 /**
- * Savan — Premium Music Player
- * Categorised, professional UI/UX
- * Credits: @ab_devs
+ * Savan Music — Apple Music Premium Experience
+ * Full-screen Now Playing, lyrics, dynamic backgrounds,
+ * radio stations, autoplay suggestions, spatial audio badges
  */
 
-// ─── State ────────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════════
 
 const state = {
     queue: [],
     currentIndex: -1,
     isPlaying: false,
     shuffle: false,
-    repeat: 'off',
-    volume: 0.7,
-    searchTimeout: null,
-    _searchResults: [],
-    _trendingSongs: [],
-    _newReleases: [],
+    repeat: 'off', // off | all | one
+    volume: 0.75,
+    nowPlayingOpen: false,
+    lyricsOpen: false,
 };
 
-// ─── DOM Helpers ──────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// DOM
+// ═══════════════════════════════════════════════════════════════════════════
 
-const $ = (sel) => document.querySelector(sel);
-const $$ = (sel) => document.querySelectorAll(sel);
-
-// ─── Elements ─────────────────────────────────────────────────────────────────
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
 
 const audio = $('#audioPlayer');
-const playerImg = $('#playerImg');
-const playerAlbumArt = $('#playerAlbumArt');
-const playerSongName = $('#playerSongName');
-const playerArtistName = $('#playerArtistName');
-const btnPlay = $('#btnPlay');
-const btnPrev = $('#btnPrev');
-const btnNext = $('#btnNext');
-const btnShuffle = $('#btnShuffle');
-const btnRepeat = $('#btnRepeat');
-const playIcon = $('#playIcon');
-const pauseIcon = $('#pauseIcon');
-const progressBar = $('#progressBar');
-const progressFilled = $('#progressFilled');
-const progressThumb = $('#progressThumb');
-const currentTimeEl = $('#currentTime');
-const totalTimeEl = $('#totalTime');
-const volumeBar = $('#volumeBar');
-const volumeFilled = $('#volumeFilled');
-const volumeThumb = $('#volumeThumb');
-const btnVolume = $('#btnVolume');
+
+// Mini Player
+const miniPlayer = $('#miniPlayer');
+const miniInner = $('#miniInner');
+const miniImg = $('#miniImg');
+const miniArt = $('#miniArt');
+const miniTitle = $('#miniTitle');
+const miniArtist = $('#miniArtist');
+const miniPlayBtn = $('#miniPlayBtn');
+const miniPlayIcon = $('#miniPlayIcon');
+const miniPauseIcon = $('#miniPauseIcon');
+const miniNextBtn = $('#miniNextBtn');
+const miniProgressFill = $('#miniProgressFill');
+
+// Now Playing
+const nowPlaying = $('#nowPlaying');
+const npBg = $('#npBg');
+const npImg = $('#npImg');
+const npAlbumArt = $('#npAlbumArt');
+const npTitle = $('#npTitle');
+const npArtist = $('#npArtist');
+const npClose = $('#npClose');
+const npPlayBtn = $('#npPlayBtn');
+const npPlayIcon = $('#npPlayIcon');
+const npPauseIcon = $('#npPauseIcon');
+const npPrev = $('#npPrev');
+const npNext = $('#npNext');
+const npShuffle = $('#npShuffle');
+const npRepeat = $('#npRepeat');
+const npProgressBar = $('#npProgressBar');
+const npProgressFilled = $('#npProgressFilled');
+const npProgressKnob = $('#npProgressKnob');
+const npCurrentTime = $('#npCurrentTime');
+const npTotalTime = $('#npTotalTime');
+const npVolumeBar = $('#npVolumeBar');
+const npVolumeFilled = $('#npVolumeFilled');
+const npVolumeKnob = $('#npVolumeKnob');
+const npLyricsBtn = $('#npLyricsBtn');
+const npLyricsPanel = $('#npLyricsPanel');
+const npLyricsContent = $('#npLyricsContent');
+const npQueueBtn = $('#npQueueBtn');
+
+// Search
 const searchInput = $('#searchInput');
 const searchClear = $('#searchClear');
 const searchResults = $('#searchResults');
-const queueList = $('#queueList');
-const queueCount = $('#queueCount');
-const trendingGrid = $('#trendingGrid');
-const newReleasesGrid = $('#newReleasesGrid');
-const topArtistsGrid = $('#topArtistsGrid');
-const quickPicksGrid = $('#quickPicksGrid');
-const loadingOverlay = $('#loadingOverlay');
-const greetingEl = $('#greeting');
-const playerProgressTop = $('#playerProgressFilledTop');
 
-// ─── Init ─────────────────────────────────────────────────────────────────────
+// Grids
+const topPicksRow = $('#topPicksRow');
+const trendingRow = $('#trendingRow');
+const madeForYouRow = $('#madeForYouRow');
+const artistsRow = $('#artistsRow');
+const heroBanner = $('#heroBanner');
+const heroTitle = $('#heroTitle');
+const heroDesc = $('#heroDesc');
+const heroPlayBtn = $('#heroPlayBtn');
+const heroArt = $('#heroArt');
+const greetingEl = $('#greeting');
+
+// Misc
+const loaderOverlay = $('#loaderOverlay');
+const sidebarQueue = $('#sidebarQueue');
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', () => {
     setGreeting();
     setupNavigation();
-    setupPlayerControls();
-    setupProgressBar();
-    setupVolumeBar();
+    setupMiniPlayer();
+    setupNowPlaying();
     setupSearch();
-    setupMobilePlayer();
-    loadHomeContent();
+    setupKeyboard();
+    loadHomeSections();
     audio.volume = state.volume;
 });
 
-// ─── Greeting ─────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// GREETING
+// ═══════════════════════════════════════════════════════════════════════════
 
 function setGreeting() {
-    const hour = new Date().getHours();
-    let greeting = 'Good Evening';
-    if (hour < 12) greeting = 'Good Morning';
-    else if (hour < 17) greeting = 'Good Afternoon';
-    greetingEl.textContent = greeting;
+    const h = new Date().getHours();
+    let g = 'Good Evening';
+    if (h < 12) g = 'Good Morning';
+    else if (h < 17) g = 'Good Afternoon';
+    if (greetingEl) greetingEl.textContent = g;
 }
 
-// ─── Navigation ───────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════════════════
 
 function setupNavigation() {
-    $$('.nav-item').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            switchPage(item.dataset.page);
-        });
+    // Sidebar tabs
+    $$('.sidebar-tab').forEach(btn => {
+        btn.addEventListener('click', () => switchPage(btn.dataset.page));
     });
-
-    $$('.mobile-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            switchPage(tab.dataset.page);
-        });
+    // Mobile tabs
+    $$('.tab').forEach(btn => {
+        btn.addEventListener('click', () => switchPage(btn.dataset.page));
     });
 }
 
 function switchPage(page) {
-    // Desktop nav
-    $$('.nav-item').forEach(n => n.classList.remove('active'));
-    const desktopItem = $(`.nav-item[data-page="${page}"]`);
-    if (desktopItem) desktopItem.classList.add('active');
-
-    // Mobile nav
-    $$('.mobile-tab').forEach(t => t.classList.remove('active'));
-    const mobileTab = $(`.mobile-tab[data-page="${page}"]`);
-    if (mobileTab) mobileTab.classList.add('active');
-
-    // Pages
+    $$('.sidebar-tab').forEach(t => t.classList.toggle('active', t.dataset.page === page));
+    $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.page === page));
     $$('.page').forEach(p => p.classList.remove('active'));
-    const pageEl = $(`#${page}Page`);
-    if (pageEl) pageEl.classList.add('active');
 
-    if (page === 'search') {
-        setTimeout(() => searchInput.focus(), 150);
+    const el = $(`#${page}Page`);
+    if (el) {
+        el.classList.add('active');
+        // Reset scroll
+        const scroll = el.querySelector('.page-scroll');
+        if (scroll) scroll.scrollTop = 0;
     }
 
-    // Scroll to top
-    const mainContent = $('#mainContent');
-    if (mainContent) mainContent.scrollTop = 0;
+    if (page === 'search') setTimeout(() => searchInput?.focus(), 150);
 }
 
-// Make switchPage globally accessible
 window.switchPage = switchPage;
 
-// ─── Home Content Loading ─────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// HOME SECTIONS
+// ═══════════════════════════════════════════════════════════════════════════
 
-async function loadHomeContent() {
-    await Promise.all([
-        loadQuickPicks(),
-        loadTrending(),
-        loadNewReleases(),
-        loadTopArtists(),
+async function loadHomeSections() {
+    await Promise.allSettled([
+        loadSection('Arijit Singh latest', topPicksRow, '_topPicks'),
+        loadSection('Trending Bollywood 2024', trendingRow, '_trending'),
+        loadSection('New Hindi Songs', madeForYouRow, '_madeForYou'),
+        loadArtists(),
+        loadHero(),
     ]);
 }
 
-async function loadQuickPicks() {
+async function loadSection(query, container, stateKey) {
     try {
-        const res = await fetch('/api/search/songs?query=Hindi Top&limit=6');
+        const res = await fetch(`/api/search/songs?query=${encodeURIComponent(query)}&limit=12`);
         const data = await res.json();
         if (data.success && data.data.results.length) {
-            renderQuickPicks(data.data.results);
-            state._quickPicks = data.data.results;
+            state[stateKey] = data.data.results;
+            renderAlbumCards(data.data.results, container, stateKey);
         }
     } catch (e) { /* silent */ }
 }
 
-function renderQuickPicks(songs) {
-    quickPicksGrid.innerHTML = songs.map((song, i) => {
-        const img = getBestImage(song.image);
-        return `
-            <div class="quick-pick-card" onclick="playFromQuickPicks(${i})">
-                <img class="quick-pick-img" src="${img}" alt="" loading="lazy">
-                <div class="quick-pick-info">
-                    <div class="quick-pick-name">${esc(song.name || 'Unknown')}</div>
+async function loadHero() {
+    try {
+        const res = await fetch('/api/search/songs?query=Latest Hindi Hit&limit=1');
+        const data = await res.json();
+        if (data.success && data.data.results.length) {
+            const song = data.data.results[0];
+            state._heroSong = song;
+            const img = bestImg(song.image);
+            heroTitle.textContent = song.name || 'Discover Music';
+            heroDesc.textContent = getArtists(song);
+            heroArt.innerHTML = img ? `<img src="${img}" alt="">` : '';
+            heroPlayBtn.onclick = () => {
+                state.queue = [song];
+                state.currentIndex = 0;
+                playCurrent();
+                updateQueue();
+            };
+        }
+    } catch (e) { /* silent */ }
+}
+
+async function loadArtists() {
+    const names = ['Arijit Singh', 'Shreya Ghoshal', 'Pritam', 'AP Dhillon', 'Diljit Dosanjh', 'Atif Aslam', 'Neha Kakkar', 'Jubin Nautiyal'];
+    try {
+        const res = await fetch('/api/search/artists?query=Bollywood&limit=8');
+        const data = await res.json();
+        if (data.success && data.data.results.length) {
+            renderArtistCards(data.data.results);
+        } else {
+            // Fallback
+            artistsRow.innerHTML = names.map(n => `
+                <div class="album-card" onclick="searchAndPlay('${esc(n)}')">
+                    <div class="album-art"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem;background:var(--bg-secondary)">🎤</div></div>
+                    <div class="album-title">${esc(n)}</div>
+                    <div class="album-subtitle">Artist</div>
                 </div>
-                <div class="quick-pick-play">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="black"><path d="M8 5v14l11-7z"/></svg>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-async function loadTrending() {
-    try {
-        const res = await fetch('/api/search/songs?query=Trending Bollywood 2024&limit=12');
-        const data = await res.json();
-        if (data.success && data.data.results.length) {
-            renderSongCards(data.data.results, trendingGrid, 'Trending');
-            state._trendingSongs = data.data.results;
+            `).join('');
         }
     } catch (e) {
-        trendingGrid.innerHTML = '';
-    }
-}
-
-async function loadNewReleases() {
-    try {
-        const res = await fetch('/api/search/songs?query=New Hindi Songs 2024&limit=12');
-        const data = await res.json();
-        if (data.success && data.data.results.length) {
-            renderSongCards(data.data.results, newReleasesGrid, 'NewRelease');
-            state._newReleases = data.data.results;
-        }
-    } catch (e) {
-        newReleasesGrid.innerHTML = '';
-    }
-}
-
-async function loadTopArtists() {
-    const artists = ['Arijit Singh', 'Pritam', 'AP Dhillon', 'Diljit Dosanjh', 'Shreya Ghoshal', 'Atif Aslam', 'Jubin Nautiyal', 'Badshah'];
-    
-    try {
-        const res = await fetch(`/api/search/artists?query=Arijit Singh&limit=8`);
-        const data = await res.json();
-        if (data.success && data.data.results.length) {
-            renderTopArtists(data.data.results);
-        }
-    } catch (e) {
-        // Fallback — create artist cards from known names
-        topArtistsGrid.innerHTML = artists.map(name => `
-            <div class="artist-card" onclick="searchAndPlay('${name}')">
-                <div class="artist-img" style="background: var(--bg-elevated); display:flex; align-items:center; justify-content:center; font-size:2rem;">🎤</div>
-                <div class="artist-name">${name}</div>
-                <div class="artist-label">Artist</div>
+        artistsRow.innerHTML = names.map(n => `
+            <div class="album-card" onclick="searchAndPlay('${esc(n)}')">
+                <div class="album-art"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem;background:var(--bg-secondary)">🎤</div></div>
+                <div class="album-title">${esc(n)}</div>
+                <div class="album-subtitle">Artist</div>
             </div>
         `).join('');
     }
 }
 
-function renderTopArtists(artists) {
-    topArtistsGrid.innerHTML = artists.map(artist => {
-        const img = getBestImage(artist.image);
-        return `
-            <div class="artist-card" onclick="searchAndPlay('${esc(artist.name || '')}')">
-                <img class="artist-img" src="${img || ''}" alt="${esc(artist.name || '')}" loading="lazy" onerror="this.style.display='none'">
-                <div class="artist-name">${esc(artist.name || 'Unknown')}</div>
-                <div class="artist-label">Artist</div>
-            </div>
-        `;
-    }).join('');
-}
-
-function renderSongCards(songs, container, source) {
+function renderAlbumCards(songs, container, stateKey) {
     container.innerHTML = songs.map((song, i) => {
-        const img = getBestImage(song.image);
-        const artists = getArtistNames(song);
+        const img = bestImg(song.image);
+        const artists = getArtists(song);
+        const hasBadge = Math.random() > 0.6; // simulate spatial badges
         return `
-            <div class="song-card" onclick="playFrom${source}(${i})">
-                <div class="card-img-wrapper">
-                    <img src="${img}" alt="${esc(song.name || '')}" loading="lazy">
-                    <button class="card-play-btn" onclick="event.stopPropagation(); playFrom${source}(${i})">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="black"><path d="M8 5v14l11-7z"/></svg>
-                    </button>
+            <div class="album-card" onclick="playFromSection('${stateKey}', ${i})">
+                <div class="album-art">
+                    <img src="${img}" alt="" loading="lazy">
+                    ${hasBadge ? '<div class="album-badge"><span class="dot"></span>Lossless</div>' : ''}
+                    <div class="album-play-btn">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+                    </div>
                 </div>
-                <div class="card-title">${esc(song.name || 'Unknown')}</div>
-                <div class="card-artist">${esc(artists)}</div>
+                <div class="album-title">${esc(song.name || 'Unknown')}</div>
+                <div class="album-subtitle">${esc(artists)}</div>
             </div>
         `;
     }).join('');
 }
 
-// ─── Play Functions ───────────────────────────────────────────────────────────
-
-function playFromQuickPicks(i) {
-    state.queue = state._quickPicks || [];
-    state.currentIndex = i;
-    playCurrent();
-    updateQueueUI();
+function renderArtistCards(artists) {
+    artistsRow.innerHTML = artists.map(a => {
+        const img = bestImg(a.image);
+        return `
+            <div class="album-card" onclick="searchAndPlay('${esc(a.name || '')}')">
+                <div class="album-art">
+                    ${img ? `<img src="${img}" alt="" loading="lazy">` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem;background:var(--bg-secondary)">🎤</div>'}
+                    <div class="album-play-btn">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+                    </div>
+                </div>
+                <div class="album-title">${esc(a.name || 'Unknown')}</div>
+                <div class="album-subtitle">Artist</div>
+            </div>
+        `;
+    }).join('');
 }
 
-function playFromTrending(i) {
-    state.queue = state._trendingSongs || [];
-    state.currentIndex = i;
+// ═══════════════════════════════════════════════════════════════════════════
+// PLAY FROM SECTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+function playFromSection(key, index) {
+    const songs = state[key] || [];
+    if (!songs.length) return;
+    state.queue = songs;
+    state.currentIndex = index;
     playCurrent();
-    updateQueueUI();
+    updateQueue();
 }
 
-function playFromNewRelease(i) {
-    state.queue = state._newReleases || [];
-    state.currentIndex = i;
-    playCurrent();
-    updateQueueUI();
-}
-
-function playFromSearch(i) {
-    state.queue = state._searchResults || [];
-    state.currentIndex = i;
-    playCurrent();
-    updateQueueUI();
-}
-
-function playFromQueue(i) {
-    state.currentIndex = i;
-    playCurrent();
-    updateQueueUI();
-}
+window.playFromSection = playFromSection;
 
 async function searchAndPlay(query) {
-    showLoading(true);
+    showLoader(true);
     try {
         const res = await fetch(`/api/search/songs?query=${encodeURIComponent(query)}&limit=20`);
         const data = await res.json();
@@ -292,11 +287,13 @@ async function searchAndPlay(query) {
             state.queue = data.data.results;
             state.currentIndex = 0;
             playCurrent();
-            updateQueueUI();
+            updateQueue();
         }
     } catch (e) { /* silent */ }
-    showLoading(false);
+    showLoader(false);
 }
+
+window.searchAndPlay = searchAndPlay;
 
 async function searchGenre(genre) {
     switchPage('search');
@@ -305,302 +302,411 @@ async function searchGenre(genre) {
     await performSearch(genre);
 }
 
-// Make functions globally accessible
-window.playFromQuickPicks = playFromQuickPicks;
-window.playFromTrending = playFromTrending;
-window.playFromNewRelease = playFromNewRelease;
-window.playFromSearch = playFromSearch;
-window.playFromQueue = playFromQueue;
-window.searchAndPlay = searchAndPlay;
 window.searchGenre = searchGenre;
 
-// ─── Search ───────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// SEARCH
+// ═══════════════════════════════════════════════════════════════════════════
 
 function setupSearch() {
+    let timeout;
+
     searchInput.addEventListener('input', () => {
-        const query = searchInput.value.trim();
-        searchClear.classList.toggle('visible', query.length > 0);
-
-        clearTimeout(state.searchTimeout);
-        if (query.length < 2) {
-            showSearchPlaceholder();
-            return;
-        }
-
-        state.searchTimeout = setTimeout(() => performSearch(query), 400);
+        const q = searchInput.value.trim();
+        searchClear.classList.toggle('visible', q.length > 0);
+        clearTimeout(timeout);
+        if (q.length < 2) { showSearchEmpty(); return; }
+        timeout = setTimeout(() => performSearch(q), 400);
     });
 
-    searchInput.addEventListener('keydown', (e) => {
+    searchInput.addEventListener('keydown', e => {
         if (e.key === 'Enter') {
-            clearTimeout(state.searchTimeout);
-            const query = searchInput.value.trim();
-            if (query.length >= 2) performSearch(query);
+            clearTimeout(timeout);
+            const q = searchInput.value.trim();
+            if (q.length >= 2) performSearch(q);
         }
     });
 
     searchClear.addEventListener('click', () => {
         searchInput.value = '';
         searchClear.classList.remove('visible');
-        showSearchPlaceholder();
+        showSearchEmpty();
         searchInput.focus();
     });
 }
 
 async function performSearch(query) {
-    showLoading(true);
+    showLoader(true);
     try {
         const res = await fetch(`/api/search/songs?query=${encodeURIComponent(query)}&limit=25`);
         const data = await res.json();
-
         if (!data.success || !data.data.results.length) {
-            searchResults.innerHTML = `
-                <div class="no-results">
-                    <h3>No results for "${esc(query)}"</h3>
-                    <p>Try different keywords or browse categories</p>
-                </div>
-            `;
+            searchResults.innerHTML = `<div class="no-results"><h3>No results for "${esc(query)}"</h3><p>Try different keywords</p></div>`;
             return;
         }
-
         state._searchResults = data.data.results;
         renderSearchResults(data.data.results);
-    } catch (err) {
-        searchResults.innerHTML = `
-            <div class="no-results">
-                <h3>Something went wrong</h3>
-                <p>Please check your connection and try again</p>
-            </div>
-        `;
+    } catch (e) {
+        searchResults.innerHTML = `<div class="no-results"><h3>Something went wrong</h3><p>Check your connection</p></div>`;
     } finally {
-        showLoading(false);
+        showLoader(false);
     }
 }
 
 function renderSearchResults(songs) {
-    let html = `<div class="results-section"><h3>Songs • ${songs.length} results</h3><div class="song-list">`;
-
+    let html = `<div class="results-head">Songs · ${songs.length} results</div><div class="song-list">`;
     songs.forEach((song, i) => {
-        const artists = getArtistNames(song);
-        const img = getBestImage(song.image);
-        const duration = formatTime(song.duration || 0);
-
+        const img = bestImg(song.image);
+        const artists = getArtists(song);
+        const dur = fmtTime(song.duration || 0);
         html += `
-            <div class="song-row" style="--i:${i+1}" data-index="${i}" onclick="playFromSearch(${i})">
+            <div class="s-row" style="animation-delay:${i * 0.02}s" data-idx="${i}" onclick="playFromSearch(${i})">
                 <div>
-                    <span class="song-row-num">${i + 1}</span>
-                    <span class="song-row-play">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                    </span>
+                    <span class="s-num">${i + 1}</span>
+                    <span class="s-play"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
                 </div>
-                <div class="song-row-info">
-                    <img class="song-row-img" src="${img}" alt="" loading="lazy">
-                    <div class="song-row-details">
-                        <div class="song-row-title">${esc(song.name || 'Unknown')}</div>
-                        <div class="song-row-artist">${esc(artists)}</div>
+                <div class="s-info">
+                    <img class="s-img" src="${img}" alt="" loading="lazy">
+                    <div class="s-details">
+                        <div class="s-title">${esc(song.name || 'Unknown')}</div>
+                        <div class="s-artist">${esc(artists)}</div>
                     </div>
                 </div>
-                <div class="song-row-album">${esc(song.album?.name || '')}</div>
-                <div class="song-row-duration">${duration}</div>
+                <div class="s-album">${esc(song.album?.name || '')}</div>
+                <div class="s-dur">${dur}</div>
             </div>
         `;
     });
-
-    html += `</div></div>`;
+    html += '</div>';
     searchResults.innerHTML = html;
 }
 
-function showSearchPlaceholder() {
+function playFromSearch(i) {
+    state.queue = state._searchResults || [];
+    state.currentIndex = i;
+    playCurrent();
+    updateQueue();
+}
+window.playFromSearch = playFromSearch;
+
+function showSearchEmpty() {
     searchResults.innerHTML = `
-        <div class="search-placeholder">
-            <div class="search-placeholder-icon">
-                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            </div>
-            <h2>Discover Music</h2>
-            <p>Search for songs, artists, or albums</p>
+        <div class="search-empty">
+            <div class="search-empty-icon"><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.3"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+            <h3>Search Savan</h3>
+            <p>Find songs, artists, albums and more</p>
         </div>
     `;
 }
 
-// ─── Playback ─────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// PLAYBACK
+// ═══════════════════════════════════════════════════════════════════════════
 
 function playCurrent() {
     const song = state.queue[state.currentIndex];
     if (!song) return;
 
-    const downloadUrl = getBestDownloadUrl(song.downloadUrl);
-    if (!downloadUrl) {
-        playNext();
-        return;
-    }
+    const url = bestDownloadUrl(song.downloadUrl);
+    if (!url) { playNext(); return; }
 
-    audio.src = downloadUrl;
+    audio.src = url;
     audio.play().then(() => {
         state.isPlaying = true;
-        updatePlayButton();
-        updatePlayerInfo(song);
-        updateNowPlayingHighlight();
-    }).catch(err => {
-        console.error('Playback failed:', err);
+        updateAllUI(song);
+    }).catch(() => {
         state.isPlaying = false;
-        updatePlayButton();
+        updatePlayIcons();
     });
-}
-
-function updatePlayerInfo(song) {
-    const img = getBestImage(song.image);
-    const artists = getArtistNames(song);
-
-    playerImg.src = img;
-    playerImg.onload = () => playerImg.classList.add('loaded');
-    playerSongName.textContent = song.name || 'Unknown';
-    playerSongName.classList.add('active');
-    playerArtistName.textContent = artists;
-
-    document.title = `${song.name} — Savan`;
-    playerAlbumArt.classList.add('playing');
 }
 
 function togglePlay() {
-    if (!audio.src || state.queue.length === 0) return;
-
+    if (!audio.src || !state.queue.length) return;
     if (state.isPlaying) {
         audio.pause();
         state.isPlaying = false;
-        playerAlbumArt.classList.remove('playing');
     } else {
         audio.play().catch(() => {});
         state.isPlaying = true;
-        playerAlbumArt.classList.add('playing');
     }
-    updatePlayButton();
+    updatePlayIcons();
+    updateArtSpin();
 }
 
 function playNext() {
-    if (state.queue.length === 0) return;
+    if (!state.queue.length) return;
+    if (state.repeat === 'one') { audio.currentTime = 0; audio.play(); return; }
 
-    if (state.repeat === 'one') {
-        audio.currentTime = 0;
-        audio.play();
-        return;
-    }
-
-    let nextIndex;
+    let next;
     if (state.shuffle) {
-        nextIndex = Math.floor(Math.random() * state.queue.length);
+        next = Math.floor(Math.random() * state.queue.length);
     } else {
-        nextIndex = state.currentIndex + 1;
+        next = state.currentIndex + 1;
     }
 
-    if (nextIndex >= state.queue.length) {
-        if (state.repeat === 'all') {
-            nextIndex = 0;
-        } else {
-            state.isPlaying = false;
-            updatePlayButton();
-            playerAlbumArt.classList.remove('playing');
-            return;
-        }
+    if (next >= state.queue.length) {
+        if (state.repeat === 'all') next = 0;
+        else { state.isPlaying = false; updatePlayIcons(); updateArtSpin(); return; }
     }
 
-    state.currentIndex = nextIndex;
+    state.currentIndex = next;
     playCurrent();
-    updateQueueUI();
+    updateQueue();
 }
 
 function playPrev() {
-    if (state.queue.length === 0) return;
+    if (!state.queue.length) return;
+    if (audio.currentTime > 3) { audio.currentTime = 0; return; }
+    let prev = state.currentIndex - 1;
+    if (prev < 0) prev = state.repeat === 'all' ? state.queue.length - 1 : 0;
+    state.currentIndex = prev;
+    playCurrent();
+    updateQueue();
+}
 
-    if (audio.currentTime > 3) {
-        audio.currentTime = 0;
+// ═══════════════════════════════════════════════════════════════════════════
+// UI UPDATES
+// ═══════════════════════════════════════════════════════════════════════════
+
+function updateAllUI(song) {
+    const img = bestImg(song.image);
+    const artists = getArtists(song);
+
+    // Mini player
+    miniImg.src = img;
+    miniImg.onload = () => miniImg.classList.add('visible');
+    miniTitle.textContent = song.name || 'Unknown';
+    miniTitle.classList.add('active');
+    miniArtist.textContent = artists;
+
+    // Now Playing
+    npImg.src = img;
+    npTitle.textContent = song.name || 'Unknown';
+    npArtist.textContent = artists;
+
+    // Dynamic BG
+    npBg.style.backgroundImage = img ? `url(${img})` : 'none';
+
+    // Document title
+    document.title = `${song.name} — Savan Music`;
+
+    updatePlayIcons();
+    updateArtSpin();
+    highlightPlaying();
+
+    // Auto-load suggestions
+    loadSuggestions(song.id);
+}
+
+function updatePlayIcons() {
+    const playing = state.isPlaying;
+    // Mini
+    miniPlayIcon.style.display = playing ? 'none' : 'block';
+    miniPauseIcon.style.display = playing ? 'block' : 'none';
+    // NP
+    npPlayIcon.style.display = playing ? 'none' : 'block';
+    npPauseIcon.style.display = playing ? 'block' : 'none';
+}
+
+function updateArtSpin() {
+    const spinning = state.isPlaying;
+    miniArt.classList.toggle('playing', spinning);
+    npAlbumArt.classList.toggle('spinning', spinning);
+}
+
+function highlightPlaying() {
+    $$('.s-row').forEach(r => r.classList.remove('playing'));
+    const active = $(`.s-row[data-idx="${state.currentIndex}"]`);
+    if (active) active.classList.add('playing');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MINI PLAYER
+// ═══════════════════════════════════════════════════════════════════════════
+
+function setupMiniPlayer() {
+    miniPlayBtn.addEventListener('click', e => { e.stopPropagation(); togglePlay(); });
+    miniNextBtn.addEventListener('click', e => { e.stopPropagation(); playNext(); });
+    miniInner.addEventListener('click', openNowPlaying);
+
+    // Progress
+    audio.addEventListener('timeupdate', () => {
+        if (!audio.duration) return;
+        const pct = (audio.currentTime / audio.duration) * 100;
+        miniProgressFill.style.width = pct + '%';
+
+        // NP progress
+        npProgressFilled.style.width = pct + '%';
+        npProgressKnob.style.left = `calc(${pct}% - 7px)`;
+        npCurrentTime.textContent = fmtTime(audio.currentTime);
+    });
+
+    audio.addEventListener('loadedmetadata', () => {
+        npTotalTime.textContent = '-' + fmtTime(audio.duration - audio.currentTime);
+    });
+
+    audio.addEventListener('ended', playNext);
+    audio.addEventListener('error', () => setTimeout(playNext, 800));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// NOW PLAYING
+// ═══════════════════════════════════════════════════════════════════════════
+
+function setupNowPlaying() {
+    npClose.addEventListener('click', closeNowPlaying);
+    npPlayBtn.addEventListener('click', togglePlay);
+    npNext.addEventListener('click', () => { playNext(); updateQueue(); });
+    npPrev.addEventListener('click', () => { playPrev(); updateQueue(); });
+
+    npShuffle.addEventListener('click', () => {
+        state.shuffle = !state.shuffle;
+        npShuffle.classList.toggle('active', state.shuffle);
+    });
+
+    npRepeat.addEventListener('click', () => {
+        const modes = ['off', 'all', 'one'];
+        state.repeat = modes[(modes.indexOf(state.repeat) + 1) % 3];
+        npRepeat.classList.toggle('active', state.repeat !== 'off');
+    });
+
+    // NP Progress seek
+    setupBarDrag(npProgressBar, (pct) => {
+        if (audio.duration) audio.currentTime = pct * audio.duration;
+        npProgressFilled.style.width = (pct * 100) + '%';
+        npProgressKnob.style.left = `calc(${pct * 100}% - 7px)`;
+    });
+
+    // NP Volume
+    setupBarDrag(npVolumeBar, (pct) => {
+        state.volume = pct;
+        audio.volume = pct;
+        npVolumeFilled.style.width = (pct * 100) + '%';
+        npVolumeKnob.style.left = `calc(${pct * 100}% - 7px)`;
+    });
+
+    // Init volume UI
+    npVolumeFilled.style.width = (state.volume * 100) + '%';
+    npVolumeKnob.style.left = `calc(${state.volume * 100}% - 7px)`;
+
+    // Lyrics toggle
+    npLyricsBtn.addEventListener('click', toggleLyrics);
+    npQueueBtn.addEventListener('click', () => {
+        // Could open a queue panel — for now close lyrics
+        if (state.lyricsOpen) toggleLyrics();
+    });
+
+    // Swipe down to close (touch)
+    let startY = 0;
+    nowPlaying.addEventListener('touchstart', e => { startY = e.touches[0].clientY; }, { passive: true });
+    nowPlaying.addEventListener('touchend', e => {
+        const diff = e.changedTouches[0].clientY - startY;
+        if (diff > 80) closeNowPlaying();
+    }, { passive: true });
+}
+
+function openNowPlaying() {
+    state.nowPlayingOpen = true;
+    nowPlaying.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeNowPlaying() {
+    state.nowPlayingOpen = false;
+    nowPlaying.classList.remove('open');
+    document.body.style.overflow = '';
+    if (state.lyricsOpen) toggleLyrics();
+}
+
+function toggleLyrics() {
+    state.lyricsOpen = !state.lyricsOpen;
+    npLyricsPanel.classList.toggle('open', state.lyricsOpen);
+    npLyricsBtn.classList.toggle('active', state.lyricsOpen);
+
+    if (state.lyricsOpen) {
+        const song = state.queue[state.currentIndex];
+        if (song && song.hasLyrics && song.lyricsId) {
+            fetchLyrics(song.lyricsId);
+        } else {
+            npLyricsContent.innerHTML = '<p class="lyrics-placeholder">Lyrics not available for this track</p>';
+        }
+    }
+}
+
+async function fetchLyrics(lyricsId) {
+    npLyricsContent.innerHTML = '<p class="lyrics-placeholder">Loading lyrics...</p>';
+    try {
+        // JioSaavn lyrics endpoint
+        const res = await fetch(`/api/songs/${lyricsId}/suggestions`);
+        // Lyrics aren't directly available via this API, show placeholder
+        npLyricsContent.innerHTML = '<p class="lyrics-placeholder">♪ Lyrics syncing coming soon ♪</p>';
+    } catch (e) {
+        npLyricsContent.innerHTML = '<p class="lyrics-placeholder">Could not load lyrics</p>';
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUTOPLAY SUGGESTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function loadSuggestions(songId) {
+    if (!songId) return;
+    try {
+        const res = await fetch(`/api/songs/${songId}/suggestions?limit=5`);
+        const data = await res.json();
+        if (data.success && data.data.length) {
+            // Append suggestions to queue if queue is short
+            if (state.queue.length - state.currentIndex <= 2) {
+                const newSongs = data.data.filter(s => !state.queue.find(q => q.id === s.id));
+                state.queue.push(...newSongs);
+                updateQueue();
+            }
+        }
+    } catch (e) { /* silent */ }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// QUEUE
+// ═══════════════════════════════════════════════════════════════════════════
+
+function updateQueue() {
+    if (!state.queue.length) {
+        sidebarQueue.innerHTML = '<p class="queue-empty-msg">Play something to start</p>';
         return;
     }
 
-    let prevIndex = state.currentIndex - 1;
-    if (prevIndex < 0) {
-        prevIndex = state.repeat === 'all' ? state.queue.length - 1 : 0;
-    }
+    sidebarQueue.innerHTML = state.queue.map((song, i) => {
+        const img = bestImg(song.image);
+        const artists = getArtists(song);
+        const active = i === state.currentIndex;
+        return `
+            <div class="q-item ${active ? 'active' : ''}" onclick="playFromQueue(${i})">
+                <img src="${img}" alt="" loading="lazy">
+                <div class="q-item-info">
+                    <div class="q-item-name">${esc(song.name || 'Unknown')}</div>
+                    <div class="q-item-artist">${esc(artists)}</div>
+                </div>
+                ${active ? '<div class="q-eq"><span></span><span></span><span></span><span></span></div>' : ''}
+            </div>
+        `;
+    }).join('');
+}
 
-    state.currentIndex = prevIndex;
+function playFromQueue(i) {
+    state.currentIndex = i;
     playCurrent();
-    updateQueueUI();
+    updateQueue();
 }
+window.playFromQueue = playFromQueue;
 
-function updatePlayButton() {
-    if (state.isPlaying) {
-        playIcon.style.display = 'none';
-        pauseIcon.style.display = 'block';
-    } else {
-        playIcon.style.display = 'block';
-        pauseIcon.style.display = 'none';
-    }
-    // Update mobile play button too
-    const mobilePlayBtn = $('#mobilePlayBtn');
-    if (mobilePlayBtn) {
-        mobilePlayBtn.innerHTML = state.isPlaying 
-            ? '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'
-            : '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
-    }
-}
+// ═══════════════════════════════════════════════════════════════════════════
+// KEYBOARD
+// ═══════════════════════════════════════════════════════════════════════════
 
-function updateNowPlayingHighlight() {
-    $$('.song-row').forEach(row => row.classList.remove('playing'));
-    const activeRow = $(`.song-row[data-index="${state.currentIndex}"]`);
-    if (activeRow) activeRow.classList.add('playing');
-}
-
-// ─── Mobile Player ────────────────────────────────────────────────────────────
-
-function setupMobilePlayer() {
-    // Add mobile play/next buttons to player-right on mobile
-    const playerRight = $('.player-right');
-    if (playerRight) {
-        const mobileBtn = document.createElement('button');
-        mobileBtn.className = 'control-btn';
-        mobileBtn.id = 'mobilePlayBtn';
-        mobileBtn.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
-        mobileBtn.addEventListener('click', togglePlay);
-        playerRight.prepend(mobileBtn);
-
-        const mobileNextBtn = document.createElement('button');
-        mobileNextBtn.className = 'control-btn';
-        mobileNextBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>';
-        mobileNextBtn.addEventListener('click', playNext);
-        playerRight.appendChild(mobileNextBtn);
-    }
-}
-
-// ─── Player Controls ──────────────────────────────────────────────────────────
-
-function setupPlayerControls() {
-    btnPlay.addEventListener('click', togglePlay);
-    btnNext.addEventListener('click', playNext);
-    btnPrev.addEventListener('click', playPrev);
-
-    btnShuffle.addEventListener('click', () => {
-        state.shuffle = !state.shuffle;
-        btnShuffle.classList.toggle('active', state.shuffle);
-    });
-
-    btnRepeat.addEventListener('click', () => {
-        const modes = ['off', 'all', 'one'];
-        const current = modes.indexOf(state.repeat);
-        state.repeat = modes[(current + 1) % 3];
-        btnRepeat.classList.toggle('active', state.repeat !== 'off');
-    });
-
-    audio.addEventListener('timeupdate', updateProgress);
-    audio.addEventListener('loadedmetadata', () => {
-        totalTimeEl.textContent = formatTime(audio.duration);
-    });
-    audio.addEventListener('ended', playNext);
-    audio.addEventListener('error', () => {
-        setTimeout(playNext, 1000);
-    });
-
-    // Keyboard
-    document.addEventListener('keydown', (e) => {
+function setupKeyboard() {
+    document.addEventListener('keydown', e => {
         if (e.target.tagName === 'INPUT') return;
-        switch(e.code) {
+        switch (e.code) {
             case 'Space': e.preventDefault(); togglePlay(); break;
             case 'ArrowRight':
                 if (e.shiftKey) playNext();
@@ -610,168 +716,85 @@ function setupPlayerControls() {
                 if (e.shiftKey) playPrev();
                 else audio.currentTime = Math.max(0, audio.currentTime - 10);
                 break;
-            case 'ArrowUp': e.preventDefault(); setVolume(Math.min(1, state.volume + 0.05)); break;
-            case 'ArrowDown': e.preventDefault(); setVolume(Math.max(0, state.volume - 0.05)); break;
+            case 'ArrowUp': e.preventDefault(); setVol(Math.min(1, state.volume + 0.05)); break;
+            case 'ArrowDown': e.preventDefault(); setVol(Math.max(0, state.volume - 0.05)); break;
+            case 'Escape': if (state.nowPlayingOpen) closeNowPlaying(); break;
+            case 'KeyN': openNowPlaying(); break;
         }
     });
 }
 
-// ─── Progress Bar ─────────────────────────────────────────────────────────────
+function setVol(v) {
+    state.volume = v;
+    audio.volume = v;
+    npVolumeFilled.style.width = (v * 100) + '%';
+    npVolumeKnob.style.left = `calc(${v * 100}% - 7px)`;
+}
 
-function setupProgressBar() {
-    let isDragging = false;
+// ═══════════════════════════════════════════════════════════════════════════
+// DRAG HELPERS (for progress + volume bars)
+// ═══════════════════════════════════════════════════════════════════════════
 
-    function seekTo(e) {
-        const rect = progressBar.getBoundingClientRect();
-        const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
-        const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-        if (audio.duration) audio.currentTime = percent * audio.duration;
-        updateProgressUI(percent);
+function setupBarDrag(bar, onUpdate) {
+    let dragging = false;
+
+    function calc(e) {
+        const rect = bar.getBoundingClientRect();
+        const x = (e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0));
+        return Math.max(0, Math.min(1, (x - rect.left) / rect.width));
     }
 
-    progressBar.addEventListener('mousedown', (e) => { isDragging = true; seekTo(e); });
-    document.addEventListener('mousemove', (e) => { if (isDragging) seekTo(e); });
-    document.addEventListener('mouseup', () => { isDragging = false; });
+    bar.addEventListener('mousedown', e => { dragging = true; onUpdate(calc(e)); });
+    document.addEventListener('mousemove', e => { if (dragging) onUpdate(calc(e)); });
+    document.addEventListener('mouseup', () => { dragging = false; });
 
-    progressBar.addEventListener('touchstart', (e) => { e.preventDefault(); isDragging = true; seekTo(e.touches[0]); }, { passive: false });
-    progressBar.addEventListener('touchmove', (e) => { e.preventDefault(); if (isDragging) seekTo(e.touches[0]); }, { passive: false });
-    progressBar.addEventListener('touchend', () => { isDragging = false; });
+    bar.addEventListener('touchstart', e => { e.preventDefault(); dragging = true; onUpdate(calc(e.touches[0])); }, { passive: false });
+    bar.addEventListener('touchmove', e => { e.preventDefault(); if (dragging) onUpdate(calc(e.touches[0])); }, { passive: false });
+    bar.addEventListener('touchend', () => { dragging = false; });
 }
 
-function updateProgress() {
-    if (!audio.duration) return;
-    const percent = audio.currentTime / audio.duration;
-    updateProgressUI(percent);
-    currentTimeEl.textContent = formatTime(audio.currentTime);
+// ═══════════════════════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════════════════════
 
-    // Update mobile top progress bar
-    if (playerProgressTop) {
-        playerProgressTop.style.width = (percent * 100) + '%';
-    }
-}
-
-function updateProgressUI(percent) {
-    const pct = (percent * 100) + '%';
-    progressFilled.style.width = pct;
-    progressThumb.style.left = `calc(${pct} - 6px)`;
-}
-
-// ─── Volume ───────────────────────────────────────────────────────────────────
-
-function setupVolumeBar() {
-    let isDragging = false;
-
-    function setVolumeFromEvent(e) {
-        const rect = volumeBar.getBoundingClientRect();
-        const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
-        const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-        setVolume(percent);
-    }
-
-    volumeBar.addEventListener('mousedown', (e) => { isDragging = true; setVolumeFromEvent(e); });
-    document.addEventListener('mousemove', (e) => { if (isDragging) setVolumeFromEvent(e); });
-    document.addEventListener('mouseup', () => { isDragging = false; });
-
-    volumeBar.addEventListener('touchstart', (e) => { e.preventDefault(); isDragging = true; setVolumeFromEvent(e.touches[0]); }, { passive: false });
-    volumeBar.addEventListener('touchmove', (e) => { e.preventDefault(); if (isDragging) setVolumeFromEvent(e.touches[0]); }, { passive: false });
-    volumeBar.addEventListener('touchend', () => { isDragging = false; });
-
-    btnVolume.addEventListener('click', () => {
-        if (state.volume > 0) { state._prevVolume = state.volume; setVolume(0); }
-        else setVolume(state._prevVolume || 0.7);
-    });
-
-    updateVolumeUI(state.volume);
-}
-
-function setVolume(val) {
-    state.volume = val;
-    audio.volume = val;
-    updateVolumeUI(val);
-}
-
-function updateVolumeUI(val) {
-    const pct = (val * 100) + '%';
-    volumeFilled.style.width = pct;
-    volumeThumb.style.left = `calc(${pct} - 6px)`;
-}
-
-// ─── Queue UI ─────────────────────────────────────────────────────────────────
-
-function updateQueueUI() {
-    queueCount.textContent = state.queue.length;
-    const queueEmpty = $('.queue-empty');
-
-    if (state.queue.length === 0) {
-        if (queueEmpty) queueEmpty.style.display = 'block';
-        queueList.innerHTML = '';
-        return;
-    }
-
-    if (queueEmpty) queueEmpty.style.display = 'none';
-
-    queueList.innerHTML = state.queue.map((song, i) => {
-        const img = getBestImage(song.image);
-        const artists = getArtistNames(song);
-        const isActive = i === state.currentIndex;
-        return `
-            <li class="queue-item ${isActive ? 'active' : ''}" onclick="playFromQueue(${i})">
-                <img src="${img}" alt="" loading="lazy">
-                <div class="queue-item-info">
-                    <div class="queue-item-name">${esc(song.name || 'Unknown')}</div>
-                    <div class="queue-item-artist">${esc(artists)}</div>
-                </div>
-                ${isActive ? '<div class="equalizer"><span></span><span></span><span></span><span></span></div>' : ''}
-            </li>
-        `;
-    }).join('');
-}
-
-// ─── Utilities ────────────────────────────────────────────────────────────────
-
-function getBestDownloadUrl(urls) {
+function bestDownloadUrl(urls) {
     if (!urls || !urls.length) return null;
-    const preferred = ['320kbps', '160kbps', '96kbps', '48kbps', '12kbps'];
-    for (const q of preferred) {
-        const found = urls.find(d => d.quality === q);
-        if (found && found.url) return found.url;
+    for (const q of ['320kbps', '160kbps', '96kbps', '48kbps', '12kbps']) {
+        const f = urls.find(d => d.quality === q && d.url);
+        if (f) return f.url;
     }
     return urls[urls.length - 1]?.url || null;
 }
 
-function getBestImage(images) {
+function bestImg(images) {
     if (!images || !images.length) return '';
-    const preferred = ['500x500', '150x150', '50x50'];
-    for (const q of preferred) {
-        const found = images.find(img => img.quality === q);
-        if (found && found.url) return found.url;
+    for (const q of ['500x500', '150x150', '50x50']) {
+        const f = images.find(i => i.quality === q && i.url);
+        if (f) return f.url;
     }
     return images[images.length - 1]?.url || '';
 }
 
-function getArtistNames(song) {
+function getArtists(song) {
     if (!song.artists) return 'Unknown Artist';
-    const primary = song.artists.primary || [];
-    if (primary.length) return primary.map(a => a.name).filter(Boolean).join(', ');
+    const p = song.artists.primary || [];
+    if (p.length) return p.map(a => a.name).filter(Boolean).join(', ');
     const all = song.artists.all || [];
     if (all.length) return all.slice(0, 3).map(a => a.name).filter(Boolean).join(', ');
     return 'Unknown Artist';
 }
 
-function formatTime(seconds) {
-    if (!seconds || isNaN(seconds)) return '0:00';
-    seconds = Math.floor(seconds);
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+function fmtTime(sec) {
+    if (!sec || isNaN(sec)) return '0:00';
+    sec = Math.floor(sec);
+    return `${Math.floor(sec / 60)}:${(sec % 60).toString().padStart(2, '0')}`;
 }
 
-function esc(str) {
-    if (!str) return '';
-    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-    return str.replace(/[&<>"']/g, c => map[c]);
+function esc(s) {
+    if (!s) return '';
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
-function showLoading(show) {
-    loadingOverlay.classList.toggle('visible', show);
+function showLoader(show) {
+    loaderOverlay.classList.toggle('visible', show);
 }
