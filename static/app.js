@@ -1,5 +1,5 @@
 /**
- * Savan Music — Apple Music Premium Experience
+ * Wavyn — Premium Music Experience
  * Full-screen Now Playing, lyrics, dynamic backgrounds,
  * radio stations, autoplay suggestions, spatial audio badges
  */
@@ -17,6 +17,11 @@ const state = {
     volume: 0.75,
     nowPlayingOpen: false,
     lyricsOpen: false,
+    eqOpen: false,
+    bassBoost: false,
+    eqPreset: 'flat',
+    eqGains: { bass: 0, lowMid: 0, mid: 0, highMid: 0, treble: 0 },
+    amplifier: 100,
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -90,6 +95,25 @@ const greetingEl = $('#greeting');
 const loaderOverlay = $('#loaderOverlay');
 const sidebarQueue = $('#sidebarQueue');
 
+// EQ Panel
+const npEqBtn = $('#npEqBtn');
+const npEqPanel = $('#npEqPanel');
+const eqCloseBtn = $('#eqCloseBtn');
+const bassBoostToggle = $('#bassBoostToggle');
+const eqPresets = $('#eqPresets');
+const eqBass = $('#eqBass');
+const eqLowMid = $('#eqLowMid');
+const eqMid = $('#eqMid');
+const eqHighMid = $('#eqHighMid');
+const eqTreble = $('#eqTreble');
+const eqBassVal = $('#eqBassVal');
+const eqLowMidVal = $('#eqLowMidVal');
+const eqMidVal = $('#eqMidVal');
+const eqHighMidVal = $('#eqHighMidVal');
+const eqTrebleVal = $('#eqTrebleVal');
+const eqAmpSlider = $('#eqAmpSlider');
+const eqAmpVal = $('#eqAmpVal');
+
 // ═══════════════════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════════════════
@@ -101,6 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupNowPlaying();
     setupSearch();
     setupKeyboard();
+    setupEqualizer();
     loadHomeSections();
     audio.volume = state.volume;
 });
@@ -393,7 +418,7 @@ function showSearchEmpty() {
     searchResults.innerHTML = `
         <div class="search-empty">
             <div class="search-empty-icon"><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.3"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
-            <h3>Search Savan</h3>
+            <h3>Search Wavyn</h3>
             <p>Find songs, artists, albums and more</p>
         </div>
     `;
@@ -488,7 +513,7 @@ function updateAllUI(song) {
     npBg.style.backgroundImage = img ? `url(${img})` : 'none';
 
     // Document title
-    document.title = `${song.name} — Savan Music`;
+    document.title = `${song.name} — Wavyn`;
 
     updatePlayIcons();
     updateArtSpin();
@@ -594,7 +619,11 @@ function setupNowPlaying() {
     npQueueBtn.addEventListener('click', () => {
         // Could open a queue panel — for now close lyrics
         if (state.lyricsOpen) toggleLyrics();
+        if (state.eqOpen) toggleEqPanel();
     });
+
+    // EQ panel toggle
+    npEqBtn.addEventListener('click', toggleEqPanel);
 
     // Swipe down to close (touch)
     let startY = 0;
@@ -622,6 +651,9 @@ function toggleLyrics() {
     state.lyricsOpen = !state.lyricsOpen;
     npLyricsPanel.classList.toggle('open', state.lyricsOpen);
     npLyricsBtn.classList.toggle('active', state.lyricsOpen);
+
+    // Close EQ if open
+    if (state.lyricsOpen && state.eqOpen) toggleEqPanel();
 
     if (state.lyricsOpen) {
         const song = state.queue[state.currentIndex];
@@ -798,3 +830,190 @@ function esc(s) {
 function showLoader(show) {
     loaderOverlay.classList.toggle('visible', show);
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// WEB AUDIO API — EQUALIZER & BASS BOOST
+// ═══════════════════════════════════════════════════════════════════════════
+
+let audioCtx = null;
+let sourceNode = null;
+let gainNode = null;
+let filters = {};
+let isAudioConnected = false;
+
+const EQ_PRESETS = {
+    flat:       { bass: 0, lowMid: 0, mid: 0, highMid: 0, treble: 0 },
+    bass:       { bass: 8, lowMid: 4, mid: 0, highMid: -1, treble: -2 },
+    vocal:      { bass: -2, lowMid: 0, mid: 4, highMid: 5, treble: 3 },
+    electronic: { bass: 6, lowMid: 3, mid: -2, highMid: 2, treble: 5 },
+    rock:       { bass: 5, lowMid: 3, mid: -1, highMid: 3, treble: 4 },
+    acoustic:   { bass: 3, lowMid: 1, mid: 2, highMid: 3, treble: 2 },
+};
+
+const EQ_FREQUENCIES = {
+    bass: 60,
+    lowMid: 250,
+    mid: 1000,
+    highMid: 4000,
+    treble: 12000,
+};
+
+function initAudioContext() {
+    if (audioCtx) return;
+
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    sourceNode = audioCtx.createMediaElementSource(audio);
+    gainNode = audioCtx.createGain();
+    gainNode.gain.value = state.amplifier / 100;
+
+    // Create 5-band EQ filters
+    let lastNode = sourceNode;
+
+    Object.keys(EQ_FREQUENCIES).forEach(band => {
+        const filter = audioCtx.createBiquadFilter();
+        const freq = EQ_FREQUENCIES[band];
+
+        if (band === 'bass') {
+            filter.type = 'lowshelf';
+        } else if (band === 'treble') {
+            filter.type = 'highshelf';
+        } else {
+            filter.type = 'peaking';
+            filter.Q.value = 1.4;
+        }
+
+        filter.frequency.value = freq;
+        filter.gain.value = state.eqGains[band] || 0;
+        filters[band] = filter;
+
+        lastNode.connect(filter);
+        lastNode = filter;
+    });
+
+    lastNode.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    isAudioConnected = true;
+}
+
+function setupEqualizer() {
+    // EQ Panel open/close
+    eqCloseBtn.addEventListener('click', toggleEqPanel);
+
+    // Bass Boost toggle
+    bassBoostToggle.addEventListener('click', () => {
+        state.bassBoost = !state.bassBoost;
+        bassBoostToggle.classList.toggle('active', state.bassBoost);
+
+        if (state.bassBoost) {
+            applyPreset('bass');
+        } else {
+            applyPreset('flat');
+        }
+    });
+
+    // Presets
+    eqPresets.addEventListener('click', e => {
+        const btn = e.target.closest('.eq-preset');
+        if (!btn) return;
+        const preset = btn.dataset.preset;
+        applyPreset(preset);
+
+        // Update bass boost toggle state
+        state.bassBoost = (preset === 'bass');
+        bassBoostToggle.classList.toggle('active', state.bassBoost);
+    });
+
+    // Manual sliders
+    const sliderMap = [
+        { el: eqBass, band: 'bass', valEl: eqBassVal },
+        { el: eqLowMid, band: 'lowMid', valEl: eqLowMidVal },
+        { el: eqMid, band: 'mid', valEl: eqMidVal },
+        { el: eqHighMid, band: 'highMid', valEl: eqHighMidVal },
+        { el: eqTreble, band: 'treble', valEl: eqTrebleVal },
+    ];
+
+    sliderMap.forEach(({ el, band, valEl }) => {
+        el.addEventListener('input', () => {
+            const val = parseInt(el.value);
+            state.eqGains[band] = val;
+            valEl.textContent = (val > 0 ? '+' : '') + val;
+
+            if (filters[band]) {
+                filters[band].gain.value = val;
+            }
+
+            // Deselect preset since manual
+            state.eqPreset = 'custom';
+            $$('.eq-preset').forEach(p => p.classList.remove('active'));
+        });
+    });
+
+    // Amplifier slider
+    eqAmpSlider.addEventListener('input', () => {
+        const val = parseInt(eqAmpSlider.value);
+        state.amplifier = val;
+        eqAmpVal.textContent = val + '%';
+
+        if (gainNode) {
+            gainNode.gain.value = val / 100;
+        }
+    });
+}
+
+function applyPreset(presetName) {
+    const preset = EQ_PRESETS[presetName];
+    if (!preset) return;
+
+    state.eqPreset = presetName;
+    state.eqGains = { ...preset };
+
+    // Update UI
+    $$('.eq-preset').forEach(p => {
+        p.classList.toggle('active', p.dataset.preset === presetName);
+    });
+
+    // Update sliders
+    eqBass.value = preset.bass;
+    eqLowMid.value = preset.lowMid;
+    eqMid.value = preset.mid;
+    eqHighMid.value = preset.highMid;
+    eqTreble.value = preset.treble;
+
+    eqBassVal.textContent = fmtGain(preset.bass);
+    eqLowMidVal.textContent = fmtGain(preset.lowMid);
+    eqMidVal.textContent = fmtGain(preset.mid);
+    eqHighMidVal.textContent = fmtGain(preset.highMid);
+    eqTrebleVal.textContent = fmtGain(preset.treble);
+
+    // Apply to audio filters
+    if (filters.bass) {
+        Object.keys(preset).forEach(band => {
+            if (filters[band]) filters[band].gain.value = preset[band];
+        });
+    }
+}
+
+function toggleEqPanel() {
+    state.eqOpen = !state.eqOpen;
+    npEqPanel.classList.toggle('open', state.eqOpen);
+    npEqBtn.classList.toggle('active', state.eqOpen);
+
+    // Close lyrics if open
+    if (state.eqOpen && state.lyricsOpen) toggleLyrics();
+
+    // Initialize audio context on first EQ interaction (needs user gesture)
+    if (state.eqOpen && !audioCtx) {
+        initAudioContext();
+    }
+}
+
+function fmtGain(v) {
+    return (v > 0 ? '+' : '') + v;
+}
+
+// Initialize AudioContext when first song plays (needs user gesture)
+const origPlayCurrent = playCurrent;
+playCurrent = function() {
+    if (!audioCtx) initAudioContext();
+    origPlayCurrent();
+};
