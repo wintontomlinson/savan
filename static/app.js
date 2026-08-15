@@ -32,7 +32,9 @@ const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 
 const audio = $('#audioPlayer');
-const audioNext = $('#audioPlayerNext');
+const audioB = $('#audioPlayerB');
+let activeAudio = audio; // current playing audio element
+let inactiveAudio = audioB; // for crossfade preload
 
 // Mini Player
 const miniPlayer = $('#miniPlayer');
@@ -107,6 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupKeyboard();
     loadHome();
     audio.volume = S.volume;
+    audioB.volume = S.volume;
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -297,33 +300,48 @@ function playCurrent() {
     const url = bestUrl(song.downloadUrl);
     if (!url) { playNext(); return; }
 
-    // Crossfade out current if enabled
-    if (S.crossfade && S.playing && audio.src) {
-        crossfadeOut(audio);
+    // Crossfade: fade out old, fade in new on inactive element
+    if (S.crossfade && S.playing && activeAudio.src && !activeAudio.paused) {
+        // Start crossfade: fade out current, play new on other element
+        fadeOut(activeAudio, S.crossfadeDur);
+        
+        // Swap active/inactive
+        const temp = activeAudio;
+        activeAudio = inactiveAudio;
+        inactiveAudio = temp;
+        
+        activeAudio.volume = 0;
+        activeAudio.src = url;
+        activeAudio.play().then(() => {
+            S.playing = true;
+            fadeIn(activeAudio, S.crossfadeDur, S.volume);
+            updateAllUI(song);
+            loadRelated(song.id);
+            bindAudioEvents();
+        }).catch(() => { S.playing = false; updatePlayIcons(); });
+    } else {
+        // Normal play (no crossfade)
+        activeAudio.src = url;
+        activeAudio.volume = S.volume;
+        activeAudio.play().then(() => {
+            S.playing = true;
+            updateAllUI(song);
+            loadRelated(song.id);
+        }).catch(() => { S.playing = false; updatePlayIcons(); });
     }
-
-    audio.src = url;
-    audio.play().then(() => {
-        S.playing = true;
-        updateAllUI(song);
-        loadRelated(song.id);
-    }).catch(() => {
-        S.playing = false;
-        updatePlayIcons();
-    });
 }
 
 function togglePlay() {
-    if (!audio.src || !S.queue.length) return;
-    if (S.playing) { audio.pause(); S.playing = false; }
-    else { audio.play().catch(()=>{}); S.playing = true; }
+    if (!activeAudio.src || !S.queue.length) return;
+    if (S.playing) { activeAudio.pause(); S.playing = false; }
+    else { activeAudio.play().catch(()=>{}); S.playing = true; }
     updatePlayIcons();
     updateArtSpin();
 }
 
 function playNext() {
     if (!S.queue.length) return;
-    if (S.repeat === 'one') { audio.currentTime = 0; audio.play(); return; }
+    if (S.repeat === 'one') { activeAudio.currentTime = 0; activeAudio.play(); return; }
 
     // Sleep timer: end of song
     if (S.sleepEndOfSong) { stopPlayback(); S.sleepEndOfSong = false; return; }
@@ -343,7 +361,7 @@ function playNext() {
 
 function playPrev() {
     if (!S.queue.length) return;
-    if (audio.currentTime > 3) { audio.currentTime = 0; return; }
+    if (activeAudio.currentTime > 3) { activeAudio.currentTime = 0; return; }
     let prev = S.idx - 1;
     if (prev < 0) prev = S.repeat === 'all' ? S.queue.length - 1 : 0;
     S.idx = prev;
@@ -352,7 +370,7 @@ function playPrev() {
 }
 
 function stopPlayback() {
-    audio.pause();
+    activeAudio.pause();
     S.playing = false;
     updatePlayIcons();
     updateArtSpin();
@@ -368,36 +386,61 @@ function setupCrossfade() {
         S.crossfade = !S.crossfade;
         btn.classList.toggle('active', S.crossfade);
     });
-
-    // Pre-load next song near end for crossfade
-    audio.addEventListener('timeupdate', () => {
-        if (S.crossfade && audio.duration && (audio.duration - audio.currentTime) <= S.crossfadeDur) {
-            preloadNext();
-        }
-    });
 }
 
-let preloaded = false;
-function preloadNext() {
-    if (preloaded) return;
-    const nextIdx = S.idx + 1 < S.queue.length ? S.idx + 1 : (S.repeat === 'all' ? 0 : -1);
-    if (nextIdx === -1) return;
-    const song = S.queue[nextIdx];
-    if (!song) return;
-    const url = bestUrl(song.downloadUrl);
-    if (url) { audioNext.src = url; audioNext.load(); preloaded = true; }
-}
-
-function crossfadeOut(el) {
-    let vol = el.volume;
+// Smooth fade out over duration (seconds)
+function fadeOut(el, duration) {
+    const steps = 20;
+    const interval = (duration * 1000) / steps;
+    const decrement = el.volume / steps;
     const fadeInterval = setInterval(() => {
-        vol -= 0.05;
-        if (vol <= 0) { el.pause(); el.volume = S.volume; clearInterval(fadeInterval); }
-        else el.volume = vol;
-    }, S.crossfadeDur * 1000 / 20);
+        if (el.volume - decrement <= 0) {
+            el.volume = 0;
+            el.pause();
+            el.currentTime = 0;
+            clearInterval(fadeInterval);
+        } else {
+            el.volume -= decrement;
+        }
+    }, interval);
 }
 
-audio.addEventListener('ended', () => { preloaded = false; playNext(); });
+// Smooth fade in over duration (seconds)
+function fadeIn(el, duration, targetVol) {
+    const steps = 20;
+    const interval = (duration * 1000) / steps;
+    const increment = targetVol / steps;
+    el.volume = 0;
+    const fadeInterval = setInterval(() => {
+        if (el.volume + increment >= targetVol) {
+            el.volume = targetVol;
+            clearInterval(fadeInterval);
+        } else {
+            el.volume += increment;
+        }
+    }, interval);
+}
+
+// Re-bind audio events to current active element
+function bindAudioEvents() {
+    // Remove old listeners by reassigning (both elements get the same handler)
+    [audio, audioB].forEach(el => {
+        el.onended = null;
+        el.ontimeupdate = null;
+    });
+    activeAudio.onended = () => { playNext(); };
+    activeAudio.ontimeupdate = handleTimeUpdate;
+}
+
+function handleTimeUpdate() {
+    if (!activeAudio.duration) return;
+    const pct = (activeAudio.currentTime / activeAudio.duration) * 100;
+    miniProgressFill.style.width = pct + '%';
+    ipProgressPlayed.style.width = pct + '%';
+    ipProgressKnob.style.left = `calc(${pct}% - 7px)`;
+    ipTimeLeft.textContent = fmtTime(activeAudio.currentTime);
+    ipTimeRight.textContent = fmtTime(activeAudio.duration - activeAudio.currentTime);
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SLEEP TIMER
@@ -483,7 +526,7 @@ function clearSleepTimer() {
 // EQUALIZER (Web Audio API)
 // ═══════════════════════════════════════════════════════════════════════════
 
-let audioCtx, sourceNode, gainNode, filters = {};
+let audioCtx, gainNode, filters = {};
 const EQ_PRESETS = {
     flat: [0,0,0,0,0],
     bass: [8,4,0,-1,-2],
@@ -534,10 +577,19 @@ function setupEQ() {
 function initAudio() {
     if (audioCtx) return;
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    sourceNode = audioCtx.createMediaElementSource(audio);
+    
+    // Connect both audio elements through EQ chain
+    const sourceA = audioCtx.createMediaElementSource(audio);
+    const sourceB = audioCtx.createMediaElementSource(audioB);
+    
+    // Merger to combine both sources
+    const merger = audioCtx.createChannelMerger(2);
+    sourceA.connect(merger, 0, 0);
+    sourceB.connect(merger, 0, 0);
+    
     gainNode = audioCtx.createGain();
 
-    let last = sourceNode;
+    let last = merger;
     EQ_BANDS.forEach((band, i) => {
         const f = audioCtx.createBiquadFilter();
         f.type = i === 0 ? 'lowshelf' : i === 4 ? 'highshelf' : 'peaking';
@@ -571,18 +623,17 @@ function setupMiniPlayer() {
     miniNextBtn.addEventListener('click', e => { e.stopPropagation(); playNext(); });
     miniInner.addEventListener('click', openPlayer);
 
-    audio.addEventListener('timeupdate', () => {
-        if (!audio.duration) return;
-        const pct = (audio.currentTime / audio.duration) * 100;
-        miniProgressFill.style.width = pct + '%';
-        ipProgressPlayed.style.width = pct + '%';
-        ipProgressKnob.style.left = `calc(${pct}% - 7px)`;
-        ipTimeLeft.textContent = fmtTime(audio.currentTime);
-        ipTimeRight.textContent = fmtTime(audio.duration - audio.currentTime);
-    });
+    // Bind time updates to both audio elements initially
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('ended', () => playNext());
+    audioB.addEventListener('timeupdate', handleTimeUpdate);
+    audioB.addEventListener('ended', () => playNext());
 
     audio.addEventListener('loadedmetadata', () => {
         ipTimeRight.textContent = fmtTime(audio.duration);
+    });
+    audioB.addEventListener('loadedmetadata', () => {
+        ipTimeRight.textContent = fmtTime(audioB.duration);
     });
 }
 
@@ -616,7 +667,7 @@ function setupImmersivePlayer() {
 
     // Progress seek
     setupDrag(ipProgressBar, pct => {
-        if (audio.duration) audio.currentTime = pct * audio.duration;
+        if (activeAudio.duration) activeAudio.currentTime = pct * activeAudio.duration;
     });
 
     // Tabs
@@ -860,10 +911,10 @@ function setupKeyboard() {
         if (e.target.tagName === 'INPUT') return;
         switch(e.code) {
             case 'Space': e.preventDefault(); togglePlay(); break;
-            case 'ArrowRight': e.shiftKey ? playNext() : (audio.duration && (audio.currentTime = Math.min(audio.duration, audio.currentTime+10))); break;
-            case 'ArrowLeft': e.shiftKey ? playPrev() : (audio.currentTime = Math.max(0, audio.currentTime-10)); break;
-            case 'ArrowUp': e.preventDefault(); S.volume = Math.min(1, S.volume+0.05); audio.volume = S.volume; break;
-            case 'ArrowDown': e.preventDefault(); S.volume = Math.max(0, S.volume-0.05); audio.volume = S.volume; break;
+            case 'ArrowRight': e.shiftKey ? playNext() : (activeAudio.duration && (activeAudio.currentTime = Math.min(activeAudio.duration, activeAudio.currentTime+10))); break;
+            case 'ArrowLeft': e.shiftKey ? playPrev() : (activeAudio.currentTime = Math.max(0, activeAudio.currentTime-10)); break;
+            case 'ArrowUp': e.preventDefault(); S.volume = Math.min(1, S.volume+0.05); activeAudio.volume = S.volume; break;
+            case 'ArrowDown': e.preventDefault(); S.volume = Math.max(0, S.volume-0.05); activeAudio.volume = S.volume; break;
             case 'Escape': closePlayer(); break;
             case 'KeyF': openPlayer(); break;
         }
