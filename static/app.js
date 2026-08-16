@@ -144,7 +144,7 @@ const Engine = (() => {
 // ═══════════════════════════════════════════════════════════════════
 
 const EQ = (() => {
-    let ctx = null, srcA = null, srcB = null, gain = null;
+    let ctx = null, gain = null, connected = false;
     const filters = [];
     const FREQS = [60, 250, 1000, 4000, 16000];
     const PRESETS = {
@@ -157,24 +157,25 @@ const EQ = (() => {
     };
 
     function init() {
-        if (ctx) return;
+        if (connected) return;
+        connected = true;
+        
         ctx = new (window.AudioContext || window.webkitAudioContext)();
         const deckA = document.getElementById('deckA');
         const deckB = document.getElementById('deckB');
-        srcA = ctx.createMediaElementSource(deckA);
-        srcB = ctx.createMediaElementSource(deckB);
+        
+        const srcA = ctx.createMediaElementSource(deckA);
+        const srcB = ctx.createMediaElementSource(deckB);
+
+        // Merge both sources into one chain
+        const merger = ctx.createGain();
+        merger.gain.value = 1;
+        srcA.connect(merger);
+        srcB.connect(merger);
 
         // Create filter chain
         gain = ctx.createGain();
         gain.gain.value = 1;
-
-        let prevA = srcA;
-        let prevB = srcB;
-
-        // Merge both sources
-        const merger = ctx.createGain(); // simple gain as merge point
-        srcA.connect(merger);
-        srcB.connect(merger);
 
         let last = merger;
         FREQS.forEach((freq, i) => {
@@ -208,8 +209,10 @@ const EQ = (() => {
     }
 
     function getPresets() { return PRESETS; }
+    function isConnected() { return connected; }
+    function resumeCtx() { if (ctx && ctx.state === 'suspended') ctx.resume(); }
 
-    return { init, setBand, setGain, applyPreset, getPresets };
+    return { init, setBand, setGain, applyPreset, getPresets, isConnected, resumeCtx };
 })();
 
 // ═══════════════════════════════════════════════════════════════════
@@ -422,8 +425,8 @@ function startPlay() {
     const song = S.queue[S.idx];
     if (!song) return;
 
-    // Init EQ on first play (requires user gesture)
-    EQ.init();
+    // Resume AudioContext if EQ was previously initialized (browser requires user gesture)
+    if (EQ.isConnected()) EQ.resumeCtx();
 
     const ok = Engine.play(song, S.crossfade, S.cfDur, actualVolume());
     if (!ok) { playNext(); return; }
@@ -475,6 +478,9 @@ function playPrev() {
 }
 
 function actualVolume() {
+    // When EQ is connected, gain node handles boost. Audio element just uses base volume.
+    // When EQ is NOT connected, we apply boost directly to element volume (capped at 1).
+    if (EQ.isConnected()) return S.volume;
     return Math.min(1, (S.volume * S.volBoost) / 100);
 }
 
@@ -659,7 +665,7 @@ function setupEQPanel() {
     bt.addEventListener('click', () => {
         S.bassBoost = !S.bassBoost;
         bt.classList.toggle('on', S.bassBoost);
-        EQ.init();
+        initEQIfNeeded();
         EQ.applyPreset(S.bassBoost ? 'bass' : S.eqPreset);
         syncSliders(S.bassBoost ? EQ.getPresets().bass : EQ.getPresets()[S.eqPreset]);
     });
@@ -671,7 +677,7 @@ function setupEQPanel() {
         $$('.eq-pill').forEach(p => p.classList.remove('active'));
         pill.classList.add('active');
         S.eqPreset = pill.dataset.p;
-        EQ.init();
+        initEQIfNeeded();
         const vals = EQ.applyPreset(S.eqPreset);
         syncSliders(vals);
         S.bassBoost = S.eqPreset === 'bass';
@@ -682,7 +688,7 @@ function setupEQPanel() {
     $$('.v-slider').forEach(sl => {
         sl.addEventListener('input', () => {
             const band = parseInt(sl.dataset.band);
-            EQ.init();
+            initEQIfNeeded();
             EQ.setBand(band, parseInt(sl.value));
             // Deselect preset
             $$('.eq-pill').forEach(p => p.classList.remove('active'));
@@ -694,10 +700,18 @@ function setupEQPanel() {
     vs.addEventListener('input', () => {
         S.volBoost = parseInt(vs.value);
         $('#volVal').textContent = S.volBoost + '%';
-        EQ.init();
-        EQ.setGain(S.volBoost / 100);
+        if (EQ.isConnected()) {
+            EQ.setGain(S.volBoost / 100);
+        }
         Engine.setVolume(actualVolume());
     });
+}
+
+function initEQIfNeeded() {
+    if (!EQ.isConnected()) {
+        EQ.init();
+    }
+    EQ.resumeCtx();
 }
 
 function syncSliders(vals) {
