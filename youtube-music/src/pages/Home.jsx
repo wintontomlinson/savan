@@ -157,12 +157,13 @@ export default function Home() {
         </div>
       )}
 
-      {/* Quick Picks - user's recently played */}
+      {/* Quick Picks - mix of liked + recently played, personalized */}
       {recentlyPlayed.length > 0 && (
         <section className="mb-8 px-2 animate-fade-in-up">
-          <h2 className="text-xl font-bold text-white mb-4">Quick Picks</h2>
+          <h2 className="text-xl font-bold text-white mb-1">Quick Picks</h2>
+          <p className="text-xs text-[#AAAAAA] mb-4">Based on what you listen to</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-            {recentlyPlayed.slice(0, 6).map((song) => (
+            {[...new Map([...likedSongs.slice(0, 3), ...recentlyPlayed.slice(0, 6)].map(s => [s.id, s])).values()].slice(0, 6).map((song) => (
               <button
                 key={song.id}
                 onClick={() => playSong(song, recentlyPlayed)}
