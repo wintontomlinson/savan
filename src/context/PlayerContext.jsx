@@ -47,6 +47,8 @@ export function PlayerProvider({ children }) {
 
   const cur = () => activeRef.current === 'A' ? audioA.current : audioB.current;
 
+  const playNextRef = useRef(null);
+
   // ─── Audio Setup ───
   useEffect(() => {
     audioA.current = new Audio();
@@ -68,7 +70,7 @@ export function PlayerProvider({ children }) {
     };
 
     const onMeta = () => setDuration(cur()?.duration || 0);
-    const onEnd = () => { if (!fadingRef.current) skipToNext(); };
+    const onEnd = () => { if (!fadingRef.current && playNextRef.current) playNextRef.current(); };
 
     [audioA.current, audioB.current].forEach(a => {
       a.addEventListener('timeupdate', onTime);
@@ -145,30 +147,6 @@ export function PlayerProvider({ children }) {
     }, ms);
   }
 
-  // ─── Skip (manual next / song ended without crossfade) ───
-  async function skipToNext() {
-    cancelFade();
-    const q = queueRef.current;
-
-    if (repeatMode === 'one') { cur().currentTime = 0; cur().play().catch(() => {}); return; }
-
-    if (q.length > 0) {
-      const idx = shuffleMode ? Math.floor(Math.random() * q.length) : 0;
-      const next = q[idx];
-      setQueue(prev => prev.filter((_, i) => i !== idx));
-      playDirect(next);
-      return;
-    }
-
-    // Fetch fresh
-    if (currentSong) {
-      const fresh = await getNextSongs(currentSong);
-      if (fresh.length > 0) { setQueue(fresh.slice(1)); setUpNext(fresh); playDirect(fresh[0]); return; }
-      resetPlayed();
-    }
-    setIsPlaying(false);
-  }
-
   function cancelFade() {
     if (fadeTimerRef.current) { clearInterval(fadeTimerRef.current); fadeTimerRef.current = null; }
     fadingRef.current = false;
@@ -204,7 +182,31 @@ export function PlayerProvider({ children }) {
     else { a?.play().catch(() => {}); setIsPlaying(true); }
   }, [currentSong, isPlaying]);
 
-  const playNext = useCallback(() => skipToNext(), [shuffleMode, repeatMode, currentSong]);
+  const playNext = useCallback(async () => {
+    cancelFade();
+    const q = queueRef.current;
+
+    if (repeatMode === 'one') { cur().currentTime = 0; cur().play().catch(() => {}); return; }
+
+    if (q.length > 0) {
+      const idx = shuffleMode ? Math.floor(Math.random() * q.length) : 0;
+      const next = q[idx];
+      setQueue(prev => prev.filter((_, i) => i !== idx));
+      playDirect(next);
+      return;
+    }
+
+    if (currentSong) {
+      const fresh = await getNextSongs(currentSong);
+      if (fresh.length > 0) { setQueue(fresh.slice(1)); setUpNext(fresh); playDirect(fresh[0]); return; }
+      resetPlayed();
+    }
+    setIsPlaying(false);
+  }, [shuffleMode, repeatMode, currentSong]);
+
+  // Keep ref updated for audio event handler
+  useEffect(() => { playNextRef.current = playNext; }, [playNext]);
+
   const playPrev = useCallback(() => { cur().currentTime = 0; setCurrentTime(0); }, []);
   const seekTo = useCallback(t => { const a = cur(); if (a) { a.currentTime = t; setCurrentTime(t); } }, []);
   const toggleShuffle = useCallback(() => setShuffle(p => !p), []);
