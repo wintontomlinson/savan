@@ -22,21 +22,23 @@ export const PlayerProvider = ({ children }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [likedSongs, setLikedSongs] = useState(() => {
-    const saved = localStorage.getItem('likedSongs');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('likedSongs');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
   const [toast, setToast] = useState(null);
 
   // Save liked songs to localStorage
   useEffect(() => {
-    localStorage.setItem('likedSongs', JSON.stringify(likedSongs));
+    try { localStorage.setItem('likedSongs', JSON.stringify(likedSongs)); } catch {}
   }, [likedSongs]);
 
   // Save last played to localStorage
   useEffect(() => {
-    if (currentSong) {
-      localStorage.setItem('lastPlayed', JSON.stringify(currentSong));
-    }
+    try { if (currentSong) localStorage.setItem('lastPlayed', JSON.stringify(currentSong)); } catch {}
   }, [currentSong]);
 
   // Simulate time progress
