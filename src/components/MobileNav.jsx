@@ -14,7 +14,7 @@ export default function MobileNav() {
         <NavLink key={i.to} to={i.to} className={({ isActive }) =>
           `flex flex-col items-center justify-center gap-0.5 py-2 px-5 rounded-xl transition-all ${isActive ? 'text-[#FF0000]' : 'text-[#555]'}`
         }>
-          <i.icon size={21} strokeWidth={isActive ? 2.5 : 1.5} />
+          <i.icon size={21} />
           <span className="text-[9px] font-medium">{i.label}</span>
         </NavLink>
       ))}
