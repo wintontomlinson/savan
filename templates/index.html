@@ -3,222 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-    <meta name="theme-color" content="#08080c">
+    <meta name="theme-color" content="#050508">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>Soniq — Feel the Sound</title>
+    <title>Soniq</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
 
-<!-- ████████ FULL-SCREEN PLAYER ████████ -->
-<div class="fs-player" id="fsPlayer">
-    <div class="fs-bg" id="fsBg"></div>
-    <div class="fs-dim"></div>
+<!-- ═══ FULL-SCREEN PLAYER ═══ -->
+<div class="fp" id="fp">
+    <div class="fp-bg" id="fpBg"></div>
+    <div class="fp-dim"></div>
+    <header class="fp-head"><button class="fp-x" id="fpX"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></button><span class="fp-from">NOW PLAYING</span><div style="width:38px"></div></header>
 
-    <header class="fs-header">
-        <button class="fs-close" id="fsClose"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></button>
-        <div class="fs-source"><span id="fsSource">NOW PLAYING</span></div>
-        <button class="fs-opt" id="fsOpt"><svg width="20" height="20" fill="currentColor"><circle cx="4" cy="10" r="2"/><circle cx="10" cy="10" r="2"/><circle cx="16" cy="10" r="2"/></svg></button>
-    </header>
+    <div class="fp-art-w"><div class="fp-art" id="fpArt"><img id="fpImg" src="" alt=""><div class="fp-art-ph"><svg width="48" height="48" fill="currentColor" opacity=".12" viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg></div></div><div class="fp-buf" id="fpBuf"></div></div>
 
-    <div class="fs-artwork-wrap">
-        <div class="fs-artwork" id="fsArtwork">
-            <img id="fsImg" src="" alt="">
-            <div class="fs-art-empty"><svg width="56" height="56" fill="currentColor" opacity=".15" viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg></div>
-        </div>
-        <div class="fs-buffer-ring" id="fsBufferRing"></div>
-    </div>
+    <div class="fp-info"><div class="fp-info-l"><h2 id="fpTitle">Soniq</h2><p id="fpArtist">Premium Music</p></div><button class="fp-like" id="fpLike"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button></div>
 
-    <div class="fs-meta">
-        <div class="fs-meta-text">
-            <h2 id="fsTitle">Soniq</h2>
-            <p id="fsArtistName">Feel the Sound</p>
-        </div>
-        <button class="fs-heart" id="fsHeart"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
-    </div>
+    <div class="fp-seek"><div class="fp-bar" id="fpBar"><div class="fp-buffered" id="fpBuffered"></div><div class="fp-played" id="fpPlayed"></div><div class="fp-knob" id="fpKnob"></div></div><div class="fp-times"><span id="fpT1">0:00</span><span id="fpT2">0:00</span></div></div>
 
-    <div class="fs-seek">
-        <div class="fs-seek-bar" id="fsSeekBar">
-            <div class="fs-seek-buffered" id="fsSeekBuffered"></div>
-            <div class="fs-seek-played" id="fsSeekPlayed"></div>
-            <div class="fs-seek-thumb" id="fsSeekThumb"></div>
-        </div>
-        <div class="fs-times"><span id="fsTimeNow">0:00</span><span id="fsTimeDur">0:00</span></div>
-    </div>
+    <div class="fp-ctrls"><button class="fp-c" id="fpShuffle"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg></button><button class="fp-c" id="fpPrev"><svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button><button class="fp-c fp-play" id="fpPlay"><svg id="fpIPlay" width="30" height="30" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg id="fpIPause" width="30" height="30" fill="currentColor" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg></button><button class="fp-c" id="fpNext"><svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button><button class="fp-c" id="fpRepeat"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg></button></div>
 
-    <div class="fs-controls">
-        <button class="fs-ctrl" id="fsShuffle"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg></button>
-        <button class="fs-ctrl" id="fsPrev"><svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
-        <button class="fs-ctrl fs-play-btn" id="fsPlayBtn">
-            <svg id="fsIconPlay" width="32" height="32" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-            <svg id="fsIconPause" width="32" height="32" fill="currentColor" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-        </button>
-        <button class="fs-ctrl" id="fsNext"><svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
-        <button class="fs-ctrl" id="fsRepeat"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg></button>
-    </div>
-
-    <!-- Bottom Tabs: Queue / EQ / Settings -->
-    <div class="fs-tabs">
-        <button class="fs-tab active" data-panel="queue">Queue</button>
-        <button class="fs-tab" data-panel="eq">EQ & Bass</button>
-        <button class="fs-tab" data-panel="settings">Settings</button>
-    </div>
-
-    <div class="fs-panels">
-        <!-- Queue Panel -->
-        <div class="fs-panel active" id="panelQueue">
-            <div class="fs-queue" id="fsQueue"><p class="empty-msg">Play a song to build your queue</p></div>
-        </div>
-
-        <!-- EQ Panel -->
-        <div class="fs-panel" id="panelEq">
-            <div class="eq-section">
-                <div class="eq-row">
-                    <span class="eq-label">Bass Boost</span>
-                    <button class="pill-toggle" id="bassToggle"><span class="pill-knob"></span></button>
-                </div>
-                <div class="eq-presets" id="eqPresets">
-                    <button class="eq-pill active" data-p="flat">Flat</button>
-                    <button class="eq-pill" data-p="bass">Bass</button>
-                    <button class="eq-pill" data-p="treble">Treble</button>
-                    <button class="eq-pill" data-p="vocal">Vocal</button>
-                    <button class="eq-pill" data-p="electronic">EDM</button>
-                    <button class="eq-pill" data-p="rock">Rock</button>
-                </div>
-                <div class="eq-sliders" id="eqSliders">
-                    <div class="eq-col"><input type="range" min="-12" max="12" value="0" class="v-slider" data-band="0"><span>60</span></div>
-                    <div class="eq-col"><input type="range" min="-12" max="12" value="0" class="v-slider" data-band="1"><span>250</span></div>
-                    <div class="eq-col"><input type="range" min="-12" max="12" value="0" class="v-slider" data-band="2"><span>1k</span></div>
-                    <div class="eq-col"><input type="range" min="-12" max="12" value="0" class="v-slider" data-band="3"><span>4k</span></div>
-                    <div class="eq-col"><input type="range" min="-12" max="12" value="0" class="v-slider" data-band="4"><span>16k</span></div>
-                </div>
-                <div class="eq-row vol-row">
-                    <span class="eq-label">Volume Boost</span>
-                    <span class="vol-val" id="volVal">100%</span>
-                </div>
-                <input type="range" min="50" max="200" value="100" class="h-slider" id="volSlider">
+    <div class="fp-tabs"><button class="fp-tab on" data-t="queue">Queue</button><button class="fp-tab" data-t="eq">EQ</button><button class="fp-tab" data-t="cfg">Settings</button></div>
+    <div class="fp-panels">
+        <div class="fp-panel on" id="pQueue"><div id="fpQueue"><p class="ph-msg">Play a song to see your queue</p></div></div>
+        <div class="fp-panel" id="pEq">
+            <div class="eq-box">
+                <div class="eq-r"><span>Bass Boost</span><button class="sw" id="swBass"><i></i></button></div>
+                <div class="eq-pills" id="eqPills"><button class="ep on" data-e="flat">Flat</button><button class="ep" data-e="bass">Bass</button><button class="ep" data-e="treble">Treble</button><button class="ep" data-e="vocal">Vocal</button><button class="ep" data-e="edm">EDM</button><button class="ep" data-e="rock">Rock</button></div>
+                <div class="eq-sl"><div class="eq-c"><input type="range" min="-12" max="12" value="0" class="vr" data-b="0"><span>60</span></div><div class="eq-c"><input type="range" min="-12" max="12" value="0" class="vr" data-b="1"><span>250</span></div><div class="eq-c"><input type="range" min="-12" max="12" value="0" class="vr" data-b="2"><span>1k</span></div><div class="eq-c"><input type="range" min="-12" max="12" value="0" class="vr" data-b="3"><span>4k</span></div><div class="eq-c"><input type="range" min="-12" max="12" value="0" class="vr" data-b="4"><span>16k</span></div></div>
+                <div class="eq-r"><span>Volume</span><span class="eq-v" id="eqV">100%</span></div>
+                <input type="range" min="50" max="200" value="100" class="hr" id="eqVol">
             </div>
         </div>
-
-        <!-- Settings Panel -->
-        <div class="fs-panel" id="panelSettings">
-            <div class="eq-section">
-                <div class="eq-row"><span class="eq-label">Crossfade</span><button class="pill-toggle" id="crossfadeToggle"><span class="pill-knob"></span></button></div>
-                <div class="eq-row"><span class="eq-label">Crossfade Duration</span><span class="cf-val" id="cfVal">5s</span></div>
-                <input type="range" min="1" max="12" value="5" class="h-slider" id="cfSlider">
-                <div class="eq-row" style="margin-top:16px"><span class="eq-label">Sleep Timer</span><span class="cf-val" id="timerVal">Off</span></div>
-                <div class="timer-btns" id="timerBtns">
-                    <button class="t-btn" data-m="15">15m</button>
-                    <button class="t-btn" data-m="30">30m</button>
-                    <button class="t-btn" data-m="60">1h</button>
-                    <button class="t-btn" data-m="0">Song end</button>
-                    <button class="t-btn t-btn-stop" data-m="-1" style="display:none">Stop</button>
-                </div>
-                <div class="eq-row" style="margin-top:16px"><span class="eq-label">Pre-buffer next songs</span><span class="cf-val">Always On</span></div>
+        <div class="fp-panel" id="pCfg">
+            <div class="eq-box">
+                <div class="eq-r"><span>Crossfade</span><button class="sw on" id="swCf"><i></i></button></div>
+                <div class="eq-r"><span>Duration</span><span class="eq-v" id="cfV">4s</span></div>
+                <input type="range" min="1" max="10" value="4" class="hr" id="cfDur">
+                <div class="eq-r" style="margin-top:18px"><span>Sleep Timer</span><span class="eq-v" id="tmV">Off</span></div>
+                <div class="tm-btns" id="tmBtns"><button class="tb" data-m="15">15m</button><button class="tb" data-m="30">30m</button><button class="tb" data-m="60">1h</button><button class="tb" data-m="0">Song end</button><button class="tb tb-stop" data-m="-1" style="display:none">Cancel</button></div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ████████ MAIN APP ████████ -->
+<!-- ═══ APP ═══ -->
 <div class="app" id="app">
-    <header class="topbar">
-        <div class="topbar-brand">
-            <svg class="brand-icon" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm3.5 14.5l-5-3v-6l5 3z"/></svg>
-            <span class="brand-name">Soniq</span>
-        </div>
-        <button class="topbar-search" id="openSearch"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 5L20.49 19l-5-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></button>
-    </header>
+    <header class="hdr"><div class="hdr-l"><svg class="hdr-icon" width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm3.5 14.5l-5-3v-6l5 3z"/></svg><span class="hdr-name">Soniq</span></div><button class="hdr-btn" id="btnSearch"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 5L20.49 19l-5-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></button></header>
 
-    <nav class="tab-nav" id="tabNav">
-        <button class="tn active" data-p="home">Home</button>
-        <button class="tn" data-p="explore">Explore</button>
-        <button class="tn" data-p="library">Library</button>
-    </nav>
+    <nav class="tabs"><button class="tab on" data-p="home">Home</button><button class="tab" data-p="explore">Explore</button><button class="tab" data-p="library">Library</button></nav>
 
-    <main class="content" id="content">
+    <main class="main">
         <!-- HOME -->
-        <section class="pg active" id="pgHome">
-            <div class="chips-row" id="chips">
-                <button class="chip active" data-q="all">All</button>
-                <button class="chip" data-q="energize">Energize</button>
-                <button class="chip" data-q="relax">Relax</button>
-                <button class="chip" data-q="romance">Romance</button>
-                <button class="chip" data-q="workout">Workout</button>
-                <button class="chip" data-q="focus">Focus</button>
-            </div>
-            <section class="shelf" id="shelfPicks"><h3 class="shelf-h">Quick picks</h3><div class="grid-list" id="gridPicks"></div></section>
-            <section class="shelf" id="shelfTrend"><h3 class="shelf-h">Trending</h3><div class="h-scroll" id="rowTrend"></div></section>
-            <section class="shelf" id="shelfNew"><h3 class="shelf-h">Fresh releases</h3><div class="h-scroll" id="rowNew"></div></section>
-            <section class="shelf" id="shelfArtists"><h3 class="shelf-h">Top artists</h3><div class="h-scroll h-scroll-artists" id="rowArtists"></div></section>
+        <section class="pg on" id="pgHome">
+            <div class="chips" id="homeChips"><button class="c on" data-q="all">All</button><button class="c" data-q="energize">Energize</button><button class="c" data-q="relax">Relax</button><button class="c" data-q="romance">Romance</button><button class="c" data-q="workout">Workout</button><button class="c" data-q="focus">Focus</button></div>
+            <section class="sec"><h3 class="sec-t">Quick picks</h3><div class="list" id="listPicks"></div></section>
+            <section class="sec"><h3 class="sec-t">Trending</h3><div class="row" id="rowTrend"></div></section>
+            <section class="sec"><h3 class="sec-t">New releases</h3><div class="row" id="rowNew"></div></section>
+            <section class="sec"><h3 class="sec-t">Artists</h3><div class="row row-round" id="rowArt"></div></section>
         </section>
 
         <!-- EXPLORE -->
         <section class="pg" id="pgExplore">
-            <h2 class="pg-title">Explore</h2>
-            <div class="mood-grid" id="moodGrid">
-                <button class="mood-tile" style="--mc:#e63946" onclick="moodPlay('Bollywood Hits')">Bollywood</button>
-                <button class="mood-tile" style="--mc:#457b9d" onclick="moodPlay('Pop Hits')">Pop</button>
-                <button class="mood-tile" style="--mc:#2a9d8f" onclick="moodPlay('Punjabi Songs')">Punjabi</button>
-                <button class="mood-tile" style="--mc:#e76f51" onclick="moodPlay('Hip Hop Rap')">Hip-Hop</button>
-                <button class="mood-tile" style="--mc:#6a4c93" onclick="moodPlay('Romantic Songs')">Romance</button>
-                <button class="mood-tile" style="--mc:#1d3557" onclick="moodPlay('Sad Songs')">Sad</button>
-                <button class="mood-tile" style="--mc:#264653" onclick="moodPlay('Chill Lofi')">Chill</button>
-                <button class="mood-tile" style="--mc:#f4a261" onclick="moodPlay('Party Dance')">Party</button>
-                <button class="mood-tile" style="--mc:#a8dadc" onclick="moodPlay('Devotional')">Devotional</button>
-                <button class="mood-tile" style="--mc:#bc6c25" onclick="moodPlay('Workout Gym')">Gym</button>
-                <button class="mood-tile" style="--mc:#7209b7" onclick="moodPlay('Sufi Music')">Sufi</button>
-                <button class="mood-tile" style="--mc:#3a86ff" onclick="moodPlay('Indie Music')">Indie</button>
+            <h2 class="pg-h">Explore</h2>
+            <h3 class="sec-t" style="padding:0 20px;margin-bottom:12px">Genres & Moods</h3>
+            <div class="moods" id="moods">
+                <button class="mood" style="--mc:#e63946" onclick="moodPlay('Bollywood Hits')">Bollywood</button>
+                <button class="mood" style="--mc:#457b9d" onclick="moodPlay('Pop Hits English')">Pop</button>
+                <button class="mood" style="--mc:#2a9d8f" onclick="moodPlay('Punjabi Songs')">Punjabi</button>
+                <button class="mood" style="--mc:#e76f51" onclick="moodPlay('Hip Hop Rap')">Hip-Hop</button>
+                <button class="mood" style="--mc:#6a4c93" onclick="moodPlay('Romantic Hindi')">Romance</button>
+                <button class="mood" style="--mc:#1d3557" onclick="moodPlay('Sad Songs Hindi')">Sad</button>
+                <button class="mood" style="--mc:#264653" onclick="moodPlay('Lofi Chill')">Lo-fi</button>
+                <button class="mood" style="--mc:#f4a261" onclick="moodPlay('Party Dance')">Party</button>
+                <button class="mood" style="--mc:#588157" onclick="moodPlay('Devotional Bhajan')">Bhakti</button>
+                <button class="mood" style="--mc:#bc6c25" onclick="moodPlay('Gym Workout')">Gym</button>
+                <button class="mood" style="--mc:#7209b7" onclick="moodPlay('Sufi Qawwali')">Sufi</button>
+                <button class="mood" style="--mc:#3a86ff" onclick="moodPlay('Indie India')">Indie</button>
             </div>
         </section>
 
         <!-- LIBRARY -->
         <section class="pg" id="pgLibrary">
-            <h2 class="pg-title">Library</h2>
-            <div id="libList" class="grid-list"></div>
-            <p class="empty-msg" id="libEmpty">Songs you play will appear here</p>
+            <h2 class="pg-h">Library</h2>
+            <div class="list" id="libList"></div>
+            <p class="ph-msg" id="libPh">Your recently played songs appear here</p>
         </section>
 
         <!-- SEARCH -->
         <section class="pg" id="pgSearch">
-            <div class="search-bar-w">
-                <div class="search-bar">
-                    <svg width="18" height="18" fill="currentColor" opacity=".5" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 5L20.49 19l-5-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                    <input id="searchInput" type="text" placeholder="Search songs, artists..." autocomplete="off" spellcheck="false">
-                    <button class="s-clear" id="sClear">&times;</button>
-                </div>
-            </div>
-            <div id="searchOut">
-                <div class="search-empty"><p>Type to search Soniq</p></div>
-            </div>
+            <div class="srch-w"><div class="srch"><svg width="18" height="18" fill="currentColor" opacity=".4" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 5L20.49 19l-5-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><input id="inp" type="text" placeholder="Search songs, artists..." autocomplete="off" spellcheck="false"><button class="srch-x" id="inpX">&times;</button></div></div>
+            <div id="sOut"><p class="ph-msg">Search for your favourite music</p></div>
         </section>
     </main>
 </div>
 
-<!-- ████████ MINI PLAYER ████████ -->
-<div class="mini" id="mini">
-    <div class="mini-prog"><div class="mini-prog-fill" id="miniProgFill"></div></div>
-    <div class="mini-body" id="miniBody">
-        <div class="mini-left">
-            <div class="mini-art" id="miniArt"><img id="miniImg" src="" alt=""></div>
-            <div class="mini-meta"><span class="mini-t" id="miniT">Soniq</span><span class="mini-a" id="miniA">Feel the Sound</span></div>
-        </div>
-        <div class="mini-right">
-            <button class="mini-btn" id="miniPlay"><svg id="mIconPlay" width="26" height="26" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg id="mIconPause" width="26" height="26" fill="currentColor" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg></button>
-            <button class="mini-btn" id="miniNext"><svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
-        </div>
+<!-- ═══ MINI PLAYER ═══ -->
+<div class="mp" id="mp">
+    <div class="mp-prog"><div class="mp-fill" id="mpFill"></div></div>
+    <div class="mp-body" id="mpBody">
+        <div class="mp-l"><div class="mp-art"><img id="mpImg" src="" alt=""></div><div class="mp-meta"><span class="mp-t" id="mpT">Soniq</span><span class="mp-s" id="mpS">Premium Music</span></div></div>
+        <div class="mp-r"><button class="mp-btn" id="mpPlay"><svg id="mpIPlay" width="26" height="26" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg id="mpIPause" width="26" height="26" fill="currentColor" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg></button><button class="mp-btn" id="mpNext"><svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button></div>
     </div>
 </div>
 
-<!-- Audio Engine -->
+<!-- Audio (two decks for real crossfade) -->
 <audio id="deckA" preload="auto"></audio>
+<audio id="deckB" preload="auto"></audio>
 
-<!-- Loader -->
-<div class="ld" id="ld"><div class="ld-ring"></div></div>
-
+<div class="ld" id="ld"><div class="ld-r"></div></div>
 <script src="/static/app.js"></script>
 </body>
 </html>
