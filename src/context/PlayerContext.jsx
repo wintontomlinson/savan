@@ -71,12 +71,13 @@ export function PlayerProvider({ children }) {
 
     const onMeta = () => setDuration(cur()?.duration || 0);
     const onEnd = () => { if (!fadingRef.current && playNextRef.current) playNextRef.current(); };
+    const onError = (e) => { console.warn('Audio error:', e?.target?.error?.message || 'unknown'); };
 
     [audioA.current, audioB.current].forEach(a => {
       a.addEventListener('timeupdate', onTime);
       a.addEventListener('loadedmetadata', onMeta);
       a.addEventListener('ended', onEnd);
-      a.addEventListener('error', onEnd);
+      a.addEventListener('error', onError);
     });
 
     return () => { audioA.current?.pause(); audioB.current?.pause(); if (fadeTimerRef.current) clearInterval(fadeTimerRef.current); };
@@ -154,30 +155,31 @@ export function PlayerProvider({ children }) {
 
   function playDirect(song) {
     if (!song) return;
+    cancelFade();
     audioA.current.pause(); audioA.current.src = '';
     audioB.current.pause(); audioB.current.src = '';
     activeRef.current = 'A';
     setCurrentSong(song);
     setCurrentTime(0);
-    setIsPlaying(true);
     addToHistory(song);
     if (song.audio) {
-      audioA.current.src = song.audio;
-      audioA.current.volume = volumeRef.current;
-      audioA.current.play().then(() => {
-        setDuration(audioA.current.duration || 0);
-      }).catch((e) => {
-        // Autoplay blocked - wait for user tap
-        console.warn('Playback blocked:', e.message);
-        setIsPlaying(false);
-        const resume = () => {
-          audioA.current.play().then(() => { setIsPlaying(true); setDuration(audioA.current.duration || 0); }).catch(() => {});
-          document.removeEventListener('touchstart', resume);
-          document.removeEventListener('click', resume);
-        };
-        document.addEventListener('touchstart', resume, { once: true });
-        document.addEventListener('click', resume, { once: true });
-      });
+      const a = audioA.current;
+      a.src = song.audio;
+      a.volume = volumeRef.current;
+      a.load();
+      const onCanPlay = () => {
+        a.removeEventListener('canplaythrough', onCanPlay);
+        a.play().then(() => {
+          setIsPlaying(true);
+          setDuration(a.duration || 0);
+        }).catch(() => {
+          // Autoplay blocked — user needs to tap play
+          setIsPlaying(false);
+        });
+      };
+      a.addEventListener('canplaythrough', onCanPlay);
+    } else {
+      setIsPlaying(false);
     }
   }
 
