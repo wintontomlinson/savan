@@ -1,20 +1,18 @@
-import{usePlayer}from'../context/PlayerContext';
-import{X,CheckCircle,Info,AlertCircle}from'lucide-react';
+import { usePlayer } from '../context/PlayerContext';
+import { CheckCircle, Info, X } from 'lucide-react';
 
-export default function Toast(){
-  const{toasts,dismissToast}=usePlayer();
-  if(!toasts.length)return null;
-  const icons={success:CheckCircle,info:Info,error:AlertCircle};
-  const colors={success:'text-green-400',info:'text-[#AAAAAA]',error:'text-red-400'};
-  return(
-    <div className="fixed bottom-24 left-4 z-[100] space-y-2">
-      {toasts.map(t=>{const Icon=icons[t.type]||Info;return(
-        <div key={t.id} className="flex items-center gap-2 bg-[#323232] border border-[#484848] px-4 py-3 rounded-xl shadow-2xl min-w-[250px] animate-[slideIn_0.3s_ease-out]">
-          <Icon size={16} className={colors[t.type]||colors.info}/>
-          <span className="text-sm text-white flex-1">{t.msg}</span>
-          <button onClick={()=>dismissToast(t.id)} className="text-[#717171] hover:text-white"><X size={14}/></button>
+export default function Toast() {
+  const { toasts, dismissToast } = usePlayer();
+  if (!toasts.length) return null;
+  return (
+    <div className="fixed bottom-28 md:bottom-24 left-1/2 -translate-x-1/2 z-[100] space-y-2 w-[90%] max-w-[300px]">
+      {toasts.map(t => (
+        <div key={t.id} className="flex items-center gap-2 bg-[#222] border border-[#333] px-4 py-3 rounded-2xl shadow-2xl animate-scale">
+          {t.type === 'success' ? <CheckCircle size={16} className="text-green-400 shrink-0" /> : <Info size={16} className="text-[#888] shrink-0" />}
+          <span className="text-[13px] text-white flex-1">{t.msg}</span>
+          <button onClick={() => dismissToast(t.id)} className="text-[#555] shrink-0"><X size={14} /></button>
         </div>
-      );})}
+      ))}
     </div>
   );
 }

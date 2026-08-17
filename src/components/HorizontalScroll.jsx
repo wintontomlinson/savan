@@ -1,20 +1,18 @@
-import{useRef}from'react';
-import{ChevronLeft,ChevronRight}from'lucide-react';
+import { useRef } from 'react';
+import { ChevronRight } from 'lucide-react';
 
-export default function HorizontalScroll({title,seeAll,children}){
-  const ref=useRef(null);
-  const scroll=(d)=>ref.current?.scrollBy({left:d==='l'?-300:300,behavior:'smooth'});
-  return(
-    <section className="mb-8">
-      <div className="flex items-center justify-between mb-3 px-1">
-        <h2 className="text-lg font-semibold text-white">{title}</h2>
-        <div className="flex items-center gap-2">
-          {seeAll&&<button className="text-xs text-[#AAAAAA] hover:text-white">See all</button>}
-          <button onClick={()=>scroll('l')} className="hidden sm:flex w-7 h-7 items-center justify-center rounded-full bg-white/5 hover:bg-white/10"><ChevronLeft size={16} className="text-white"/></button>
-          <button onClick={()=>scroll('r')} className="hidden sm:flex w-7 h-7 items-center justify-center rounded-full bg-white/5 hover:bg-white/10"><ChevronRight size={16} className="text-white"/></button>
-        </div>
+export default function HorizontalScroll({ title, children }) {
+  const ref = useRef(null);
+  return (
+    <section className="mb-7 animate-in">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-[15px] sm:text-[17px] font-bold text-white">{title}</h2>
+        <button onClick={() => ref.current?.scrollBy({ left: 200, behavior: 'smooth' })}
+          className="text-[12px] text-[#FF0000] font-medium flex items-center gap-0.5 active:opacity-60">
+          More <ChevronRight size={14} />
+        </button>
       </div>
-      <div ref={ref} className="flex gap-4 overflow-x-auto scroll-smooth pb-2" style={{scrollbarWidth:'none'}}>{children}</div>
+      <div ref={ref} className="flex gap-3 sm:gap-4 scroll-x pb-1">{children}</div>
     </section>
   );
 }

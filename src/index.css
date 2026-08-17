@@ -5,26 +5,18 @@
   html, body, #root {
     height: 100%;
     overflow: hidden;
-    background: #0a0a0a;
+    background: #080808;
     color: #fff;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
   }
 }
 
-/* Scrollable areas */
-.scroll-area {
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-.scroll-area::-webkit-scrollbar { display: none; }
-.scroll-x {
-  overflow-x: auto;
-  scrollbar-width: none;
-}
+/* Scroll */
+.scroll-y { overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.scroll-y::-webkit-scrollbar { display: none; }
+.scroll-x { overflow-x: auto; scrollbar-width: none; }
 .scroll-x::-webkit-scrollbar { display: none; }
 
 /* Equalizer */
@@ -40,4 +32,17 @@
 .eq-bar:nth-child(4) { animation: eq4 0.9s ease-in-out infinite; }
 .eq-bar:nth-child(5) { animation: eq5 1.1s ease-in-out infinite; }
 
+/* Animations */
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+@keyframes scaleIn { from{opacity:0;transform:scale(0.95)} to{opacity:1;transform:scale(1)} }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+@keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+
+.animate-in { animation: fadeIn 0.3s ease-out both; }
+.animate-up { animation: slideUp 0.35s cubic-bezier(0.32,0.72,0,1) both; }
+.animate-scale { animation: scaleIn 0.2s ease-out both; }
+.shimmer { background: linear-gradient(90deg,#1a1a1a 25%,#252525 50%,#1a1a1a 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+
+/* Glassmorphism */
+.glass { background: rgba(10,10,10,0.85); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); }

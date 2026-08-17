@@ -12,10 +12,10 @@ export default function MobileNav() {
     <div className="flex items-center justify-around h-[52px]">
       {items.map(i => (
         <NavLink key={i.to} to={i.to} className={({ isActive }) =>
-          `flex flex-col items-center justify-center gap-0.5 min-w-[60px] py-1.5 ${isActive ? 'text-[#FF0000]' : 'text-[#555]'}`
+          `flex flex-col items-center justify-center gap-0.5 py-2 px-5 rounded-xl transition-all ${isActive ? 'text-[#FF0000]' : 'text-[#555]'}`
         }>
-          <i.icon size={22} />
-          <span className="text-[10px] font-medium">{i.label}</span>
+          <i.icon size={21} strokeWidth={isActive ? 2.5 : 1.5} />
+          <span className="text-[9px] font-medium">{i.label}</span>
         </NavLink>
       ))}
     </div>

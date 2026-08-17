@@ -7,24 +7,24 @@ export default function SongCard({ song }) {
   const isActive = currentSong?.id === song.id;
 
   return (
-    <div className="group flex-shrink-0 w-[130px] sm:w-[150px] md:w-[160px] cursor-pointer active:scale-95 transition-transform" onClick={() => playSong(song)}>
-      <div className="relative aspect-square rounded-xl overflow-hidden mb-1.5 shadow-md">
-        <img src={song.thumbnail} alt={song.title} className="w-full h-full object-cover" />
-        {/* Play overlay */}
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <div className="w-10 h-10 bg-[#FF0000] rounded-full flex items-center justify-center shadow-lg">
-            <Play size={16} className="text-white ml-0.5" fill="white" />
+    <div className="group flex-shrink-0 w-[130px] sm:w-[150px] md:w-[160px] cursor-pointer" onClick={() => playSong(song)}>
+      <div className="relative aspect-square rounded-2xl overflow-hidden mb-2 shadow-lg shadow-black/40 ring-1 ring-white/5 transition-transform duration-200 group-active:scale-95 group-hover:ring-white/10">
+        <img src={song.thumbnail} alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+        {/* Hover overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+          <div className="w-11 h-11 bg-[#FF0000] rounded-full flex items-center justify-center shadow-xl shadow-red-500/30 transform scale-75 group-hover:scale-100 transition-transform duration-200">
+            <Play size={18} className="text-white ml-0.5" fill="white" />
           </div>
         </div>
-        {/* Equalizer when playing */}
+        {/* Playing badge */}
         {isActive && isPlaying && (
-          <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm rounded-full px-2 py-1">
-            <Equalizer size="sm" />
+          <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm rounded-full px-2 py-1">
+            <Equalizer />
           </div>
         )}
       </div>
-      <p className={`text-[12px] sm:text-[13px] font-medium truncate ${isActive ? 'text-[#FF0000]' : 'text-white'}`}>{song.title}</p>
-      <p className="text-[10px] sm:text-[11px] text-[#888] truncate">{song.artist}</p>
+      <p className={`text-[12px] sm:text-[13px] font-medium truncate transition-colors ${isActive ? 'text-[#FF0000]' : 'text-white'}`}>{song.title}</p>
+      <p className="text-[10px] sm:text-[11px] text-[#666] truncate">{song.artist}</p>
     </div>
   );
 }
