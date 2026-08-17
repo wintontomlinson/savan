@@ -1,14 +1,14 @@
 import{Play,Pause,SkipBack,SkipForward,Shuffle,Repeat,Repeat1,Heart,ChevronDown,Volume2,VolumeX,ListPlus,Share2}from'lucide-react';
 import{usePlayer}from'../context/PlayerContext';
-import{formatDuration,lyrics}from'../data/mockData';
+import{formatDuration}from'../data/mockData';
 
 export default function ExpandedPlayer(){
   const{currentSong,isPlaying,togglePlay,playNext,playPrev,currentTime,duration,seekTo,volume,setVolume,isMuted,toggleMute,shuffleMode,toggleShuffle,repeatMode,cycleRepeat,toggleLike,likedSongs,isExpanded,setExpanded,showToast}=usePlayer();
   if(!isExpanded||!currentSong)return null;
   const liked=likedSongs.includes(currentSong.id);
   const progress=duration>0?(currentTime/duration)*100:0;
-  const songLyrics=lyrics[currentSong.id]||null;
-  const currentLineIdx=songLyrics?Math.min(Math.floor(currentTime/(duration/songLyrics.length)),songLyrics.length-1):0;
+  const songLyrics=null;
+  const currentLineIdx=0;
 
   return(
     <div className="fixed inset-0 z-[60] flex flex-col animate-[slideUp_0.35s_ease-out]">

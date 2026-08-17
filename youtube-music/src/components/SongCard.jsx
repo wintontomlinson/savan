@@ -1,6 +1,5 @@
 import{Play}from'lucide-react';
 import{usePlayer}from'../context/PlayerContext';
-import{songs}from'../data/mockData';
 import ContextMenu from'./ContextMenu';
 
 export default function SongCard({song,size='md'}){
@@ -9,7 +8,7 @@ export default function SongCard({song,size='md'}){
   const w=size==='sm'?'w-[130px]':size==='lg'?'w-[200px]':'w-[160px]';
 
   return(
-    <div className={`group flex-shrink-0 ${w} cursor-pointer`} onClick={()=>playSong(song,songs)}>
+    <div className={`group flex-shrink-0 ${w} cursor-pointer`} onClick={()=>playSong(song)}>
       <div className="relative aspect-square rounded-lg overflow-hidden mb-2 shadow-md">
         <img src={song.thumbnail} alt={song.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"/>
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
