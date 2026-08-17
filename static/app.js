@@ -147,6 +147,12 @@ function ps(i){S.queue=S._sr||[];S.idx=i;play()}window.ps=ps;
 function play(){
     const s=S.queue[S.idx];if(!s)return;
     const url=bUrl(s.downloadUrl);if(!url){playNext();return}
+
+    // Init EQ on first play (user gesture required by browser)
+    // This connects both decks BEFORE playing — no interruption
+    initEQ();
+    resumeEQ();
+
     const ok=playTrack(url);if(!ok){playNext();return}
     S.playing=true;updUI(s);updQ();updLib();
 }
@@ -217,30 +223,85 @@ function setupFP(){
     $('#fp').addEventListener('touchend',e=>{if(e.changedTouches[0].clientY-sy>100)$('#fp').classList.remove('open')},{passive:true});
 }
 
-// ─── EQ ───
-let eqCtx,eqFilters=[],eqGain,eqOn=false;
+// ─── EQ (both decks always connected, flat by default) ───
+let eqCtx=null,eqFilters=[],eqGain=null,eqReady=false;
 const FREQS=[60,250,1000,4000,16000];
 const PRESETS={flat:[0,0,0,0,0],bass:[9,5,0,-1,-2],treble:[-2,0,0,3,7],vocal:[-2,0,5,4,1],edm:[6,3,-2,3,5],rock:[5,3,-1,4,3]};
 
-function connectEQ(){
-    if(eqOn)return;eqOn=true;
+// Called once on first user gesture — connects BOTH decks through EQ
+function initEQ(){
+    if(eqReady)return;
+    eqReady=true;
     eqCtx=new(window.AudioContext||window.webkitAudioContext)();
-    // Connect ONLY activeDeck (the one currently playing)
-    const src=eqCtx.createMediaElementSource(activeDeck);
-    eqGain=eqCtx.createGain();eqGain.gain.value=1;
-    let last=src;
-    FREQS.forEach((f,i)=>{const fl=eqCtx.createBiquadFilter();fl.type=i===0?'lowshelf':i===4?'highshelf':'peaking';if(fl.type==='peaking')fl.Q.value=1.2;fl.frequency.value=f;fl.gain.value=0;eqFilters.push(fl);last.connect(fl);last=fl});
-    last.connect(eqGain);eqGain.connect(eqCtx.destination);
+
+    // Create sources for BOTH decks
+    const srcA=eqCtx.createMediaElementSource(deckA);
+    const srcB=eqCtx.createMediaElementSource(deckB);
+
+    // Gain node for volume boost
+    eqGain=eqCtx.createGain();
+    eqGain.gain.value=1;
+
+    // Build filter chain
+    let lastA=srcA, lastB=srcB;
+    FREQS.forEach((f,i)=>{
+        const flA=eqCtx.createBiquadFilter();
+        flA.type=i===0?'lowshelf':i===4?'highshelf':'peaking';
+        if(flA.type==='peaking')flA.Q.value=1.2;
+        flA.frequency.value=f;flA.gain.value=0;
+
+        const flB=eqCtx.createBiquadFilter();
+        flB.type=flA.type;
+        if(flB.type==='peaking')flB.Q.value=1.2;
+        flB.frequency.value=f;flB.gain.value=0;
+
+        eqFilters.push({a:flA,b:flB});
+        lastA.connect(flA);lastA=flA;
+        lastB.connect(flB);lastB=flB;
+    });
+
+    // Both chains merge into same gain → destination
+    lastA.connect(eqGain);
+    lastB.connect(eqGain);
+    eqGain.connect(eqCtx.destination);
+}
+
+// Resume AudioContext (browser suspends until user gesture)
+function resumeEQ(){if(eqCtx&&eqCtx.state==='suspended')eqCtx.resume()}
+
+function setEQBand(i,val){
+    if(!eqFilters[i])return;
+    eqFilters[i].a.gain.value=val;
+    eqFilters[i].b.gain.value=val;
+}
+
+function applyP(name){
+    const p=PRESETS[name];if(!p)return;
+    p.forEach((v,i)=>setEQBand(i,v));
+    $$('.vr').forEach((sl,i)=>{sl.value=p[i]||0});
+    $$('.ep').forEach(x=>x.classList.toggle('on',x.dataset.e===name));
 }
 
 function setupEQ(){
-    $('#swBass').addEventListener('click',()=>{const on=!$('#swBass').classList.contains('on');$('#swBass').classList.toggle('on',on);connectEQ();applyP(on?'bass':'flat')});
-    $('#eqPills').addEventListener('click',e=>{const p=e.target.closest('.ep');if(!p)return;$$('.ep').forEach(x=>x.classList.remove('on'));p.classList.add('on');connectEQ();applyP(p.dataset.e)});
-    $$('.vr').forEach(sl=>sl.addEventListener('input',()=>{connectEQ();const i=+sl.dataset.b;if(eqFilters[i])eqFilters[i].gain.value=+sl.value;$$('.ep').forEach(x=>x.classList.remove('on'))}));
-    $('#eqVol').addEventListener('input',()=>{const v=+$('#eqVol').value;$('#eqV').textContent=v+'%';if(eqOn)eqGain.gain.value=v/100;else activeDeck.volume=Math.min(1,S.vol*v/100)});
+    $('#swBass').addEventListener('click',()=>{
+        const on=!$('#swBass').classList.contains('on');
+        $('#swBass').classList.toggle('on',on);
+        applyP(on?'bass':'flat');
+    });
+    $('#eqPills').addEventListener('click',e=>{
+        const p=e.target.closest('.ep');if(!p)return;
+        applyP(p.dataset.e);
+    });
+    $$('.vr').forEach(sl=>sl.addEventListener('input',()=>{
+        setEQBand(+sl.dataset.b,+sl.value);
+        $$('.ep').forEach(x=>x.classList.remove('on'));
+    }));
+    $('#eqVol').addEventListener('input',()=>{
+        const v=+$('#eqVol').value;
+        $('#eqV').textContent=v+'%';
+        if(eqGain)eqGain.gain.value=v/100;
+    });
 }
-
-function applyP(name){const p=PRESETS[name];if(!p)return;p.forEach((v,i)=>{if(eqFilters[i])eqFilters[i].gain.value=v});$$('.vr').forEach((sl,i)=>{sl.value=p[i]||0});$$('.ep').forEach(x=>x.classList.toggle('on',x.dataset.e===name))}
 
 // ─── Settings ───
 function setupCfg(){
