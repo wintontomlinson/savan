@@ -87,23 +87,56 @@ export function getSmartQueries(currentSong) {
   return queries;
 }
 
-// Build related song queries for auto-next (prioritized)
+// Build related song queries for auto-next (rotates between similar artists)
 export function getRelatedQueries(song) {
   if (!song) return [];
   const queries = [];
   const artist = song.artist?.split(',')[0]?.trim();
+  const lang = song.language || 'hindi';
 
-  // Priority 1: Same artist
-  if (artist) queries.push(`${artist} songs`);
+  // Related artists map - when playing one artist, suggest others in same scene
+  const relatedArtists = {
+    // Punjabi scene
+    'Karan Aujla': ['Sidhu Moosewala', 'AP Dhillon', 'Shubh', 'Diljit Dosanjh', 'Cheema Y'],
+    'AP Dhillon': ['Karan Aujla', 'Shubh', 'Sidhu Moosewala', 'Diljit Dosanjh', 'Cheema Y'],
+    'Sidhu Moosewala': ['Karan Aujla', 'AP Dhillon', 'Shubh', 'Cheema Y', 'Amrit Maan'],
+    'Shubh': ['AP Dhillon', 'Karan Aujla', 'Sidhu Moosewala', 'Cheema Y', 'Diljit Dosanjh'],
+    'Diljit Dosanjh': ['Karan Aujla', 'AP Dhillon', 'Amrit Maan', 'Sidhu Moosewala', 'Babbu Maan'],
+    'Cheema Y': ['Karan Aujla', 'Sidhu Moosewala', 'Shubh', 'AP Dhillon', 'Singga'],
+    // Bollywood
+    'Arijit Singh': ['Jubin Nautiyal', 'B Praak', 'Atif Aslam', 'Pritam', 'Vishal Mishra'],
+    'Jubin Nautiyal': ['Arijit Singh', 'B Praak', 'Vishal Mishra', 'Darshan Raval', 'Stebin Ben'],
+    'B Praak': ['Arijit Singh', 'Jubin Nautiyal', 'Vishal Mishra', 'Ammy Virk', 'Jaani'],
+    'Pritam': ['Arijit Singh', 'Vishal Shekhar', 'A.R. Rahman', 'Sachin-Jigar', 'Amit Trivedi'],
+    'Atif Aslam': ['Arijit Singh', 'Rahat Fateh Ali Khan', 'B Praak', 'Jubin Nautiyal'],
+    // English
+    'The Weeknd': ['Drake', 'Post Malone', 'Dua Lipa', 'Travis Scott', 'Billie Eilish'],
+    'Drake': ['The Weeknd', 'Post Malone', 'Travis Scott', 'J. Cole', 'Kendrick Lamar'],
+    'Taylor Swift': ['Ed Sheeran', 'Dua Lipa', 'Billie Eilish', 'Olivia Rodrigo', 'Ariana Grande'],
+    'Dua Lipa': ['The Weeknd', 'Taylor Swift', 'Harry Styles', 'Olivia Rodrigo'],
+    'Ed Sheeran': ['Taylor Swift', 'Shawn Mendes', 'Dua Lipa', 'Coldplay', 'Post Malone'],
+  };
 
-  // Priority 2: Same album
-  if (song.album) queries.push(`${song.album}`);
+  // Priority 1: Same artist (but only 2-3 songs)
+  if (artist) queries.push(`${artist} top songs`);
 
-  // Priority 3: Same language + similar vibe
-  if (song.language && artist) queries.push(`${song.language} ${artist} similar`);
+  // Priority 2: Related artists from the same scene
+  const related = relatedArtists[artist];
+  if (related) {
+    // Pick 2-3 random related artists
+    const shuffled = [...related].sort(() => Math.random() - 0.5);
+    shuffled.slice(0, 3).forEach(a => {
+      queries.push(`${a} top songs`);
+    });
+  } else {
+    // Unknown artist - try language-based similar
+    if (lang === 'punjabi') queries.push('Karan Aujla Shubh AP Dhillon top', 'Sidhu Moosewala Cheema Y songs');
+    else if (lang === 'hindi') queries.push('Arijit Singh Jubin Nautiyal latest', 'B Praak Vishal Mishra songs');
+    else queries.push(`${lang} top artists songs 2024`);
+  }
 
-  // Priority 4: Same language trending
-  if (song.language) queries.push(`${song.language} trending`);
+  // Priority 3: Language-based trending (fallback)
+  queries.push(`${lang} latest hits 2024`);
 
   return queries;
 }

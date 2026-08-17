@@ -38,15 +38,21 @@ export function PlayerProvider({children}){
     async function fetchRelated(){
       const queries=getRelatedQueries(currentSong);
       if(!queries.length)return;
-      const results=await searchSongs(queries[0],20);
-      // Filter out already played songs
-      const filtered=results.filter(s=>!playedIds.current.has(s.id));
-      setUpNext(filtered);
-      // If queue is empty, auto-fill with unique songs
-      setQueue(prev=>{
-        if(prev.length>0)return prev;
-        return filtered.slice(0,10);
+      // Fetch from multiple queries to get mixed artists
+      let allSongs=[];
+      for(const q of queries.slice(0,3)){
+        const results=await searchSongs(q,8);
+        allSongs=[...allSongs,...results];
+      }
+      // Deduplicate and filter played
+      const seen=new Set();
+      const unique=allSongs.filter(s=>{
+        if(seen.has(s.id)||playedIds.current.has(s.id))return false;
+        seen.add(s.id);return true;
       });
+      setUpNext(unique);
+      // Auto-fill queue with mixed artists (max 8)
+      setQueue(prev=>prev.length>0?prev:unique.slice(0,8));
     }
     fetchRelated();
   },[currentSong]);
@@ -87,14 +93,18 @@ export function PlayerProvider({children}){
       return;
     }
 
-    // Queue empty — fetch related songs, exclude already played
+    // Queue empty — fetch from related artists (rotates between artists)
     const queries=getRelatedQueries(currentSong);
+    // Try each query — first one that gives unplayed songs wins
     for(const q of queries){
-      const results=await searchSongs(q,20);
+      const results=await searchSongs(q,15);
       const filtered=results.filter(s=>!playedIds.current.has(s.id));
-      if(filtered.length>0){
+      if(filtered.length>=2){
+        // Take 2-3 songs from this artist, then add from next queries
+        const take=Math.min(3,filtered.length);
         const next=filtered[0];
-        setQueue(filtered.slice(1,10));
+        const remaining=filtered.slice(1,take+3);
+        setQueue(remaining);
         setUpNext(filtered);
         setCurrentSong(next);setCurrentTime(0);setIsPlaying(true);
         playedIds.current.add(next.id);
@@ -104,9 +114,13 @@ export function PlayerProvider({children}){
       }
     }
 
-    // All related played — reset and stop (or clear history for fresh start)
-    if(repeatMode==='all'){playedIds.current.clear();audioRef.current.currentTime=0;audioRef.current.play().catch(()=>{});}
-    else setIsPlaying(false);
+    // All exhausted — reset played history and try again
+    if(playedIds.current.size>30){
+      playedIds.current.clear();
+      const q=getRelatedQueries(currentSong);
+      if(q.length){const r=await searchSongs(q[0],10);if(r.length){playSong(r[0],r);return;}}
+    }
+    setIsPlaying(false);
   },[queue,shuffleMode,repeatMode,currentSong]);
 
   const playPrev=useCallback(()=>{if(currentTime>3){audioRef.current.currentTime=0;setCurrentTime(0);}},[currentTime]);
