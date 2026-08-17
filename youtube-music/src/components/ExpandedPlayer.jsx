@@ -1,110 +1,52 @@
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, Volume2, VolumeX, ChevronDown } from 'lucide-react';
-import { usePlayer } from '../context/PlayerContext';
-import { formatDuration } from '../data/data';
+import{Play,Pause,SkipBack,SkipForward,Shuffle,Repeat,Repeat1,Heart,ChevronDown,Volume2,VolumeX,ListPlus,Share2}from'lucide-react';
+import{usePlayer}from'../context/PlayerContext';
+import{formatDuration,lyrics}from'../data/mockData';
 
-export default function ExpandedPlayer() {
-  const {
-    currentSong, isPlaying, togglePlay, handleNext, handlePrevious,
-    shuffleMode, toggleShuffle, repeatMode, toggleRepeat,
-    currentTime, duration, seekTo, volume, setVolume,
-    toggleLike, isLiked, isExpanded, setIsExpanded, isBuffering
-  } = usePlayer();
+export default function ExpandedPlayer(){
+  const{currentSong,isPlaying,togglePlay,playNext,playPrev,currentTime,duration,seekTo,volume,setVolume,isMuted,toggleMute,shuffleMode,toggleShuffle,repeatMode,cycleRepeat,toggleLike,likedSongs,isExpanded,setExpanded,showToast}=usePlayer();
+  if(!isExpanded||!currentSong)return null;
+  const liked=likedSongs.includes(currentSong.id);
+  const progress=duration>0?(currentTime/duration)*100:0;
+  const songLyrics=lyrics[currentSong.id]||null;
+  const currentLineIdx=songLyrics?Math.min(Math.floor(currentTime/(duration/songLyrics.length)),songLyrics.length-1):0;
 
-  if (!isExpanded || !currentSong) return null;
-
-  const liked = isLiked(currentSong.id);
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
-
-  return (
-    <div className="fixed inset-0 z-[70] flex flex-col animate-slide-up">
-      {/* Background */}
-      <div className="absolute inset-0">
-        <img src={currentSong.image} alt="" className="w-full h-full object-cover blur-[80px] scale-150 opacity-40" />
-        <div className="absolute inset-0 bg-black/60"></div>
-      </div>
-
-      <div className="relative flex-1 flex flex-col">
-        {/* Handle bar (mobile) + Close */}
-        <div className="flex items-center justify-between px-5 pt-4 pb-2">
-          <button onClick={() => setIsExpanded(false)} className="p-1 active:scale-90 transition-transform">
-            <ChevronDown size={28} className="text-white/80" />
-          </button>
-          <p className="text-[12px] text-white/60 font-medium uppercase tracking-wider">Playing from Library</p>
-          <div className="w-8"></div>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 flex flex-col items-center justify-center px-8 sm:px-12 pb-8 gap-6 sm:gap-8">
-          {/* Album Art */}
-          <div className="w-[240px] h-[240px] sm:w-[300px] sm:h-[300px] md:w-[340px] md:h-[340px] rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
-            <img src={currentSong.image} alt="" className="w-full h-full object-cover" />
+  return(
+    <div className="fixed inset-0 z-[60] flex flex-col animate-[slideUp_0.35s_ease-out]">
+      <div className="absolute inset-0"><img src={currentSong.thumbnail} alt="" className="w-full h-full object-cover blur-[80px] scale-125 opacity-30"/><div className="absolute inset-0 bg-black/70"/></div>
+      <div className="relative flex-1 flex flex-col lg:flex-row overflow-y-auto">
+        {/* Left/Main */}
+        <div className="flex-1 flex flex-col items-center justify-center px-6 py-4 gap-5">
+          <div className="w-full flex justify-between items-center"><button onClick={()=>setExpanded(false)} className="p-2 hover:bg-white/10 rounded-full"><ChevronDown size={24} className="text-white"/></button><p className="text-xs text-[#AAAAAA]">Now Playing</p><div className="w-10"/></div>
+          <img src={currentSong.thumbnail} alt="" className={`w-[220px] h-[220px] sm:w-[280px] sm:h-[280px] rounded-2xl object-cover shadow-2xl ${isPlaying?'animate-[spin_30s_linear_infinite]':''}`} style={{animationPlayState:isPlaying?'running':'paused'}}/>
+          <div className="text-center w-full max-w-sm">
+            <h1 className="text-xl font-bold text-white truncate">{currentSong.title}</h1>
+            <p className="text-sm text-[#AAAAAA]">{currentSong.artist}</p>
           </div>
-
-          {/* Info + Controls */}
-          <div className="w-full max-w-[340px] sm:max-w-[380px]">
-            {/* Title & Like */}
-            <div className="flex items-start justify-between mb-6">
-              <div className="min-w-0 flex-1 mr-4">
-                <h1 className="text-[20px] sm:text-[22px] font-bold text-white truncate">{currentSong.title}</h1>
-                <p className="text-[15px] text-[#FC3C44] truncate">{currentSong.artist}</p>
-              </div>
-              <button onClick={() => toggleLike(currentSong)} className={`p-1.5 mt-1 ${liked ? 'text-[#FC3C44]' : 'text-white/40'}`}>
-                <Heart size={22} fill={liked ? 'currentColor' : 'none'} />
-              </button>
+          <button onClick={()=>toggleLike(currentSong.id)} className={`${liked?'text-[#FF0000]':'text-[#AAAAAA]'}`}><Heart size={22} fill={liked?'currentColor':'none'}/></button>
+          <div className="w-full max-w-sm">
+            <div className="w-full h-[5px] bg-white/20 rounded-full cursor-pointer group" onClick={e=>{const r=e.currentTarget.getBoundingClientRect();seekTo((e.clientX-r.left)/r.width*duration);}}>
+              <div className="h-full bg-white rounded-full relative" style={{width:`${progress}%`}}><div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow opacity-0 group-hover:opacity-100"/></div>
             </div>
-
-            {/* Progress */}
-            <div className="mb-4">
-              <div className="w-full h-[4px] bg-white/20 rounded-full cursor-pointer"
-                onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); seekTo((e.clientX - r.left) / r.width * duration); }}
-              >
-                <div className="h-full bg-white rounded-full relative" style={{ width: `${progress}%` }}>
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[14px] h-[14px] bg-white rounded-full shadow-md"></div>
-                </div>
-              </div>
-              <div className="flex justify-between mt-1.5 text-[11px] text-white/50 font-medium">
-                <span>{formatDuration(currentTime)}</span>
-                <span>-{formatDuration(Math.max(0, duration - currentTime))}</span>
-              </div>
-            </div>
-
-            {/* Controls */}
-            <div className="flex items-center justify-between mb-4">
-              <button onClick={toggleShuffle} className={`p-2 ${shuffleMode ? 'text-[#FC3C44]' : 'text-white/50'}`}>
-                <Shuffle size={20} />
-              </button>
-              <button onClick={handlePrevious} className="p-2 text-white active:scale-90 transition-transform">
-                <SkipBack size={30} fill="white" />
-              </button>
-              <button onClick={togglePlay} className="w-[56px] h-[56px] bg-white rounded-full flex items-center justify-center active:scale-90 transition-transform shadow-xl">
-                {isBuffering ? (
-                  <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                ) : isPlaying ? (
-                  <Pause size={26} className="text-black" fill="black" />
-                ) : (
-                  <Play size={26} className="text-black ml-1" fill="black" />
-                )}
-              </button>
-              <button onClick={handleNext} className="p-2 text-white active:scale-90 transition-transform">
-                <SkipForward size={30} fill="white" />
-              </button>
-              <button onClick={toggleRepeat} className={`p-2 ${repeatMode !== 'none' ? 'text-[#FC3C44]' : 'text-white/50'}`}>
-                {repeatMode === 'one' ? <Repeat1 size={20} /> : <Repeat size={20} />}
-              </button>
-            </div>
-
-            {/* Volume (desktop) */}
-            <div className="hidden sm:flex items-center justify-center gap-3 mt-2">
-              <button onClick={() => setVolume(volume > 0 ? 0 : 0.7)} className="text-white/50">
-                {volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
-              </button>
-              <input type="range" min="0" max="1" step="0.01" value={volume}
-                onChange={(e) => setVolume(parseFloat(e.target.value))}
-                className="w-28 h-[3px] rounded-full appearance-none bg-white/20 cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
-              />
-            </div>
+            <div className="flex justify-between mt-1 text-[11px] text-[#AAAAAA]"><span>{formatDuration(currentTime)}</span><span>{formatDuration(duration)}</span></div>
+          </div>
+          <div className="flex items-center gap-6">
+            <button onClick={toggleShuffle} className={shuffleMode?'text-[#FF0000]':'text-[#AAAAAA]'}><Shuffle size={20}/></button>
+            <button onClick={playPrev} className="text-white"><SkipBack size={28} fill="white"/></button>
+            <button onClick={togglePlay} className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-xl active:scale-95 transition-transform">{isPlaying?<Pause size={26} className="text-black" fill="black"/>:<Play size={26} className="text-black ml-1" fill="black"/>}</button>
+            <button onClick={playNext} className="text-white"><SkipForward size={28} fill="white"/></button>
+            <button onClick={cycleRepeat} className={repeatMode!=='none'?'text-[#FF0000]':'text-[#AAAAAA]'}>{repeatMode==='one'?<Repeat1 size={20}/>:<Repeat size={20}/>}</button>
+          </div>
+          <div className="flex items-center gap-4 mt-2">
+            <button onClick={()=>showToast('Added to playlist')} className="text-[#AAAAAA] hover:text-white"><ListPlus size={18}/></button>
+            <button onClick={()=>showToast('Link copied!')} className="text-[#AAAAAA] hover:text-white"><Share2 size={18}/></button>
+            <div className="hidden sm:flex items-center gap-2 ml-4"><button onClick={toggleMute} className="text-[#AAAAAA]">{isMuted?<VolumeX size={16}/>:<Volume2 size={16}/>}</button><input type="range" min="0" max="1" step="0.01" value={isMuted?0:volume} onChange={e=>setVolume(parseFloat(e.target.value))} className="w-24 h-1 appearance-none bg-white/20 rounded-full cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"/></div>
           </div>
         </div>
+        {/* Right - Lyrics */}
+        {songLyrics&&<div className="hidden lg:flex flex-col w-[380px] border-l border-white/10 p-6 overflow-y-auto">
+          <h3 className="text-sm font-semibold text-white mb-4">Lyrics</h3>
+          <div className="space-y-3">{songLyrics.map((line,i)=><p key={i} className={`text-sm transition-all ${i===currentLineIdx?'text-white text-base font-medium':'text-[#717171]'}`}>{line}</p>)}</div>
+        </div>}
       </div>
     </div>
   );
