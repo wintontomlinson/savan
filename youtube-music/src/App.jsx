@@ -14,11 +14,11 @@ export default function App() {
   return (
     <PlayerProvider>
       <Router>
-        <div className="flex h-screen bg-[#0F0F0F] overflow-hidden">
+        <div className="flex h-[100dvh] bg-[#0F0F0F] overflow-hidden">
           <Sidebar />
-          <div className="flex-1 flex flex-col lg:ml-[240px] h-full">
+          <div className="flex-1 flex flex-col lg:ml-[240px] min-w-0">
             <Header />
-            <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 pb-[140px] lg:pb-[100px]">
+            <main className="flex-1 overflow-y-auto px-3 sm:px-5 lg:px-6 py-3 pb-[160px] sm:pb-[140px] lg:pb-[100px]">
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/library" element={<Library />} />

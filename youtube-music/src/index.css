@@ -12,11 +12,13 @@
     background-color: #0F0F0F;
     color: #FFFFFF;
     overflow: hidden;
-    height: 100vh;
+    height: 100dvh;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
   }
 
   #root {
-    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
   }
 
