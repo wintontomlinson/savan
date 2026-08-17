@@ -62,15 +62,15 @@ export default function Home() {
         </div>
       )}
 
-      {/* Quick Picks from Trending */}
-      {trendingSongs.length > 0 && (
+      {/* Quick Picks - only user's recently played songs */}
+      {recentlyPlayed.length > 0 && (
         <section className="mb-8 px-2 animate-fade-in-up">
           <h2 className="text-xl font-bold text-white mb-4">Quick Picks</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-            {trendingSongs.slice(0, 6).map((song) => (
+            {recentlyPlayed.slice(0, 6).map((song) => (
               <button
                 key={song.id}
-                onClick={() => playSong(song, trendingSongs)}
+                onClick={() => playSong(song, recentlyPlayed)}
                 className="group flex items-center gap-3 p-2 rounded-lg bg-[#1F1F1F] hover:bg-[#282828] transition-all duration-200"
               >
                 <img src={song.image} alt="" className="w-12 h-12 rounded object-cover" />
