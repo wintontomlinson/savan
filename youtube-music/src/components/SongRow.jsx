@@ -1,7 +1,6 @@
 import { Play, Heart } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { formatDuration } from '../data/data';
-import ContextMenu from './ContextMenu';
 
 export default function SongRow({ song, index, showAlbum = true, songList = [] }) {
   const { playSong, currentSong, isPlaying, toggleLike, isLiked } = usePlayer();
@@ -40,11 +39,6 @@ export default function SongRow({ song, index, showAlbum = true, songList = [] }
         <p className="text-xs text-[#AAAAAA] truncate">{song.artist}</p>
       </div>
 
-      {/* Album */}
-      {showAlbum && song.album && (
-        <p className="hidden md:block text-xs text-[#AAAAAA] truncate w-28 lg:w-40 flex-shrink-0">{song.album}</p>
-      )}
-
       {/* Duration */}
       <span className="text-xs text-[#AAAAAA] w-10 text-right flex-shrink-0">
         {formatDuration(song.duration)}
@@ -57,11 +51,6 @@ export default function SongRow({ song, index, showAlbum = true, songList = [] }
       >
         <Heart size={15} fill={liked ? 'currentColor' : 'none'} />
       </button>
-
-      {/* Menu */}
-      <div className="opacity-0 group-hover:opacity-100" onClick={e => e.stopPropagation()}>
-        <ContextMenu song={song} />
-      </div>
     </div>
   );
 }

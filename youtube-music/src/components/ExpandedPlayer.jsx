@@ -1,4 +1,4 @@
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, Volume2, VolumeX, ListMusic, ChevronDown } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, Volume2, VolumeX, ChevronDown } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { formatDuration } from '../data/data';
 
@@ -7,7 +7,7 @@ export default function ExpandedPlayer() {
     currentSong, isPlaying, togglePlay, handleNext, handlePrevious,
     shuffleMode, toggleShuffle, repeatMode, toggleRepeat,
     currentTime, duration, seekTo, volume, setVolume,
-    toggleLike, isLiked, isExpanded, setIsExpanded, setIsQueueOpen, isBuffering
+    toggleLike, isLiked, isExpanded, setIsExpanded, isBuffering
   } = usePlayer();
 
   if (!isExpanded || !currentSong) return null;
@@ -30,9 +30,7 @@ export default function ExpandedPlayer() {
             <ChevronDown size={24} className="text-white" />
           </button>
           <p className="text-sm text-[#AAAAAA]">Now Playing</p>
-          <button onClick={() => { setIsQueueOpen(true); setIsExpanded(false); }} className="p-2 rounded-full hover:bg-white/10">
-            <ListMusic size={20} className="text-white" />
-          </button>
+          <div className="w-10"></div>
         </div>
 
         {/* Content */}

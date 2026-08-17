@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Play, Loader2 } from 'lucide-react';
-import { moods, getGreeting } from '../data/data';
+import { getGreeting } from '../data/data';
 import { searchSongs } from '../data/api';
 import { usePlayer } from '../context/PlayerContext';
 import SongCard from '../components/SongCard';
@@ -208,17 +208,6 @@ export default function Home() {
         </section>
       )}
 
-      {/* Moods */}
-      <section className="mb-8 px-2">
-        <h2 className="text-xl font-bold text-white mb-4">Moods & Genres</h2>
-        <div className="flex flex-wrap gap-3">
-          {moods.map((mood) => (
-            <button key={mood.id} className={`${mood.color} px-5 py-2.5 rounded-full text-white text-sm font-medium transition-all hover:scale-105 btn-press`}>
-              <span className="mr-1.5">{mood.icon}</span>{mood.name}
-            </button>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }

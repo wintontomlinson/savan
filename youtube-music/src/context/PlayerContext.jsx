@@ -20,7 +20,6 @@ export const PlayerProvider = ({ children }) => {
   const [shuffleMode, setShuffleMode] = useState(false);
   const [repeatMode, setRepeatMode] = useState('none');
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
   const [toast, setToast] = useState(null);
 
@@ -77,22 +76,6 @@ export const PlayerProvider = ({ children }) => {
   }, []);
 
   useEffect(() => { audioRef.current.volume = volume; }, [volume]);
-
-  // Keyboard shortcuts
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-      switch (e.code) {
-        case 'Space': e.preventDefault(); togglePlay(); break;
-        case 'ArrowRight': e.preventDefault(); seekTo(Math.min(currentTime + 10, duration)); break;
-        case 'ArrowLeft': e.preventDefault(); seekTo(Math.max(currentTime - 10, 0)); break;
-        case 'KeyM': setVolumeState(v => v > 0 ? 0 : 0.7); break;
-        case 'KeyL': if (currentSong) toggleLike(currentSong); break;
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [currentTime, duration, currentSong]);
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2500); };
   const setVolume = useCallback((v) => { setVolumeState(v); audioRef.current.volume = v; }, []);
@@ -261,12 +244,12 @@ export const PlayerProvider = ({ children }) => {
   return (
     <PlayerContext.Provider value={{
       currentSong, isPlaying, volume, currentTime, duration,
-      queue, shuffleMode, repeatMode, isExpanded, isQueueOpen,
+      queue, shuffleMode, repeatMode, isExpanded,
       likedSongs, recentlyPlayed, toast, isBuffering,
       playSong, togglePlay, handleNext, handlePrevious, seekTo,
       setVolume, addToQueue, removeFromQueue, clearQueue,
       toggleLike, isLiked, toggleShuffle, toggleRepeat,
-      setIsExpanded, setIsQueueOpen, showToast,
+      setIsExpanded, showToast,
     }}>
       {children}
     </PlayerContext.Provider>

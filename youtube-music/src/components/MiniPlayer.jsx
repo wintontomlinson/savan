@@ -1,4 +1,4 @@
-import { Play, Pause, SkipBack, SkipForward, Heart, Volume2, VolumeX, ListMusic, Maximize2 } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Heart, Volume2, VolumeX, Maximize2 } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { formatDuration } from '../data/data';
 
@@ -6,7 +6,7 @@ export default function MiniPlayer() {
   const {
     currentSong, isPlaying, togglePlay, handleNext, handlePrevious,
     currentTime, duration, seekTo, volume, setVolume,
-    toggleLike, isLiked, setIsExpanded, setIsQueueOpen, isQueueOpen, isBuffering
+    toggleLike, isLiked, setIsExpanded, isBuffering
   } = usePlayer();
 
   if (!currentSong) return null;
@@ -71,9 +71,6 @@ export default function MiniPlayer() {
         {/* Right */}
         <div className="flex items-center gap-2 w-[35%] justify-end">
           <span className="text-[10px] text-[#AAAAAA] hidden sm:block">{formatDuration(currentTime)} / {formatDuration(duration)}</span>
-          <button onClick={() => setIsQueueOpen(!isQueueOpen)} className={`p-1 hidden lg:block ${isQueueOpen ? 'text-[#FF0000]' : 'text-[#AAAAAA] hover:text-white'}`}>
-            <ListMusic size={18} />
-          </button>
           <div className="hidden lg:flex items-center gap-1">
             <button onClick={() => setVolume(volume > 0 ? 0 : 0.7)} className="p-1 text-[#AAAAAA] hover:text-white">
               {volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
