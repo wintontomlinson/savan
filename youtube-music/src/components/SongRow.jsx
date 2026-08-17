@@ -1,12 +1,21 @@
-import { Play, Heart } from 'lucide-react';
+import { Play, Heart, Download } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { formatDuration } from '../data/mockData';
+import { downloadSong } from '../data/api';
 import Equalizer from './Equalizer';
 
 export default function SongRow({ song, index, songList = [] }) {
-  const { playSong, currentSong, isPlaying, toggleLike, likedSongs } = usePlayer();
+  const { playSong, currentSong, isPlaying, toggleLike, likedSongs, showToast } = usePlayer();
   const isActive = currentSong?.id === song.id;
   const liked = likedSongs.includes(song.id);
+
+  const handleDownload = async (e) => {
+    e.stopPropagation();
+    showToast('Downloading...');
+    const ok = await downloadSong(song);
+    if (ok) showToast('Downloaded ✓', 'success');
+    else showToast('Download failed', 'error');
+  };
 
   return (
     <div className={`group flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 transition-colors active:bg-[#272727] hover:bg-[#1F1F1F] cursor-pointer ${isActive ? 'bg-[#1A1A1A]' : ''}`}
@@ -26,6 +35,10 @@ export default function SongRow({ song, index, songList = [] }) {
       </div>
       {/* Duration */}
       <span className="text-[11px] text-[#666] shrink-0 hidden sm:block">{formatDuration(song.duration)}</span>
+      {/* Download */}
+      <button onClick={handleDownload} className="p-1.5 shrink-0 text-[#555] hover:text-white sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+        <Download size={14} />
+      </button>
       {/* Like */}
       <button onClick={e => { e.stopPropagation(); toggleLike(song.id); }}
         className={`p-1.5 shrink-0 ${liked ? 'text-[#FF0000]' : 'text-[#555] sm:opacity-0 sm:group-hover:opacity-100'}`}>

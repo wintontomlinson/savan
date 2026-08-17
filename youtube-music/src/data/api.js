@@ -14,13 +14,27 @@ function bestImage(images) {
   return images[images.length - 1]?.url || images[0]?.url;
 }
 
-function bestAudio(urls) {
+// Get audio URL by quality
+function getAudioByQuality(urls, quality) {
   if (!urls?.length) return '';
-  const p = urls.find(u => u.quality === '160kbps');
-  return p?.url || urls[urls.length - 1]?.url || '';
+  const match = urls.find(u => u.quality === quality);
+  if (match) return match.url;
+  // Fallback to highest available
+  return urls[urls.length - 1]?.url || '';
+}
+
+// Get current quality setting
+export function getQuality() {
+  try { return localStorage.getItem('audio_quality') || '320kbps'; }
+  catch { return '320kbps'; }
+}
+
+export function setQuality(q) {
+  try { localStorage.setItem('audio_quality', q); } catch {}
 }
 
 function mapSong(s) {
+  const quality = getQuality();
   return {
     id: s.id,
     title: (s.name || '').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#039;/g, "'"),
@@ -30,7 +44,8 @@ function mapSong(s) {
     albumId: s.album?.id || '',
     duration: s.duration || 0,
     thumbnail: bestImage(s.image),
-    audio: bestAudio(s.downloadUrl),
+    audio: getAudioByQuality(s.downloadUrl, quality),
+    audioAll: s.downloadUrl || [], // All quality URLs for download
     plays: s.playCount || 0,
     language: s.language || '',
     year: s.year || '',
@@ -65,29 +80,27 @@ export async function getAlbumById(id) {
   return { ...mapAlbum(data), songs: (data.songs || []).map(mapSong) };
 }
 
-export async function getPlaylistById(id) {
-  const data = await fetchApi(`/playlists?id=${id}`);
-  if (!data) return null;
-  return {
-    id: data.id,
-    title: (data.name || '').replace(/&quot;/g, '"'),
-    description: data.description || '',
-    thumbnail: bestImage(data.image),
-    songs: (data.songs || []).map(mapSong),
-    songCount: data.songCount || 0,
-  };
-}
+// Download a song
+export async function downloadSong(song) {
+  if (!song) return;
+  // Get highest quality URL
+  const urls = song.audioAll || [];
+  const best = urls.find(u => u.quality === '320kbps') || urls[urls.length - 1];
+  if (!best?.url) return;
 
-export async function getArtistById(id) {
-  const data = await fetchApi(`/artists/${id}`);
-  if (!data) return null;
-  return {
-    id: data.id,
-    name: data.name,
-    image: bestImage(data.image),
-    bio: data.bio?.[0]?.text || data.wiki || '',
-    followerCount: data.followerCount || 0,
-    topSongs: (data.topSongs || []).map(mapSong),
-    topAlbums: (data.topAlbums || []).map(mapAlbum),
-  };
+  try {
+    const response = await fetch(best.url);
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${song.title} - ${song.artist}.mp4`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    return true;
+  } catch {
+    return false;
+  }
 }

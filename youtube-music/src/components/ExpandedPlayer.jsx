@@ -1,10 +1,14 @@
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Volume2, VolumeX, Download, Settings } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { formatDuration } from '../data/mockData';
+import { downloadSong, getQuality, setQuality } from '../data/api';
 import Equalizer from './Equalizer';
+import { useState } from 'react';
 
 export default function ExpandedPlayer() {
-  const { currentSong, isPlaying, togglePlay, playNext, playPrev, currentTime, duration, seekTo, volume, setVolume, shuffleMode, toggleShuffle, repeatMode, cycleRepeat, toggleLike, likedSongs, isExpanded, setExpanded } = usePlayer();
+  const { currentSong, isPlaying, togglePlay, playNext, playPrev, currentTime, duration, seekTo, volume, setVolume, shuffleMode, toggleShuffle, repeatMode, cycleRepeat, toggleLike, likedSongs, isExpanded, setExpanded, showToast } = usePlayer();
+  const [showQuality, setShowQuality] = useState(false);
+  const [quality, setQualityState] = useState(getQuality());
 
   if (!isExpanded || !currentSong) return null;
   const liked = likedSongs.includes(currentSong.id);
@@ -65,11 +69,31 @@ export default function ExpandedPlayer() {
             </button>
           </div>
 
-          {/* Like + Volume */}
-          <div className="flex items-center gap-5">
+          {/* Like + Download + Quality + Volume */}
+          <div className="flex items-center gap-3 flex-wrap justify-center">
             <button onClick={() => toggleLike(currentSong.id)} className={`p-2 ${liked ? 'text-[#FF0000]' : 'text-[#888]'}`}>
               <Heart size={24} fill={liked ? 'currentColor' : 'none'} />
             </button>
+            <button onClick={async () => { showToast('Downloading 320kbps...'); const ok = await downloadSong(currentSong); if (ok) showToast('Downloaded ✓', 'success'); else showToast('Failed', 'error'); }}
+              className="p-2 text-[#888] hover:text-white active:scale-90 transition-transform">
+              <Download size={22} />
+            </button>
+            {/* Quality selector */}
+            <div className="relative">
+              <button onClick={() => setShowQuality(!showQuality)} className="flex items-center gap-1 px-2.5 py-1.5 bg-[#1A1A1A] rounded-full text-[11px] text-[#aaa] hover:text-white border border-[#333]">
+                <Settings size={12} />{quality}
+              </button>
+              {showQuality && (
+                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-[#1A1A1A] border border-[#333] rounded-xl overflow-hidden shadow-2xl z-10 w-32">
+                  {['320kbps', '160kbps', '96kbps', '48kbps'].map(q => (
+                    <button key={q} onClick={() => { setQuality(q); setQualityState(q); setShowQuality(false); showToast(`Quality: ${q}`); }}
+                      className={`w-full px-4 py-2.5 text-[12px] text-left transition-colors ${quality === q ? 'text-[#FF0000] bg-[#FF0000]/10' : 'text-white hover:bg-[#272727]'}`}>
+                      {q} {q === '320kbps' && <span className="text-[10px] text-[#888]">HD</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <div className="hidden sm:flex items-center gap-2">
               <Volume2 size={16} className="text-[#888]" />
               <input type="range" min="0" max="1" step="0.01" value={volume} onChange={e => setVolume(parseFloat(e.target.value))}
