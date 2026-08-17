@@ -50,11 +50,11 @@ export default function ExpandedPlayer() {
             {/* Visualizer */}
             {isPlaying && (
               <div className="flex items-end justify-center gap-[3px] h-4 mt-3">
-                <span className="w-[3px] bg-[#FF0000] rounded-full animate-wave-1"></span>
-                <span className="w-[3px] bg-[#FF0000] rounded-full animate-wave-2"></span>
-                <span className="w-[3px] bg-[#FF0000] rounded-full animate-wave-3"></span>
-                <span className="w-[3px] bg-[#FF0000] rounded-full animate-wave-1" style={{animationDelay:'0.2s'}}></span>
-                <span className="w-[3px] bg-[#FF0000] rounded-full animate-wave-2" style={{animationDelay:'0.4s'}}></span>
+                <span className="w-[3px] bg-[#1DB954] rounded-full animate-wave-1"></span>
+                <span className="w-[3px] bg-[#1DB954] rounded-full animate-wave-2"></span>
+                <span className="w-[3px] bg-[#1DB954] rounded-full animate-wave-3"></span>
+                <span className="w-[3px] bg-[#1DB954] rounded-full animate-wave-1" style={{animationDelay:'0.2s'}}></span>
+                <span className="w-[3px] bg-[#1DB954] rounded-full animate-wave-2" style={{animationDelay:'0.4s'}}></span>
               </div>
             )}
           </div>
@@ -76,7 +76,7 @@ export default function ExpandedPlayer() {
 
           {/* Controls */}
           <div className="flex items-center justify-center gap-5 sm:gap-7 w-full">
-            <button onClick={toggleShuffle} className={`p-2 ${shuffleMode ? 'text-[#FF0000]' : 'text-[#AAAAAA]'}`}>
+            <button onClick={toggleShuffle} className={`p-2 ${shuffleMode ? 'text-[#1DB954]' : 'text-[#AAAAAA]'}`}>
               <Shuffle size={18} />
             </button>
             <button onClick={handlePrevious} className="p-2 text-white active:scale-90 transition-transform">
@@ -94,14 +94,14 @@ export default function ExpandedPlayer() {
             <button onClick={handleNext} className="p-2 text-white active:scale-90 transition-transform">
               <SkipForward size={24} fill="currentColor" />
             </button>
-            <button onClick={toggleRepeat} className={`p-2 ${repeatMode !== 'none' ? 'text-[#FF0000]' : 'text-[#AAAAAA]'}`}>
+            <button onClick={toggleRepeat} className={`p-2 ${repeatMode !== 'none' ? 'text-[#1DB954]' : 'text-[#AAAAAA]'}`}>
               {repeatMode === 'one' ? <Repeat1 size={18} /> : <Repeat size={18} />}
             </button>
           </div>
 
           {/* Like + Volume */}
           <div className="flex items-center justify-center gap-5 w-full">
-            <button onClick={() => toggleLike(currentSong)} className={`p-2 ${liked ? 'text-[#FF0000]' : 'text-[#AAAAAA]'}`}>
+            <button onClick={() => toggleLike(currentSong)} className={`p-2 ${liked ? 'text-[#1DB954]' : 'text-[#AAAAAA]'}`}>
               <Heart size={22} fill={liked ? 'currentColor' : 'none'} />
             </button>
             <div className="hidden sm:flex items-center gap-2">

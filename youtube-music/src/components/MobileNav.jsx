@@ -16,7 +16,7 @@ export default function MobileNav() {
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center gap-0.5 w-full h-full transition-colors ${isActive ? 'text-white' : 'text-[#777]'}`
+              `flex flex-col items-center justify-center gap-0.5 w-full h-full transition-colors ${isActive ? 'text-white' : 'text-[#666]'}`
             }
           >
             {({ isActive }) => (

@@ -13,7 +13,7 @@ export default function SongCard({ song }) {
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
           <button
             onClick={() => playSong(song)}
-            className="w-10 h-10 sm:w-11 sm:h-11 bg-[#FF0000] rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform"
+            className="w-10 h-10 sm:w-11 sm:h-11 bg-[#1DB954] rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform"
           >
             <Play size={16} className="text-white ml-0.5" fill="white" />
           </button>
@@ -21,13 +21,13 @@ export default function SongCard({ song }) {
         {/* Playing indicator */}
         {isActive && isPlaying && (
           <div className="absolute bottom-1.5 left-1.5 flex items-end gap-[2px]">
-            <span className="w-[2px] bg-[#FF0000] rounded-full animate-wave-1"></span>
-            <span className="w-[2px] bg-[#FF0000] rounded-full animate-wave-2"></span>
-            <span className="w-[2px] bg-[#FF0000] rounded-full animate-wave-3"></span>
+            <span className="w-[2px] bg-[#1DB954] rounded-full animate-wave-1"></span>
+            <span className="w-[2px] bg-[#1DB954] rounded-full animate-wave-2"></span>
+            <span className="w-[2px] bg-[#1DB954] rounded-full animate-wave-3"></span>
           </div>
         )}
       </div>
-      <h3 className={`text-xs sm:text-sm font-medium truncate ${isActive ? 'text-[#FF0000]' : 'text-white'}`}>{song.title}</h3>
+      <h3 className={`text-xs sm:text-sm font-medium truncate ${isActive ? 'text-[#1DB954]' : 'text-white'}`}>{song.title}</h3>
       <p className="text-[10px] sm:text-xs text-[#AAAAAA] truncate">{song.artist}</p>
     </div>
   );

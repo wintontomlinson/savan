@@ -7,175 +7,106 @@ import SongCard from '../components/SongCard';
 import HorizontalScroll from '../components/HorizontalScroll';
 import SongRow from '../components/SongRow';
 
-// Default categories (shown when user has no history)
-const DEFAULT_CATEGORIES = [
-  { key: 'trending', query: 'trending top hits 2024', title: '🔥 Trending Now' },
-  { key: 'bollywood', query: 'Arijit Singh latest', title: '❤️ Bollywood Hits' },
-  { key: 'punjabi', query: 'AP Dhillon Punjabi hits', title: '🔥 Punjabi Fire' },
-  { key: 'english', query: 'The Weeknd Dua Lipa pop', title: '🌍 English Pop' },
-  { key: 'chill', query: 'lofi chill relax', title: '😌 Chill Vibes' },
+// Curated sections - Spotify style
+const SECTIONS = [
+  { key: 'top_hindi', query: 'latest hindi songs 2024 trending', title: 'Top Hindi' },
+  { key: 'top_global', query: 'global top songs 2024 trending', title: 'Top Global' },
+  { key: 'new_releases', query: 'new release 2024 latest', title: 'New Releases' },
+  { key: 'arijit', query: 'Arijit Singh latest 2024', title: 'Arijit Singh' },
+  { key: 'punjabi', query: 'Punjabi latest hits 2024 AP Dhillon Diljit', title: 'Punjabi Hits' },
+  { key: 'pop', query: 'english pop hits 2024 Dua Lipa Taylor Swift', title: 'Pop Hits' },
+  { key: 'romantic', query: 'romantic hindi songs love', title: 'Romance' },
+  { key: 'hiphop', query: 'hip hop rap 2024 trending', title: 'Hip-Hop' },
+  { key: 'lofi', query: 'lofi chill beats hindi', title: 'Lo-Fi & Chill' },
+  { key: 'party', query: 'party songs bollywood punjabi 2024', title: 'Party' },
+  { key: 'devotional', query: 'bhajan aarti devotional hindi', title: 'Devotional' },
+  { key: 'workout', query: 'workout gym motivation songs', title: 'Workout' },
 ];
 
-// Analyze user's listening history to build recommendations
-function analyzePreferences(recentlyPlayed, likedSongs) {
-  const allSongs = [...recentlyPlayed, ...likedSongs];
-  if (allSongs.length === 0) return null;
-
-  // Count artists
+// Analyze user preferences from history
+function getUserPrefs(recentlyPlayed, likedSongs) {
+  const all = [...recentlyPlayed, ...likedSongs];
+  if (all.length === 0) return null;
   const artistCount = {};
-  const languageCount = {};
-
-  allSongs.forEach(song => {
-    // Track artists
-    const artist = song.artist?.split(',')[0]?.trim();
-    if (artist) artistCount[artist] = (artistCount[artist] || 0) + 1;
-
-    // Track languages
-    const lang = song.language || 'hindi';
-    languageCount[lang] = (languageCount[lang] || 0) + 1;
+  all.forEach(s => {
+    const a = s.artist?.split(',')[0]?.trim();
+    if (a) artistCount[a] = (artistCount[a] || 0) + 1;
   });
-
-  // Top artists (sorted by frequency)
-  const topArtists = Object.entries(artistCount)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([name]) => name);
-
-  // Top languages
-  const topLanguages = Object.entries(languageCount)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3)
-    .map(([lang]) => lang);
-
-  return { topArtists, topLanguages };
-}
-
-// Build recommendation queries based on user preferences
-function buildRecommendationQueries(prefs) {
-  if (!prefs) return [];
-
-  const queries = [];
-
-  // Recommend based on top artists
-  prefs.topArtists.slice(0, 3).forEach((artist, i) => {
-    queries.push({
-      key: `rec-artist-${i}`,
-      query: `${artist} songs`,
-      title: `🎵 More from ${artist}`,
-    });
-  });
-
-  // Recommend based on language
-  const langTitles = { hindi: '🇮🇳 Hindi For You', punjabi: '🎶 Punjabi For You', english: '🌍 English For You', tamil: '🎵 Tamil For You', telugu: '🎵 Telugu For You' };
-  prefs.topLanguages.forEach((lang, i) => {
-    if (i < 2) {
-      queries.push({
-        key: `rec-lang-${lang}`,
-        query: `latest ${lang} songs 2024`,
-        title: langTitles[lang] || `🎵 ${lang.charAt(0).toUpperCase() + lang.slice(1)} For You`,
-      });
-    }
-  });
-
-  // "Because you listened to X" style
-  if (prefs.topArtists.length >= 2) {
-    queries.push({
-      key: 'rec-similar',
-      query: `${prefs.topArtists[0]} ${prefs.topArtists[1]} similar`,
-      title: `✨ Recommended For You`,
-    });
-  }
-
-  return queries;
+  const topArtists = Object.entries(artistCount).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([n]) => n);
+  return topArtists;
 }
 
 export default function Home() {
   const { playSong, recentlyPlayed, likedSongs } = usePlayer();
   const [sections, setSections] = useState({});
+  const [recSongs, setRecSongs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Analyze preferences
-  const prefs = useMemo(() => analyzePreferences(recentlyPlayed, likedSongs), [recentlyPlayed, likedSongs]);
-  const recommendationQueries = useMemo(() => buildRecommendationQueries(prefs), [prefs]);
+  const topArtists = useMemo(() => getUserPrefs(recentlyPlayed, likedSongs), [recentlyPlayed, likedSongs]);
 
-  // Decide what to fetch: recommendations if history exists, else defaults
-  const categoriesToFetch = useMemo(() => {
-    if (recommendationQueries.length > 0) {
-      // User has history — show personalized + trending
-      return [
-        { key: 'trending', query: 'trending top hits 2024', title: '🔥 Trending Now' },
-        ...recommendationQueries,
-      ];
-    }
-    return DEFAULT_CATEGORIES;
-  }, [recommendationQueries]);
-
+  // Fetch all sections
   useEffect(() => {
     async function fetchAll() {
       setLoading(true);
       const results = {};
-      const promises = categoriesToFetch.map(async (cat) => {
-        const songs = await searchSongs(cat.query, 12);
-        results[cat.key] = songs;
+      const promises = SECTIONS.map(async (s) => {
+        const songs = await searchSongs(s.query, 10);
+        results[s.key] = songs;
       });
       await Promise.all(promises);
       setSections(results);
       setLoading(false);
     }
     fetchAll();
-  }, [categoriesToFetch]);
+  }, []);
 
-  const trendingSongs = sections.trending || [];
-  const hasHistory = recentlyPlayed.length > 0;
+  // Fetch personalized recommendations
+  useEffect(() => {
+    if (!topArtists || topArtists.length === 0) return;
+    async function fetchRec() {
+      const songs = await searchSongs(`${topArtists[0]} ${topArtists[1] || ''} similar`, 10);
+      setRecSongs(songs);
+    }
+    fetchRec();
+  }, [topArtists]);
+
+  const quickPickSongs = useMemo(() => {
+    const merged = [...likedSongs.slice(0, 3), ...recentlyPlayed.slice(0, 6)];
+    return [...new Map(merged.map(s => [s.id, s])).values()].slice(0, 6);
+  }, [likedSongs, recentlyPlayed]);
 
   return (
     <div className="pb-8">
       {/* Greeting */}
-      <section className="mb-8 px-2 animate-fade-in-up">
-        <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-[#FF0000]/20 via-[#1F1F1F] to-[#1F1F1F] p-8 sm:p-12">
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2 animate-text-reveal">{getGreeting()}</h1>
-          <p className="text-[#AAAAAA] text-sm">
-            {hasHistory
-              ? `Based on your taste • ${prefs?.topArtists?.[0] || ''}, ${prefs?.topArtists?.[1] || ''} & more`
-              : 'Discover music you love'}
-          </p>
-          <div className="absolute right-4 top-4 w-24 h-24 opacity-10">
-            <svg viewBox="0 0 200 200" className="w-full h-full fill-[#FF0000] animate-float">
-              <circle cx="100" cy="100" r="80" />
-            </svg>
-          </div>
-        </div>
+      <section className="mb-6 animate-fade-in-up">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">{getGreeting()}</h1>
+        <p className="text-sm text-[#AAAAAA]">
+          {topArtists?.length ? `For you • ${topArtists.join(', ')}` : 'Discover new music'}
+        </p>
       </section>
 
       {/* Loading */}
       {loading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 size={28} className="text-[#FF0000] animate-spin" />
-          <span className="ml-3 text-[#AAAAAA] text-sm">
-            {hasHistory ? 'Building recommendations for you...' : 'Loading music...'}
-          </span>
+        <div className="flex items-center justify-center py-16">
+          <Loader2 size={24} className="text-[#FF0000] animate-spin" />
+          <span className="ml-3 text-[#AAAAAA] text-sm">Loading...</span>
         </div>
       )}
 
-      {/* Quick Picks - mix of liked + recently played, personalized */}
-      {recentlyPlayed.length > 0 && (
-        <section className="mb-8 px-2 animate-fade-in-up">
-          <h2 className="text-xl font-bold text-white mb-1">Quick Picks</h2>
-          <p className="text-xs text-[#AAAAAA] mb-4">Based on what you listen to</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-            {[...new Map([...likedSongs.slice(0, 3), ...recentlyPlayed.slice(0, 6)].map(s => [s.id, s])).values()].slice(0, 6).map((song) => (
+      {/* Quick Picks */}
+      {quickPickSongs.length > 0 && (
+        <section className="mb-6 animate-fade-in-up">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {quickPickSongs.map((song) => (
               <button
                 key={song.id}
-                onClick={() => playSong(song, recentlyPlayed)}
-                className="group flex items-center gap-3 p-2 rounded-lg bg-[#1F1F1F] hover:bg-[#282828] transition-all duration-200"
+                onClick={() => playSong(song, quickPickSongs)}
+                className="group flex items-center gap-2 bg-[#1A1A1A] hover:bg-[#2A2A2A] rounded-md overflow-hidden transition-colors"
               >
-                <img src={song.image} alt="" className="w-12 h-12 rounded object-cover" />
-                <div className="flex-1 min-w-0 text-left">
-                  <p className="text-sm font-medium text-white truncate group-hover:text-[#FF0000] transition-colors">{song.title}</p>
-                  <p className="text-xs text-[#AAAAAA] truncate">{song.artist}</p>
-                </div>
-                <div className="w-8 h-8 bg-[#FF0000] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity btn-press">
-                  <Play size={14} className="text-white ml-0.5" fill="white" />
+                <img src={song.image} alt="" className="w-11 h-11 sm:w-12 sm:h-12 object-cover" />
+                <p className="text-xs sm:text-sm font-medium text-white truncate pr-2 flex-1">{song.title}</p>
+                <div className="w-8 h-8 bg-[#1DB954] rounded-full items-center justify-center mr-2 hidden group-hover:flex shadow-lg">
+                  <Play size={14} className="text-black ml-0.5" fill="black" />
                 </div>
               </button>
             ))}
@@ -183,31 +114,39 @@ export default function Home() {
         </section>
       )}
 
-      {/* Personalized Recommendation Sections */}
-      {categoriesToFetch.map((cat) => {
-        const catSongs = sections[cat.key] || [];
-        if (catSongs.length === 0) return null;
-        return (
-          <HorizontalScroll key={cat.key} title={cat.title}>
-            {catSongs.map((song) => (
-              <SongCard key={song.id} song={song} />
-            ))}
-          </HorizontalScroll>
-        );
-      })}
+      {/* Personalized "Made For You" */}
+      {recSongs.length > 0 && (
+        <HorizontalScroll title="Made For You">
+          {recSongs.map((song) => (
+            <SongCard key={song.id} song={song} />
+          ))}
+        </HorizontalScroll>
+      )}
 
-      {/* Top Chart */}
-      {trendingSongs.length > 0 && (
-        <section className="mb-8 px-2">
-          <h2 className="text-xl font-bold text-white mb-4">📊 Top Chart</h2>
-          <div className="bg-[#1F1F1F] rounded-xl overflow-hidden">
-            {trendingSongs.map((song, index) => (
-              <SongRow key={song.id} song={song} index={index} songList={trendingSongs} />
+      {/* Top Hindi Chart */}
+      {(sections.top_hindi?.length > 0) && (
+        <section className="mb-6">
+          <h2 className="text-lg sm:text-xl font-bold text-white mb-3">🇮🇳 Top Hindi</h2>
+          <div className="bg-[#1A1A1A] rounded-xl overflow-hidden">
+            {sections.top_hindi.slice(0, 8).map((song, i) => (
+              <SongRow key={song.id} song={song} index={i} songList={sections.top_hindi} />
             ))}
           </div>
         </section>
       )}
 
+      {/* Sections as carousels */}
+      {SECTIONS.filter(s => s.key !== 'top_hindi').map((sec) => {
+        const songs = sections[sec.key] || [];
+        if (songs.length === 0) return null;
+        return (
+          <HorizontalScroll key={sec.key} title={sec.title}>
+            {songs.map((song) => (
+              <SongCard key={song.id} song={song} />
+            ))}
+          </HorizontalScroll>
+        );
+      })}
     </div>
   );
 }

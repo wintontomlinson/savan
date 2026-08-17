@@ -14,7 +14,7 @@ export default function App() {
   return (
     <PlayerProvider>
       <Router>
-        <div className="flex h-[100dvh] bg-[#0F0F0F] overflow-hidden">
+        <div className="flex h-[100dvh] bg-[#121212] overflow-hidden">
           <Sidebar />
           <div className="flex-1 flex flex-col lg:ml-[240px] min-w-0">
             <Header />

@@ -23,7 +23,7 @@ export default function MiniPlayer() {
           seekTo((e.clientX - rect.left) / rect.width * duration);
         }}
       >
-        <div className="h-full bg-[#FF0000] relative" style={{ width: `${progress}%` }}>
+        <div className="h-full bg-[#1DB954] relative" style={{ width: `${progress}%` }}>
           <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
         </div>
       </div>
@@ -43,7 +43,7 @@ export default function MiniPlayer() {
           </div>
           <button
             onClick={() => toggleLike(currentSong)}
-            className={`p-1.5 flex-shrink-0 ${liked ? 'text-[#FF0000]' : 'text-[#AAAAAA]'}`}
+            className={`p-1.5 flex-shrink-0 ${liked ? 'text-[#1DB954]' : 'text-[#AAAAAA]'}`}
           >
             <Heart size={16} fill={liked ? 'currentColor' : 'none'} />
           </button>

@@ -14,12 +14,12 @@ export default function SongRow({ song, index, songList = [] }) {
     >
       {/* Number */}
       <div className="w-6 sm:w-7 flex-shrink-0 text-center">
-        <span className={`text-xs sm:text-sm group-hover:hidden ${isActive ? 'text-[#FF0000]' : 'text-[#AAAAAA]'}`}>
+        <span className={`text-xs sm:text-sm group-hover:hidden ${isActive ? 'text-[#1DB954]' : 'text-[#AAAAAA]'}`}>
           {isActive && isPlaying ? (
             <span className="flex items-end justify-center gap-[2px] h-3 sm:h-4">
-              <span className="w-[2px] sm:w-[3px] bg-[#FF0000] rounded-full animate-wave-1"></span>
-              <span className="w-[2px] sm:w-[3px] bg-[#FF0000] rounded-full animate-wave-2"></span>
-              <span className="w-[2px] sm:w-[3px] bg-[#FF0000] rounded-full animate-wave-3"></span>
+              <span className="w-[2px] sm:w-[3px] bg-[#1DB954] rounded-full animate-wave-1"></span>
+              <span className="w-[2px] sm:w-[3px] bg-[#1DB954] rounded-full animate-wave-2"></span>
+              <span className="w-[2px] sm:w-[3px] bg-[#1DB954] rounded-full animate-wave-3"></span>
             </span>
           ) : (
             index + 1
@@ -35,7 +35,7 @@ export default function SongRow({ song, index, songList = [] }) {
 
       {/* Title & Artist */}
       <div className="flex-1 min-w-0">
-        <p className={`text-xs sm:text-sm font-medium truncate ${isActive ? 'text-[#FF0000]' : 'text-white'}`}>{song.title}</p>
+        <p className={`text-xs sm:text-sm font-medium truncate ${isActive ? 'text-[#1DB954]' : 'text-white'}`}>{song.title}</p>
         <p className="text-[10px] sm:text-xs text-[#AAAAAA] truncate">{song.artist}</p>
       </div>
 
@@ -47,7 +47,7 @@ export default function SongRow({ song, index, songList = [] }) {
       {/* Like */}
       <button
         onClick={(e) => { e.stopPropagation(); toggleLike(song); }}
-        className={`p-1 rounded-full flex-shrink-0 ${liked ? 'text-[#FF0000]' : 'text-[#AAAAAA] opacity-0 group-hover:opacity-100'}`}
+        className={`p-1 rounded-full flex-shrink-0 ${liked ? 'text-[#1DB954]' : 'text-[#AAAAAA] opacity-0 group-hover:opacity-100'}`}
       >
         <Heart size={14} fill={liked ? 'currentColor' : 'none'} />
       </button>
