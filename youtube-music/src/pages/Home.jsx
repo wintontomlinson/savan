@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Play, Loader2 } from 'lucide-react';
 import { moods, getGreeting } from '../data/data';
 import { searchSongs } from '../data/api';
@@ -7,26 +7,114 @@ import SongCard from '../components/SongCard';
 import HorizontalScroll from '../components/HorizontalScroll';
 import SongRow from '../components/SongRow';
 
-// Categories to fetch from API
-const CATEGORIES = [
+// Default categories (shown when user has no history)
+const DEFAULT_CATEGORIES = [
   { key: 'trending', query: 'trending top hits 2024', title: '🔥 Trending Now' },
-  { key: 'bollywood', query: 'Arijit Singh Pritam latest bollywood', title: '❤️ Bollywood Romance' },
-  { key: 'punjabi', query: 'AP Dhillon Sidhu Moosewala Punjabi', title: '🔥 Punjabi Hits' },
-  { key: 'english', query: 'The Weeknd Dua Lipa Taylor Swift pop', title: '🌍 English Pop' },
-  { key: 'chill', query: 'lofi chill relax', title: '😌 Chill & Relax' },
-  { key: 'party', query: 'party dance songs hindi english', title: '🎉 Party Mix' },
+  { key: 'bollywood', query: 'Arijit Singh latest', title: '❤️ Bollywood Hits' },
+  { key: 'punjabi', query: 'AP Dhillon Punjabi hits', title: '🔥 Punjabi Fire' },
+  { key: 'english', query: 'The Weeknd Dua Lipa pop', title: '🌍 English Pop' },
+  { key: 'chill', query: 'lofi chill relax', title: '😌 Chill Vibes' },
 ];
 
+// Analyze user's listening history to build recommendations
+function analyzePreferences(recentlyPlayed, likedSongs) {
+  const allSongs = [...recentlyPlayed, ...likedSongs];
+  if (allSongs.length === 0) return null;
+
+  // Count artists
+  const artistCount = {};
+  const languageCount = {};
+
+  allSongs.forEach(song => {
+    // Track artists
+    const artist = song.artist?.split(',')[0]?.trim();
+    if (artist) artistCount[artist] = (artistCount[artist] || 0) + 1;
+
+    // Track languages
+    const lang = song.language || 'hindi';
+    languageCount[lang] = (languageCount[lang] || 0) + 1;
+  });
+
+  // Top artists (sorted by frequency)
+  const topArtists = Object.entries(artistCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([name]) => name);
+
+  // Top languages
+  const topLanguages = Object.entries(languageCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([lang]) => lang);
+
+  return { topArtists, topLanguages };
+}
+
+// Build recommendation queries based on user preferences
+function buildRecommendationQueries(prefs) {
+  if (!prefs) return [];
+
+  const queries = [];
+
+  // Recommend based on top artists
+  prefs.topArtists.slice(0, 3).forEach((artist, i) => {
+    queries.push({
+      key: `rec-artist-${i}`,
+      query: `${artist} songs`,
+      title: `🎵 More from ${artist}`,
+    });
+  });
+
+  // Recommend based on language
+  const langTitles = { hindi: '🇮🇳 Hindi For You', punjabi: '🎶 Punjabi For You', english: '🌍 English For You', tamil: '🎵 Tamil For You', telugu: '🎵 Telugu For You' };
+  prefs.topLanguages.forEach((lang, i) => {
+    if (i < 2) {
+      queries.push({
+        key: `rec-lang-${lang}`,
+        query: `latest ${lang} songs 2024`,
+        title: langTitles[lang] || `🎵 ${lang.charAt(0).toUpperCase() + lang.slice(1)} For You`,
+      });
+    }
+  });
+
+  // "Because you listened to X" style
+  if (prefs.topArtists.length >= 2) {
+    queries.push({
+      key: 'rec-similar',
+      query: `${prefs.topArtists[0]} ${prefs.topArtists[1]} similar`,
+      title: `✨ Recommended For You`,
+    });
+  }
+
+  return queries;
+}
+
 export default function Home() {
-  const { playSong, recentlyPlayed } = usePlayer();
+  const { playSong, recentlyPlayed, likedSongs } = usePlayer();
   const [sections, setSections] = useState({});
   const [loading, setLoading] = useState(true);
+
+  // Analyze preferences
+  const prefs = useMemo(() => analyzePreferences(recentlyPlayed, likedSongs), [recentlyPlayed, likedSongs]);
+  const recommendationQueries = useMemo(() => buildRecommendationQueries(prefs), [prefs]);
+
+  // Decide what to fetch: recommendations if history exists, else defaults
+  const categoriesToFetch = useMemo(() => {
+    if (recommendationQueries.length > 0) {
+      // User has history — show personalized + trending
+      return [
+        { key: 'trending', query: 'trending top hits 2024', title: '🔥 Trending Now' },
+        ...recommendationQueries,
+      ];
+    }
+    return DEFAULT_CATEGORIES;
+  }, [recommendationQueries]);
 
   useEffect(() => {
     async function fetchAll() {
       setLoading(true);
       const results = {};
-      const promises = CATEGORIES.map(async (cat) => {
+      const promises = categoriesToFetch.map(async (cat) => {
         const songs = await searchSongs(cat.query, 12);
         results[cat.key] = songs;
       });
@@ -35,9 +123,10 @@ export default function Home() {
       setLoading(false);
     }
     fetchAll();
-  }, []);
+  }, [categoriesToFetch]);
 
   const trendingSongs = sections.trending || [];
+  const hasHistory = recentlyPlayed.length > 0;
 
   return (
     <div className="pb-8">
@@ -45,7 +134,11 @@ export default function Home() {
       <section className="mb-8 px-2 animate-fade-in-up">
         <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-[#FF0000]/20 via-[#1F1F1F] to-[#1F1F1F] p-8 sm:p-12">
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2 animate-text-reveal">{getGreeting()}</h1>
-          <p className="text-[#AAAAAA] text-sm">Stream real music from JioSaavn</p>
+          <p className="text-[#AAAAAA] text-sm">
+            {hasHistory
+              ? `Based on your taste • ${prefs?.topArtists?.[0] || ''}, ${prefs?.topArtists?.[1] || ''} & more`
+              : 'Discover music you love'}
+          </p>
           <div className="absolute right-4 top-4 w-24 h-24 opacity-10">
             <svg viewBox="0 0 200 200" className="w-full h-full fill-[#FF0000] animate-float">
               <circle cx="100" cy="100" r="80" />
@@ -58,11 +151,13 @@ export default function Home() {
       {loading && (
         <div className="flex items-center justify-center py-12">
           <Loader2 size={28} className="text-[#FF0000] animate-spin" />
-          <span className="ml-3 text-[#AAAAAA] text-sm">Loading music...</span>
+          <span className="ml-3 text-[#AAAAAA] text-sm">
+            {hasHistory ? 'Building recommendations for you...' : 'Loading music...'}
+          </span>
         </div>
       )}
 
-      {/* Quick Picks - only user's recently played songs */}
+      {/* Quick Picks - user's recently played */}
       {recentlyPlayed.length > 0 && (
         <section className="mb-8 px-2 animate-fade-in-up">
           <h2 className="text-xl font-bold text-white mb-4">Quick Picks</h2>
@@ -87,17 +182,8 @@ export default function Home() {
         </section>
       )}
 
-      {/* Recently Played */}
-      {recentlyPlayed.length > 0 && (
-        <HorizontalScroll title="🕐 Recently Played">
-          {recentlyPlayed.slice(0, 10).map((song) => (
-            <SongCard key={song.id} song={song} />
-          ))}
-        </HorizontalScroll>
-      )}
-
-      {/* Category Sections */}
-      {CATEGORIES.map((cat) => {
+      {/* Personalized Recommendation Sections */}
+      {categoriesToFetch.map((cat) => {
         const catSongs = sections[cat.key] || [];
         if (catSongs.length === 0) return null;
         return (
@@ -109,7 +195,7 @@ export default function Home() {
         );
       })}
 
-      {/* Trending Chart */}
+      {/* Top Chart */}
       {trendingSongs.length > 0 && (
         <section className="mb-8 px-2">
           <h2 className="text-xl font-bold text-white mb-4">📊 Top Chart</h2>
