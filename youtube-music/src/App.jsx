@@ -1,4 +1,4 @@
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { PlayerProvider } from './context/PlayerContext';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
