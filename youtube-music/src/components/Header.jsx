@@ -1,30 +1,40 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Mic, Cast, Bell, User, ChevronDown } from 'lucide-react';
-import { songs, artists, albums } from '../data/data';
+import { Search, Mic, Cast, Bell, User, ChevronDown, Loader2 } from 'lucide-react';
+import { searchSongs } from '../data/api';
 
 export default function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const searchRef = useRef(null);
+  const debounceRef = useRef(null);
   const navigate = useNavigate();
 
-  const suggestions = searchQuery.length > 0 ? {
-    songs: songs.filter(s => 
-      s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.artist.toLowerCase().includes(searchQuery.toLowerCase())
-    ).slice(0, 4),
-    artists: artists.filter(a => 
-      a.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ).slice(0, 3),
-    albums: albums.filter(a => 
-      a.title.toLowerCase().includes(searchQuery.toLowerCase())
-    ).slice(0, 3),
-  } : { songs: [], artists: [], albums: [] };
+  // Debounced API search for suggestions
+  useEffect(() => {
+    if (searchQuery.length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    setLoadingSuggestions(true);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const results = await searchSongs(searchQuery, 5);
+        setSuggestions(results);
+      } catch {
+        setSuggestions([]);
+      }
+      setLoadingSuggestions(false);
+    }, 300);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [searchQuery]);
 
-  const hasSuggestions = suggestions.songs.length > 0 || suggestions.artists.length > 0 || suggestions.albums.length > 0;
+  const hasSuggestions = suggestions.length > 0;
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -71,68 +81,29 @@ export default function Header() {
         {/* Search Suggestions Dropdown */}
         {showSuggestions && hasSuggestions && (
           <div className="absolute top-full mt-2 w-full bg-[#282828] rounded-xl shadow-2xl border border-white/5 overflow-hidden max-h-[400px] overflow-y-auto animate-scale-in">
-            {suggestions.songs.length > 0 && (
-              <div className="p-2">
-                <p className="text-xs text-[#AAAAAA] px-3 py-1 uppercase font-medium">Songs</p>
-                {suggestions.songs.map((song, i) => (
-                  <button
-                    key={song.id}
-                    onClick={() => {
-                      navigate(`/search?q=${encodeURIComponent(song.title)}`);
-                      setShowSuggestions(false);
-                      setSearchQuery(song.title);
-                    }}
-                    className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 hover:pl-4"
-                    style={{ animationDelay: `${i * 0.05}s` }}
-                  >
-                    <img src={song.image} alt="" className="w-10 h-10 rounded object-cover transition-transform duration-200 hover:scale-105" />
-                    <div className="text-left">
-                      <p className="text-sm text-white">{song.title}</p>
-                      <p className="text-xs text-[#AAAAAA]">{song.artist}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-            {suggestions.artists.length > 0 && (
-              <div className="p-2 border-t border-white/5">
-                <p className="text-xs text-[#AAAAAA] px-3 py-1 uppercase font-medium">Artists</p>
-                {suggestions.artists.map((artist, i) => (
-                  <button
-                    key={artist.id}
-                    onClick={() => {
-                      navigate(`/artist/${artist.id}`);
-                      setShowSuggestions(false);
-                      setSearchQuery('');
-                    }}
-                    className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 hover:pl-4"
-                  >
-                    <img src={artist.image} alt="" className="w-10 h-10 rounded-full object-cover transition-transform duration-200 hover:scale-110" />
-                    <p className="text-sm text-white">{artist.name}</p>
-                  </button>
-                ))}
-              </div>
-            )}
-            {suggestions.albums.length > 0 && (
-              <div className="p-2 border-t border-white/5">
-                <p className="text-xs text-[#AAAAAA] px-3 py-1 uppercase font-medium">Albums</p>
-                {suggestions.albums.map((album, i) => (
-                  <button
-                    key={album.id}
-                    onClick={() => {
-                      navigate(`/album/${album.id}`);
-                      setShowSuggestions(false);
-                      setSearchQuery('');
-                    }}
-                    className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 hover:pl-4"
-                  >
-                    <img src={album.image} alt="" className="w-10 h-10 rounded object-cover transition-transform duration-200 hover:scale-105" />
-                    <div className="text-left">
-                      <p className="text-sm text-white">{album.title}</p>
-                      <p className="text-xs text-[#AAAAAA]">{album.artist}</p>
-                    </div>
-                  </button>
-                ))}
+            <div className="p-2">
+              <p className="text-xs text-[#AAAAAA] px-3 py-1 uppercase font-medium">Songs</p>
+              {suggestions.map((song, i) => (
+                <button
+                  key={song.id}
+                  onClick={() => {
+                    navigate(`/search?q=${encodeURIComponent(song.title)}`);
+                    setShowSuggestions(false);
+                    setSearchQuery(song.title);
+                  }}
+                  className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 hover:pl-4"
+                >
+                  <img src={song.image} alt="" className="w-10 h-10 rounded object-cover" />
+                  <div className="text-left flex-1 min-w-0">
+                    <p className="text-sm text-white truncate">{song.title}</p>
+                    <p className="text-xs text-[#AAAAAA] truncate">{song.artist}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+            {loadingSuggestions && (
+              <div className="flex items-center justify-center py-2">
+                <Loader2 size={16} className="text-[#AAAAAA] animate-spin" />
               </div>
             )}
           </div>

@@ -1,13 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Play } from 'lucide-react';
-import { songs, artists, albums, playlists } from '../data/data';
+import { Play, Loader2 } from 'lucide-react';
+import { searchSongs, searchAlbums, searchArtists } from '../data/api';
 import { usePlayer } from '../context/PlayerContext';
 import SongRow from '../components/SongRow';
-import ArtistCard from '../components/ArtistCard';
-import PlaylistCard from '../components/PlaylistCard';
 
-const filterChips = ['All', 'Songs', 'Albums', 'Artists', 'Playlists'];
+const filterChips = ['All', 'Songs', 'Albums', 'Artists'];
 
 export default function Search() {
   const [searchParams] = useSearchParams();
@@ -16,25 +14,41 @@ export default function Search() {
   const navigate = useNavigate();
   const { playSong } = usePlayer();
 
-  const results = useMemo(() => {
-    if (!query) return { songs: [], artists: [], albums: [], playlists: [] };
-    const q = query.toLowerCase();
-    return {
-      songs: songs.filter((s) => s.title.toLowerCase().includes(q) || s.artist.toLowerCase().includes(q)),
-      artists: artists.filter((a) => a.name.toLowerCase().includes(q)),
-      albums: albums.filter((a) => a.title.toLowerCase().includes(q) || a.artist.toLowerCase().includes(q)),
-      playlists: playlists.filter((p) => p.title.toLowerCase().includes(q) || p.description.toLowerCase().includes(q)),
-    };
+  const [songResults, setSongResults] = useState([]);
+  const [albumResults, setAlbumResults] = useState([]);
+  const [artistResults, setArtistResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!query) return;
+    setLoading(true);
+
+    async function fetchResults() {
+      try {
+        const [songs, albums, artists] = await Promise.all([
+          searchSongs(query, 20),
+          searchAlbums(query, 10),
+          searchArtists(query, 10),
+        ]);
+        setSongResults(songs);
+        setAlbumResults(albums);
+        setArtistResults(artists);
+      } catch (e) {
+        console.error(e);
+      }
+      setLoading(false);
+    }
+    fetchResults();
   }, [query]);
 
-  const hasResults = results.songs.length > 0 || results.artists.length > 0 || results.albums.length > 0 || results.playlists.length > 0;
+  const hasResults = songResults.length > 0 || albumResults.length > 0 || artistResults.length > 0;
 
   if (!query) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <p className="text-lg text-white font-medium mb-2">Search YouTube Music</p>
-          <p className="text-sm text-[#AAAAAA]">Find songs, artists, albums, and playlists</p>
+          <p className="text-sm text-[#AAAAAA]">Find songs, artists, albums from JioSaavn</p>
         </div>
       </div>
     );
@@ -66,31 +80,41 @@ export default function Search() {
         ))}
       </div>
 
-      {!hasResults ? (
+      {/* Loading */}
+      {loading && (
+        <div className="flex items-center justify-center py-12 animate-fade-in">
+          <Loader2 size={32} className="text-[#FF0000] animate-spin" />
+          <span className="ml-3 text-[#AAAAAA]">Searching JioSaavn...</span>
+        </div>
+      )}
+
+      {!loading && !hasResults && (
         <div className="text-center py-12 px-2">
           <p className="text-lg text-white mb-2">No results found</p>
           <p className="text-sm text-[#AAAAAA]">Try searching for something else</p>
         </div>
-      ) : (
+      )}
+
+      {!loading && hasResults && (
         <>
           {/* Top Result */}
-          {(activeFilter === 'All') && results.songs.length > 0 && (
+          {(activeFilter === 'All') && songResults.length > 0 && (
             <section className="mb-8 px-2">
               <h2 className="text-xl font-bold text-white mb-4">Top Result</h2>
               <button
-                onClick={() => playSong(results.songs[0], results.songs)}
+                onClick={() => playSong(songResults[0], songResults)}
                 className="group w-full sm:w-[400px] p-5 bg-[#1F1F1F] rounded-xl hover:bg-[#282828] transition-colors duration-200 text-left"
               >
                 <div className="flex items-center gap-4">
                   <img
-                    src={results.songs[0].image}
+                    src={songResults[0].image}
                     alt=""
                     className="w-20 h-20 rounded-lg object-cover"
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xl font-bold text-white truncate">{results.songs[0].title}</p>
-                    <p className="text-sm text-[#AAAAAA]">{results.songs[0].artist}</p>
-                    <span className="inline-block mt-2 text-xs bg-[#282828] px-2 py-1 rounded text-[#AAAAAA]">Song</span>
+                    <p className="text-xl font-bold text-white truncate">{songResults[0].title}</p>
+                    <p className="text-sm text-[#AAAAAA]">{songResults[0].artist}</p>
+                    <span className="inline-block mt-2 text-xs bg-[#282828] px-2 py-1 rounded text-[#AAAAAA]">Song • {songResults[0].language}</span>
                   </div>
                   <div className="w-12 h-12 bg-[#FF0000] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
                     <Play size={20} className="text-white ml-0.5" fill="white" />
@@ -101,30 +125,30 @@ export default function Search() {
           )}
 
           {/* Songs */}
-          {(activeFilter === 'All' || activeFilter === 'Songs') && results.songs.length > 0 && (
+          {(activeFilter === 'All' || activeFilter === 'Songs') && songResults.length > 0 && (
             <section className="mb-8 px-2">
               <h2 className="text-xl font-bold text-white mb-4">Songs</h2>
               <div className="bg-[#1F1F1F] rounded-xl overflow-hidden">
-                {results.songs.slice(0, activeFilter === 'Songs' ? 50 : 6).map((song, index) => (
-                  <SongRow key={song.id} song={song} index={index} songList={results.songs} />
+                {songResults.slice(0, activeFilter === 'Songs' ? 50 : 8).map((song, index) => (
+                  <SongRow key={song.id} song={song} index={index} songList={songResults} />
                 ))}
               </div>
             </section>
           )}
 
           {/* Albums */}
-          {(activeFilter === 'All' || activeFilter === 'Albums') && results.albums.length > 0 && (
+          {(activeFilter === 'All' || activeFilter === 'Albums') && albumResults.length > 0 && (
             <section className="mb-8 px-2">
               <h2 className="text-xl font-bold text-white mb-4">Albums</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {results.albums.map((album) => (
+                {albumResults.map((album) => (
                   <div
                     key={album.id}
-                    className="group cursor-pointer"
+                    className="group cursor-pointer card-hover-tilt"
                     onClick={() => navigate(`/album/${album.id}`)}
                   >
                     <div className="relative aspect-square rounded-lg overflow-hidden mb-2">
-                      <img src={album.image} alt={album.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                      <img src={album.image} alt={album.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <div className="w-12 h-12 bg-[#FF0000] rounded-full flex items-center justify-center shadow-lg">
                           <Play size={20} className="text-white ml-0.5" fill="white" />
@@ -140,24 +164,18 @@ export default function Search() {
           )}
 
           {/* Artists */}
-          {(activeFilter === 'All' || activeFilter === 'Artists') && results.artists.length > 0 && (
+          {(activeFilter === 'All' || activeFilter === 'Artists') && artistResults.length > 0 && (
             <section className="mb-8 px-2">
               <h2 className="text-xl font-bold text-white mb-4">Artists</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {results.artists.map((artist) => (
-                  <ArtistCard key={artist.id} artist={artist} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Playlists */}
-          {(activeFilter === 'All' || activeFilter === 'Playlists') && results.playlists.length > 0 && (
-            <section className="mb-8 px-2">
-              <h2 className="text-xl font-bold text-white mb-4">Playlists</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {results.playlists.map((playlist) => (
-                  <PlaylistCard key={playlist.id} playlist={playlist} />
+                {artistResults.map((artist) => (
+                  <div key={artist.id} className="group cursor-pointer text-center" onClick={() => navigate(`/artist/${artist.id}`)}>
+                    <div className="relative w-[120px] h-[120px] mx-auto rounded-full overflow-hidden mb-3 transition-all duration-300 group-hover:shadow-[0_0_30px_rgba(255,0,0,0.2)]">
+                      <img src={artist.image} alt={artist.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    </div>
+                    <p className="text-sm font-medium text-white truncate group-hover:text-[#FF0000] transition-colors">{artist.name}</p>
+                    <p className="text-xs text-[#AAAAAA]">Artist</p>
+                  </div>
                 ))}
               </div>
             </section>
