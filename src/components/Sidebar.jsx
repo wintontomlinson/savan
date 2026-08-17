@@ -12,7 +12,7 @@ export default function Sidebar() {
     <aside className="hidden md:flex flex-col w-[72px] lg:w-[240px] h-full bg-[#0F0F0F] border-r border-[#1A1A1A] fixed left-0 top-0 z-30 pt-14">
       <div className="px-4 lg:px-5 py-4 flex items-center gap-2.5">
         <Music className="text-[#FF0000] shrink-0" size={22} />
-        <span className="hidden lg:block text-white font-bold text-base">Savan</span>
+        <span className="hidden lg:block text-white font-bold text-base">Music Area</span>
       </div>
       <nav className="flex-1 px-2 lg:px-3 space-y-0.5">
         {links.map(l => (

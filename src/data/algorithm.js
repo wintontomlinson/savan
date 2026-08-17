@@ -1,6 +1,6 @@
 import { searchSongs } from './api';
 
-const HISTORY_KEY = 'savan_history';
+const HISTORY_KEY = 'ma_history';
 const playedSet = new Set();
 
 export function getHistory() {
