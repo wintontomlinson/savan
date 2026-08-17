@@ -148,10 +148,8 @@ function play(){
     const s=S.queue[S.idx];if(!s)return;
     const url=bUrl(s.downloadUrl);if(!url){playNext();return}
 
-    // Init EQ on first play (user gesture required by browser)
-    // This connects both decks BEFORE playing — no interruption
-    initEQ();
-    resumeEQ();
+    // Resume AudioContext if EQ was previously activated
+    if(eqReady)resumeEQ();
 
     const ok=playTrack(url);if(!ok){playNext();return}
     S.playing=true;updUI(s);updQ();updLib();
@@ -286,20 +284,23 @@ function setupEQ(){
     $('#swBass').addEventListener('click',()=>{
         const on=!$('#swBass').classList.contains('on');
         $('#swBass').classList.toggle('on',on);
+        initEQ();resumeEQ();
         applyP(on?'bass':'flat');
     });
     $('#eqPills').addEventListener('click',e=>{
         const p=e.target.closest('.ep');if(!p)return;
+        initEQ();resumeEQ();
         applyP(p.dataset.e);
     });
     $$('.vr').forEach(sl=>sl.addEventListener('input',()=>{
+        initEQ();resumeEQ();
         setEQBand(+sl.dataset.b,+sl.value);
         $$('.ep').forEach(x=>x.classList.remove('on'));
     }));
     $('#eqVol').addEventListener('input',()=>{
         const v=+$('#eqVol').value;
         $('#eqV').textContent=v+'%';
-        if(eqGain)eqGain.gain.value=v/100;
+        if(eqReady){initEQ();resumeEQ();eqGain.gain.value=v/100;}
     });
 }
 
