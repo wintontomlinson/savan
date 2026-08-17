@@ -4,84 +4,68 @@ import { Search, Loader2 } from 'lucide-react';
 import { searchSongs } from '../data/api';
 
 export default function Header() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [query, setQuery] = useState('');
+  const [show, setShow] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
-  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
-  const searchRef = useRef(null);
-  const debounceRef = useRef(null);
+  const [loading, setLoading] = useState(false);
+  const ref = useRef(null);
+  const timer = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (searchQuery.length < 2) { setSuggestions([]); return; }
-    setLoadingSuggestions(true);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(async () => {
-      try {
-        const results = await searchSongs(searchQuery, 5);
-        setSuggestions(results);
-      } catch { setSuggestions([]); }
-      setLoadingSuggestions(false);
+    if (query.length < 2) { setSuggestions([]); return; }
+    setLoading(true);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(async () => {
+      const r = await searchSongs(query, 5);
+      setSuggestions(r);
+      setLoading(false);
     }, 400);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [searchQuery]);
+    return () => clearTimeout(timer.current);
+  }, [query]);
 
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (searchRef.current && !searchRef.current.contains(e.target)) setShowSuggestions(false);
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setShow(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const handleSearch = (e) => {
+  const submit = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      setShowSuggestions(false);
-    }
+    if (query.trim()) { navigate(`/search?q=${encodeURIComponent(query.trim())}`); setShow(false); }
   };
 
   return (
-    <header className="sticky top-0 z-30 glass px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3">
-      <div ref={searchRef} className="w-full max-w-xl mx-auto relative">
-        <form onSubmit={handleSearch} className="relative">
-          <Search size={16} className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-[#AAAAAA]" />
+    <header className="sticky top-0 z-30 glass px-4 sm:px-6 py-3">
+      <div ref={ref} className="w-full max-w-lg mx-auto relative">
+        <form onSubmit={submit}>
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#98989F]" />
           <input
             type="text"
-            value={searchQuery}
-            onChange={(e) => { setSearchQuery(e.target.value); setShowSuggestions(true); }}
-            onFocus={() => setShowSuggestions(true)}
-            placeholder="Search songs, artists..."
-            className="w-full bg-[#282828] text-white text-sm pl-9 sm:pl-11 pr-4 py-2.5 sm:py-3 rounded-full placeholder:text-[#666] focus:outline-none focus:ring-1 focus:ring-white/20 transition-all"
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setShow(true); }}
+            onFocus={() => setShow(true)}
+            placeholder="Artists, Songs, Albums"
+            className="w-full bg-[#2C2C2E] text-white text-[14px] pl-10 pr-4 py-2.5 rounded-xl placeholder:text-[#636366] focus:outline-none focus:ring-2 focus:ring-[#FC3C44]/40 transition-all"
           />
         </form>
 
-        {/* Suggestions */}
-        {showSuggestions && suggestions.length > 0 && (
-          <div className="absolute top-full mt-2 w-full bg-[#1F1F1F] rounded-xl shadow-2xl border border-white/5 overflow-hidden max-h-[60vh] overflow-y-auto animate-scale-in z-50">
+        {show && suggestions.length > 0 && (
+          <div className="absolute top-full mt-2 w-full bg-[#2C2C2E] rounded-2xl shadow-2xl border border-white/5 overflow-hidden max-h-[55vh] overflow-y-auto animate-scale-in">
             {suggestions.map((song) => (
               <button
                 key={song.id}
-                onClick={() => {
-                  navigate(`/search?q=${encodeURIComponent(song.title)}`);
-                  setShowSuggestions(false);
-                  setSearchQuery(song.title);
-                }}
-                className="flex items-center gap-3 w-full px-3 py-2.5 hover:bg-white/5 transition-colors"
+                onClick={() => { navigate(`/search?q=${encodeURIComponent(song.title)}`); setShow(false); setQuery(song.title); }}
+                className="flex items-center gap-3 w-full px-4 py-3 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"
               >
-                <img src={song.image} alt="" className="w-9 h-9 sm:w-10 sm:h-10 rounded object-cover flex-shrink-0" />
+                <img src={song.image} alt="" className="w-11 h-11 rounded-lg object-cover" />
                 <div className="text-left min-w-0 flex-1">
-                  <p className="text-sm text-white truncate">{song.title}</p>
-                  <p className="text-xs text-[#AAAAAA] truncate">{song.artist}</p>
+                  <p className="text-[14px] text-white truncate">{song.title}</p>
+                  <p className="text-[12px] text-[#98989F] truncate">{song.artist}</p>
                 </div>
               </button>
             ))}
-            {loadingSuggestions && (
-              <div className="flex justify-center py-2">
-                <Loader2 size={14} className="text-[#AAAAAA] animate-spin" />
-              </div>
-            )}
+            {loading && <div className="flex justify-center py-3"><Loader2 size={16} className="text-[#98989F] animate-spin" /></div>}
           </div>
         )}
       </div>

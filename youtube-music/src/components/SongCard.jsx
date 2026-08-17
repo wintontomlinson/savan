@@ -6,29 +6,29 @@ export default function SongCard({ song }) {
   const isActive = currentSong?.id === song.id;
 
   return (
-    <div className="group relative flex-shrink-0 w-[130px] sm:w-[150px] md:w-[160px]">
-      <div className="relative aspect-square rounded-lg overflow-hidden mb-1.5">
+    <div className="group relative flex-shrink-0 w-[140px] sm:w-[160px] md:w-[170px]">
+      <div className="relative aspect-square rounded-xl overflow-hidden mb-2 shadow-lg shadow-black/30">
         <img src={song.image} alt={song.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-        {/* Play button */}
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+        {/* Play overlay */}
+        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
           <button
             onClick={() => playSong(song)}
-            className="w-10 h-10 sm:w-11 sm:h-11 bg-[#1DB954] rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform"
+            className="w-11 h-11 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-xl active:scale-90 transition-transform"
           >
-            <Play size={16} className="text-white ml-0.5" fill="white" />
+            <Play size={18} className="text-black ml-0.5" fill="black" />
           </button>
         </div>
-        {/* Playing indicator */}
+        {/* Playing */}
         {isActive && isPlaying && (
-          <div className="absolute bottom-1.5 left-1.5 flex items-end gap-[2px]">
-            <span className="w-[2px] bg-[#1DB954] rounded-full animate-wave-1"></span>
-            <span className="w-[2px] bg-[#1DB954] rounded-full animate-wave-2"></span>
-            <span className="w-[2px] bg-[#1DB954] rounded-full animate-wave-3"></span>
+          <div className="absolute bottom-2 left-2 flex items-end gap-[2px] bg-black/50 backdrop-blur-sm rounded-full px-1.5 py-1">
+            <span className="w-[2px] bg-[#FC3C44] rounded-full animate-wave-1"></span>
+            <span className="w-[2px] bg-[#FC3C44] rounded-full animate-wave-2"></span>
+            <span className="w-[2px] bg-[#FC3C44] rounded-full animate-wave-3"></span>
           </div>
         )}
       </div>
-      <h3 className={`text-xs sm:text-sm font-medium truncate ${isActive ? 'text-[#1DB954]' : 'text-white'}`}>{song.title}</h3>
-      <p className="text-[10px] sm:text-xs text-[#AAAAAA] truncate">{song.artist}</p>
+      <h3 className={`text-[13px] font-medium truncate ${isActive ? 'text-[#FC3C44]' : 'text-white'}`}>{song.title}</h3>
+      <p className="text-[11px] text-[#98989F] truncate">{song.artist}</p>
     </div>
   );
 }

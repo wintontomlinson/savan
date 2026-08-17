@@ -1,4 +1,4 @@
-import { Heart } from 'lucide-react';
+import { Heart, Music } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import SongRow from '../components/SongRow';
 
@@ -7,29 +7,30 @@ export default function Library() {
 
   return (
     <div className="pb-8 animate-fade-in-up">
-      <h1 className="text-2xl sm:text-3xl font-bold text-white mb-6 px-2">Your Library</h1>
+      <h1 className="text-[26px] sm:text-[32px] font-bold text-white tracking-tight mb-6">Library</h1>
 
-      <section className="px-2">
-        <div className="flex items-center gap-4 mb-4 p-4 rounded-xl bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-white/5">
-          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
-            <Heart size={20} className="text-white" fill="white" />
+      <section>
+        {/* Liked Songs header */}
+        <div className="flex items-center gap-4 mb-5 p-4 bg-gradient-to-r from-[#FC3C44]/20 to-[#1C1C1E] rounded-2xl border border-white/5">
+          <div className="w-14 h-14 bg-gradient-to-br from-[#FC3C44] to-[#FF2D55] rounded-xl flex items-center justify-center shadow-lg">
+            <Heart size={22} className="text-white" fill="white" />
           </div>
           <div>
-            <p className="text-base font-bold text-white">Liked Songs</p>
-            <p className="text-sm text-[#AAAAAA]">{likedSongs.length} songs</p>
+            <p className="text-[16px] font-bold text-white">Loved Songs</p>
+            <p className="text-[13px] text-[#98989F]">{likedSongs.length} songs</p>
           </div>
         </div>
 
         {likedSongs.length === 0 ? (
-          <div className="text-center py-10">
-            <Heart size={40} className="text-[#AAAAAA]/30 mx-auto mb-3" />
-            <p className="text-[#AAAAAA] text-sm">No liked songs yet</p>
-            <p className="text-xs text-[#AAAAAA]/50 mt-1">Play a song and tap ❤️ to save it here</p>
+          <div className="text-center py-16">
+            <Music size={44} className="text-[#48484A] mx-auto mb-4" />
+            <p className="text-[15px] text-[#98989F]">Songs you love will appear here</p>
+            <p className="text-[12px] text-[#48484A] mt-1">Tap ❤️ on any song to save it</p>
           </div>
         ) : (
-          <div className="bg-[#1F1F1F] rounded-xl overflow-hidden">
-            {likedSongs.map((song, index) => (
-              <SongRow key={song.id} song={song} index={index} songList={likedSongs} />
+          <div className="bg-[#1C1C1E] rounded-2xl overflow-hidden border border-white/5">
+            {likedSongs.map((song, i) => (
+              <SongRow key={song.id} song={song} index={i} songList={likedSongs} />
             ))}
           </div>
         )}
