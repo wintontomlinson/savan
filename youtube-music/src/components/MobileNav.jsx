@@ -17,13 +17,18 @@ export default function MobileNav() {
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
-              `flex flex-col items-center gap-1 px-4 py-1 transition-colors duration-200 ${
-                isActive ? 'text-white' : 'text-[#AAAAAA]'
+              `flex flex-col items-center gap-1 px-4 py-1 transition-all duration-200 btn-press ${
+                isActive ? 'text-white scale-110' : 'text-[#AAAAAA] hover:text-white'
               }`
             }
           >
-            <item.icon size={20} />
-            <span className="text-[10px] font-medium">{item.label}</span>
+            {({ isActive }) => (
+              <>
+                <item.icon size={20} className={`transition-all duration-200 ${isActive ? 'animate-scale-in' : ''}`} />
+                <span className="text-[10px] font-medium">{item.label}</span>
+                {isActive && <div className="w-1 h-1 bg-[#FF0000] rounded-full mt-0.5 animate-scale-in"></div>}
+              </>
+            )}
           </NavLink>
         ))}
       </div>

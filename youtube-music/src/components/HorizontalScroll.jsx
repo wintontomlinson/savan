@@ -21,13 +21,13 @@ export default function HorizontalScroll({ title, children, className = '' }) {
         <div className="flex gap-2">
           <button
             onClick={() => scroll('left')}
-            className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 transition-colors duration-200"
+            className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 transition-all duration-200 hover:scale-110 btn-press"
           >
             <ChevronLeft size={18} className="text-white" />
           </button>
           <button
             onClick={() => scroll('right')}
-            className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 transition-colors duration-200"
+            className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 transition-all duration-200 hover:scale-110 btn-press"
           >
             <ChevronRight size={18} className="text-white" />
           </button>
@@ -35,7 +35,7 @@ export default function HorizontalScroll({ title, children, className = '' }) {
       </div>
       <div
         ref={scrollRef}
-        className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 px-2"
+        className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 px-2 scroll-smooth"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {children}

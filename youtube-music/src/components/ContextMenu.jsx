@@ -35,13 +35,13 @@ export default function ContextMenu({ song }) {
           e.stopPropagation();
           setIsOpen(!isOpen);
         }}
-        className="p-1.5 rounded-full hover:bg-white/10 transition-colors duration-200"
+        className="p-1.5 rounded-full hover:bg-white/10 transition-all duration-200 hover:scale-110 btn-press"
       >
         <MoreVertical size={18} className="text-white" />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-1 w-52 bg-[#282828] rounded-xl shadow-2xl border border-white/10 overflow-hidden z-50">
+        <div className="absolute right-0 top-full mt-1 w-52 bg-[#282828] rounded-xl shadow-2xl border border-white/10 overflow-hidden z-50 animate-scale-in">
           {menuItems.map((item, i) => (
             <button
               key={i}
@@ -50,9 +50,10 @@ export default function ContextMenu({ song }) {
                 item.action();
                 setIsOpen(false);
               }}
-              className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-white hover:bg-white/10 transition-colors"
+              className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-white hover:bg-white/10 transition-all duration-200 hover:pl-5"
+              style={{ animationDelay: `${i * 0.05}s` }}
             >
-              <item.icon size={16} className="text-[#AAAAAA]" />
+              <item.icon size={16} className="text-[#AAAAAA] transition-colors duration-200 group-hover:text-white" />
               <span>{item.label}</span>
               {item.premium && (
                 <Lock size={12} className="ml-auto text-[#AAAAAA]" />

@@ -8,9 +8,9 @@ export default function Toast() {
 
   return (
     <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] animate-bounce-in">
-      <div className="flex items-center gap-2 bg-white text-black px-4 py-2.5 rounded-lg shadow-2xl text-sm font-medium">
-        <CheckCircle size={16} className="text-green-600" />
-        {toast}
+      <div className="flex items-center gap-2 bg-white text-black px-4 py-2.5 rounded-lg shadow-2xl text-sm font-medium backdrop-blur-md">
+        <CheckCircle size={16} className="text-green-600 animate-scale-in" />
+        <span className="animate-text-reveal">{toast}</span>
       </div>
     </div>
   );
