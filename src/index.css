@@ -10,10 +10,10 @@
     height: 100dvh;
     -webkit-tap-highlight-color: transparent;
     -webkit-font-smoothing: antialiased;
-    touch-action: manipulation;
   }
   #root { height: 100dvh; overflow: hidden; }
   ::-webkit-scrollbar { width: 0; height: 0; }
+  main { -webkit-overflow-scrolling: touch; }
 }
 
 /* Equalizer Animation */
