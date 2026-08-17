@@ -161,7 +161,24 @@ export function PlayerProvider({ children }) {
     setCurrentTime(0);
     setIsPlaying(true);
     addToHistory(song);
-    if (song.audio) { audioA.current.src = song.audio; audioA.current.volume = volumeRef.current; audioA.current.play().catch(() => {}); }
+    if (song.audio) {
+      audioA.current.src = song.audio;
+      audioA.current.volume = volumeRef.current;
+      audioA.current.play().then(() => {
+        setDuration(audioA.current.duration || 0);
+      }).catch((e) => {
+        // Autoplay blocked - wait for user tap
+        console.warn('Playback blocked:', e.message);
+        setIsPlaying(false);
+        const resume = () => {
+          audioA.current.play().then(() => { setIsPlaying(true); setDuration(audioA.current.duration || 0); }).catch(() => {});
+          document.removeEventListener('touchstart', resume);
+          document.removeEventListener('click', resume);
+        };
+        document.addEventListener('touchstart', resume, { once: true });
+        document.addEventListener('click', resume, { once: true });
+      });
+    }
   }
 
   // ─── Public actions ───
@@ -179,7 +196,16 @@ export function PlayerProvider({ children }) {
     if (!currentSong) return;
     const a = cur();
     if (isPlaying) { a?.pause(); setIsPlaying(false); }
-    else { a?.play().catch(() => {}); setIsPlaying(true); }
+    else {
+      a?.play().then(() => setIsPlaying(true)).catch(() => {
+        // If src not set, re-set it
+        if (currentSong.audio && a) {
+          a.src = currentSong.audio;
+          a.volume = volumeRef.current;
+          a.play().then(() => setIsPlaying(true)).catch(() => {});
+        }
+      });
+    }
   }, [currentSong, isPlaying]);
 
   const playNext = useCallback(async () => {
