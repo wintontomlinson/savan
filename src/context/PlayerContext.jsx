@@ -1,10 +1,11 @@
 import { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 import { addToHistory, getNextSongs, resetPlayed } from '../data/algorithm';
+import { getCrossfadeDuration } from '../components/AudioSettings';
 
 const Ctx = createContext();
 export const usePlayer = () => useContext(Ctx);
 
-const CROSSFADE_DURATION = 5; // seconds before end to start crossfade
+const CROSSFADE_DURATION = 5; // will be overridden by getCrossfadeDuration()
 
 export function PlayerProvider({ children }) {
   // Two audio elements for crossfade
@@ -44,8 +45,9 @@ export function PlayerProvider({ children }) {
 
       // Start crossfade when approaching end
       if (a.duration && a.duration > CROSSFADE_DURATION + 2) {
+        const cfDur = getCrossfadeDuration();
         const timeLeft = a.duration - a.currentTime;
-        if (timeLeft <= CROSSFADE_DURATION && timeLeft > 0 && !isCrossfading.current) {
+        if (cfDur > 0 && timeLeft <= cfDur && timeLeft > 0 && !isCrossfading.current) {
           startCrossfade();
         }
       }
@@ -103,9 +105,10 @@ export function PlayerProvider({ children }) {
     incoming.volume = 0;
     incoming.play().catch(() => {});
 
-    // Fade: outgoing down, incoming up over CROSSFADE_DURATION seconds
-    const steps = 20; // fade steps
-    const interval = (CROSSFADE_DURATION * 1000) / steps;
+    // Fade: outgoing down, incoming up over crossfade duration
+    const cfDur = getCrossfadeDuration();
+    const steps = 20;
+    const interval = (cfDur * 1000) / steps;
     let step = 0;
 
     if (crossfadeTimer.current) clearInterval(crossfadeTimer.current);

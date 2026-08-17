@@ -3,6 +3,7 @@ import { usePlayer } from '../context/PlayerContext';
 import { formatDuration } from '../data/mockData';
 import { downloadSong, getQuality, setQuality } from '../data/api';
 import Equalizer from './Equalizer';
+import AudioSettings, { connectAudio } from './AudioSettings';
 import { useState } from 'react';
 
 export default function ExpandedPlayer() {
@@ -99,6 +100,7 @@ export default function ExpandedPlayer() {
               <input type="range" min="0" max="1" step="0.01" value={volume} onChange={e => setVolume(parseFloat(e.target.value))}
                 className="w-24 h-1 rounded-full appearance-none bg-white/20 cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white" />
             </div>
+            <AudioSettings />
           </div>
         </div>
       </div>
