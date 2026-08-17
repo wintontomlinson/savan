@@ -1,10 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FF0000"/>
-      <stop offset="100%" stop-color="#CC0000"/>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF1744"/>
+      <stop offset="50%" stop-color="#FF0000"/>
+      <stop offset="100%" stop-color="#D50000"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="white" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="white" stop-opacity="0"/>
     </linearGradient>
   </defs>
-  <rect width="32" height="32" rx="8" fill="url(#g)"/>
-  <path d="M12 8v12.5a3.5 3.5 0 1 1-2-3.16V10.5L20 9v11.5a3.5 3.5 0 1 1-2-3.16V8z" fill="white" opacity="0.95"/>
+  <!-- Background -->
+  <rect width="64" height="64" rx="16" fill="url(#bg)"/>
+  <!-- Shine -->
+  <rect width="64" height="32" rx="16" fill="url(#shine)"/>
+  <!-- Headphone shape -->
+  <path d="M16 36c0-8.8 7.2-16 16-16s16 7.2 16 16" stroke="white" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <!-- Left ear -->
+  <rect x="12" y="34" width="8" height="14" rx="4" fill="white"/>
+  <!-- Right ear -->
+  <rect x="44" y="34" width="8" height="14" rx="4" fill="white"/>
+  <!-- Music note -->
+  <circle cx="32" cy="44" r="3" fill="white"/>
+  <rect x="31" y="30" width="2" height="14" fill="white"/>
+  <path d="M33 30 l8-3 v5 l-8 3z" fill="white"/>
 </svg>
