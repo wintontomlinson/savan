@@ -1,6 +1,5 @@
 import { Play } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
-import { songs } from '../data/data';
 import ContextMenu from './ContextMenu';
 
 export default function SongCard({ song }) {
@@ -20,7 +19,7 @@ export default function SongCard({ song }) {
         {/* Play overlay */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
           <button
-            onClick={() => playSong(song, songs)}
+            onClick={() => playSong(song)}
             className="w-12 h-12 bg-[#FF0000] rounded-full flex items-center justify-center shadow-lg transform scale-75 group-hover:scale-100 transition-all duration-300 btn-press hover:bg-[#CC0000]"
           >
             <Play size={20} className="text-white ml-0.5" fill="white" />

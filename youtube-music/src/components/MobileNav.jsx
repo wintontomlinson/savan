@@ -1,11 +1,10 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Compass, Library, Star } from 'lucide-react';
+import { Home, Search, Library } from 'lucide-react';
 
 const navItems = [
   { to: '/', icon: Home, label: 'Home' },
-  { to: '/explore', icon: Compass, label: 'Explore' },
+  { to: '/search', icon: Search, label: 'Search' },
   { to: '/library', icon: Library, label: 'Library' },
-  { to: '/premium', icon: Star, label: 'Premium' },
 ];
 
 export default function MobileNav() {
@@ -18,15 +17,15 @@ export default function MobileNav() {
             to={item.to}
             className={({ isActive }) =>
               `flex flex-col items-center gap-1 px-4 py-1 transition-all duration-200 btn-press ${
-                isActive ? 'text-white scale-110' : 'text-[#AAAAAA] hover:text-white'
+                isActive ? 'text-white' : 'text-[#AAAAAA]'
               }`
             }
           >
             {({ isActive }) => (
               <>
-                <item.icon size={20} className={`transition-all duration-200 ${isActive ? 'animate-scale-in' : ''}`} />
+                <item.icon size={20} />
                 <span className="text-[10px] font-medium">{item.label}</span>
-                {isActive && <div className="w-1 h-1 bg-[#FF0000] rounded-full mt-0.5 animate-scale-in"></div>}
+                {isActive && <div className="w-1 h-1 bg-[#FF0000] rounded-full mt-0.5"></div>}
               </>
             )}
           </NavLink>

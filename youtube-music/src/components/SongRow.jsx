@@ -1,13 +1,13 @@
 import { Play, Heart } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
-import { songs, formatDuration } from '../data/data';
+import { formatDuration } from '../data/data';
 import ContextMenu from './ContextMenu';
 
-export default function SongRow({ song, index, showAlbum = true, songList = null }) {
+export default function SongRow({ song, index, showAlbum = true, songList = [] }) {
   const { playSong, currentSong, isPlaying, toggleLike, likedSongs } = usePlayer();
   const isActive = currentSong?.id === song.id;
   const isLiked = likedSongs.includes(song.id);
-  const list = songList || songs;
+  const list = songList;
 
   return (
     <div
