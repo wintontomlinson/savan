@@ -14,7 +14,7 @@ export default function Sidebar() {
         <div className="w-8 h-8 bg-gradient-to-br from-[#FF0000] to-[#CC0000] rounded-xl flex items-center justify-center shadow-lg shadow-red-500/20">
           <Music size={16} className="text-white" />
         </div>
-        <span className="hidden lg:block text-white font-bold text-[15px]">Music Area</span>
+        <span className="hidden lg:block text-white font-bold text-[15px]"></span>
       </div>
       <nav className="flex-1 px-2 lg:px-3 space-y-1 mt-2">
         {links.map(l => (

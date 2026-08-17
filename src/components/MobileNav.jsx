@@ -15,7 +15,7 @@ export default function MobileNav() {
         <div className="w-6 h-6 bg-gradient-to-br from-[#FF0000] to-[#CC0000] rounded-lg flex items-center justify-center">
           <Music size={12} className="text-white" />
         </div>
-        <span className="text-[11px] font-bold text-white tracking-tight">Music Area</span>
+        <span className="text-[11px] font-bold text-white tracking-tight"></span>
       </div>
 
       {/* Nav Items */}
