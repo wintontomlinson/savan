@@ -9,6 +9,7 @@ import Toast from './components/Toast';
 import Home from './pages/Home';
 import Library from './pages/Library';
 import Search from './pages/Search';
+import Preferences from './pages/Preferences';
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/library" element={<Library />} />
                 <Route path="/search" element={<Search />} />
+                <Route path="/preferences" element={<Preferences />} />
               </Routes>
             </main>
           </div>
