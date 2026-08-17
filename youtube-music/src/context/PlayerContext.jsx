@@ -10,10 +10,10 @@ export const usePlayer = () => {
 };
 
 export const PlayerProvider = ({ children }) => {
-  const audioRef = useRef(null);
+  const audioRef = useRef(new Audio());
   const [currentSong, setCurrentSong] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(0.7);
+  const [volume, setVolumeState] = useState(0.7);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [queue, setQueue] = useState([]);
@@ -30,39 +30,70 @@ export const PlayerProvider = ({ children }) => {
     }
   });
   const [toast, setToast] = useState(null);
+  const [isBuffering, setIsBuffering] = useState(false);
 
   // Save liked songs to localStorage
   useEffect(() => {
     try { localStorage.setItem('likedSongs', JSON.stringify(likedSongs)); } catch {}
   }, [likedSongs]);
 
-  // Save last played to localStorage
+  // Audio event listeners
   useEffect(() => {
-    try { if (currentSong) localStorage.setItem('lastPlayed', JSON.stringify(currentSong)); } catch {}
-  }, [currentSong]);
+    const audio = audioRef.current;
 
-  // Simulate time progress
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+    };
+
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration);
+      setIsBuffering(false);
+    };
+
+    const handleEnded = () => {
+      handleNext();
+    };
+
+    const handleWaiting = () => {
+      setIsBuffering(true);
+    };
+
+    const handleCanPlay = () => {
+      setIsBuffering(false);
+    };
+
+    const handleError = (e) => {
+      console.warn('Audio error:', e);
+      setIsBuffering(false);
+    };
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('waiting', handleWaiting);
+    audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('error', handleError);
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('waiting', handleWaiting);
+      audio.removeEventListener('canplay', handleCanPlay);
+      audio.removeEventListener('error', handleError);
+    };
+  }, []);
+
+  // Volume control
   useEffect(() => {
-    let interval;
-    if (isPlaying && currentSong) {
-      interval = setInterval(() => {
-        setCurrentTime((prev) => {
-          if (prev >= currentSong.duration) {
-            handleNext();
-            return 0;
-          }
-          return prev + 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isPlaying, currentSong]);
+    audioRef.current.volume = volume;
+  }, [volume]);
 
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-      
+
       switch (e.code) {
         case 'Space':
           e.preventDefault();
@@ -77,7 +108,7 @@ export const PlayerProvider = ({ children }) => {
           seekTo(Math.max(currentTime - 10, 0));
           break;
         case 'KeyM':
-          setVolume((prev) => (prev > 0 ? 0 : 0.7));
+          setVolumeState((prev) => (prev > 0 ? 0 : 0.7));
           break;
         case 'KeyL':
           if (currentSong) toggleLike(currentSong.id);
@@ -94,12 +125,31 @@ export const PlayerProvider = ({ children }) => {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const setVolume = useCallback((val) => {
+    setVolumeState(val);
+    audioRef.current.volume = val;
+  }, []);
+
   const playSong = useCallback((song, songList = null) => {
+    const audio = audioRef.current;
+
+    // Set song state
     setCurrentSong(song);
     setCurrentTime(0);
-    setDuration(song.duration);
     setIsPlaying(true);
+    setIsBuffering(true);
 
+    // Load and play audio
+    if (song.audio) {
+      audio.src = song.audio;
+      audio.load();
+      audio.play().catch((err) => {
+        console.warn('Playback failed:', err.message);
+        setIsBuffering(false);
+      });
+    }
+
+    // Set queue from song list
     if (songList) {
       const currentIndex = songList.findIndex((s) => s.id === song.id);
       const upNext = songList.slice(currentIndex + 1);
@@ -108,19 +158,28 @@ export const PlayerProvider = ({ children }) => {
   }, []);
 
   const togglePlay = useCallback(() => {
+    const audio = audioRef.current;
+
     if (!currentSong) {
-      // Play first song if nothing is selected
       if (songs.length > 0) {
         playSong(songs[0], songs);
       }
       return;
     }
-    setIsPlaying((prev) => !prev);
-  }, [currentSong, playSong]);
+
+    if (isPlaying) {
+      audio.pause();
+      setIsPlaying(false);
+    } else {
+      audio.play().catch((err) => console.warn('Play failed:', err.message));
+      setIsPlaying(true);
+    }
+  }, [currentSong, isPlaying, playSong]);
 
   const handleNext = useCallback(() => {
     if (repeatMode === 'one' && currentSong) {
-      setCurrentTime(0);
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(() => {});
       return;
     }
 
@@ -129,44 +188,35 @@ export const PlayerProvider = ({ children }) => {
         const randomIndex = Math.floor(Math.random() * queue.length);
         const nextSong = queue[randomIndex];
         const newQueue = queue.filter((_, i) => i !== randomIndex);
-        setCurrentSong(nextSong);
-        setCurrentTime(0);
-        setDuration(nextSong.duration);
         setQueue(newQueue);
+        playSong(nextSong);
       } else {
         const [nextSong, ...rest] = queue;
-        setCurrentSong(nextSong);
-        setCurrentTime(0);
-        setDuration(nextSong.duration);
         setQueue(rest);
+        playSong(nextSong);
       }
     } else if (repeatMode === 'all') {
-      // Restart from beginning
-      const allSongs = songs;
-      if (allSongs.length > 0) {
-        playSong(allSongs[0], allSongs);
-      }
+      playSong(songs[0], songs);
     } else {
+      audioRef.current.pause();
       setIsPlaying(false);
     }
   }, [queue, shuffleMode, repeatMode, currentSong, playSong]);
 
   const handlePrevious = useCallback(() => {
     if (currentTime > 3) {
+      audioRef.current.currentTime = 0;
       setCurrentTime(0);
     } else {
-      // Find current song in all songs and go back
       const currentIndex = songs.findIndex((s) => s.id === currentSong?.id);
       if (currentIndex > 0) {
-        const prevSong = songs[currentIndex - 1];
-        setCurrentSong(prevSong);
-        setCurrentTime(0);
-        setDuration(prevSong.duration);
+        playSong(songs[currentIndex - 1]);
       }
     }
-  }, [currentTime, currentSong]);
+  }, [currentTime, currentSong, playSong]);
 
   const seekTo = useCallback((time) => {
+    audioRef.current.currentTime = time;
     setCurrentTime(time);
   }, []);
 
@@ -212,7 +262,6 @@ export const PlayerProvider = ({ children }) => {
   }, []);
 
   const value = {
-    // State
     currentSong,
     isPlaying,
     volume,
@@ -225,9 +274,9 @@ export const PlayerProvider = ({ children }) => {
     isQueueOpen,
     likedSongs,
     toast,
+    isBuffering,
     audioRef,
 
-    // Actions
     playSong,
     togglePlay,
     handleNext,
