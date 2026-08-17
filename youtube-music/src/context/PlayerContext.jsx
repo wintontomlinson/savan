@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
-import { songs } from '../data/data';
 
 const PlayerContext = createContext();
 
@@ -17,164 +16,121 @@ export const PlayerProvider = ({ children }) => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [queue, setQueue] = useState([]);
+  const [history, setHistory] = useState([]); // played songs
   const [shuffleMode, setShuffleMode] = useState(false);
-  const [repeatMode, setRepeatMode] = useState('none'); // none, one, all
+  const [repeatMode, setRepeatMode] = useState('none');
   const [isExpanded, setIsExpanded] = useState(false);
   const [isQueueOpen, setIsQueueOpen] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  // Liked songs - store full song objects
   const [likedSongs, setLikedSongs] = useState(() => {
     try {
-      const saved = localStorage.getItem('likedSongs');
+      const saved = localStorage.getItem('yt_liked_songs');
       return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
+    } catch { return []; }
   });
-  const [toast, setToast] = useState(null);
-  const [isBuffering, setIsBuffering] = useState(false);
 
-  // Save liked songs to localStorage
+  // Recently played - store full song objects
+  const [recentlyPlayed, setRecentlyPlayed] = useState(() => {
+    try {
+      const saved = localStorage.getItem('yt_recently_played');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+
+  // Persist
   useEffect(() => {
-    try { localStorage.setItem('likedSongs', JSON.stringify(likedSongs)); } catch {}
+    try { localStorage.setItem('yt_liked_songs', JSON.stringify(likedSongs)); } catch {}
   }, [likedSongs]);
 
-  // Audio event listeners
+  useEffect(() => {
+    try { localStorage.setItem('yt_recently_played', JSON.stringify(recentlyPlayed)); } catch {}
+  }, [recentlyPlayed]);
+
+  // Audio events
   useEffect(() => {
     const audio = audioRef.current;
+    const onTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const onLoaded = () => { setDuration(audio.duration); setIsBuffering(false); };
+    const onEnded = () => handleNext();
+    const onWaiting = () => setIsBuffering(true);
+    const onCanPlay = () => setIsBuffering(false);
+    const onError = () => setIsBuffering(false);
 
-    const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
-    };
-
-    const handleLoadedMetadata = () => {
-      setDuration(audio.duration);
-      setIsBuffering(false);
-    };
-
-    const handleEnded = () => {
-      handleNext();
-    };
-
-    const handleWaiting = () => {
-      setIsBuffering(true);
-    };
-
-    const handleCanPlay = () => {
-      setIsBuffering(false);
-    };
-
-    const handleError = (e) => {
-      console.warn('Audio error:', e);
-      setIsBuffering(false);
-    };
-
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('ended', handleEnded);
-    audio.addEventListener('waiting', handleWaiting);
-    audio.addEventListener('canplay', handleCanPlay);
-    audio.addEventListener('error', handleError);
+    audio.addEventListener('timeupdate', onTimeUpdate);
+    audio.addEventListener('loadedmetadata', onLoaded);
+    audio.addEventListener('ended', onEnded);
+    audio.addEventListener('waiting', onWaiting);
+    audio.addEventListener('canplay', onCanPlay);
+    audio.addEventListener('error', onError);
 
     return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('waiting', handleWaiting);
-      audio.removeEventListener('canplay', handleCanPlay);
-      audio.removeEventListener('error', handleError);
+      audio.removeEventListener('timeupdate', onTimeUpdate);
+      audio.removeEventListener('loadedmetadata', onLoaded);
+      audio.removeEventListener('ended', onEnded);
+      audio.removeEventListener('waiting', onWaiting);
+      audio.removeEventListener('canplay', onCanPlay);
+      audio.removeEventListener('error', onError);
     };
   }, []);
 
-  // Volume control
-  useEffect(() => {
-    audioRef.current.volume = volume;
-  }, [volume]);
+  useEffect(() => { audioRef.current.volume = volume; }, [volume]);
 
   // Keyboard shortcuts
   useEffect(() => {
-    const handleKeyDown = (e) => {
+    const onKey = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-
       switch (e.code) {
-        case 'Space':
-          e.preventDefault();
-          togglePlay();
-          break;
-        case 'ArrowRight':
-          e.preventDefault();
-          seekTo(Math.min(currentTime + 10, duration));
-          break;
-        case 'ArrowLeft':
-          e.preventDefault();
-          seekTo(Math.max(currentTime - 10, 0));
-          break;
-        case 'KeyM':
-          setVolumeState((prev) => (prev > 0 ? 0 : 0.7));
-          break;
-        case 'KeyL':
-          if (currentSong) toggleLike(currentSong.id);
-          break;
+        case 'Space': e.preventDefault(); togglePlay(); break;
+        case 'ArrowRight': e.preventDefault(); seekTo(Math.min(currentTime + 10, duration)); break;
+        case 'ArrowLeft': e.preventDefault(); seekTo(Math.max(currentTime - 10, 0)); break;
+        case 'KeyM': setVolumeState(v => v > 0 ? 0 : 0.7); break;
+        case 'KeyL': if (currentSong) toggleLike(currentSong); break;
       }
     };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, [currentTime, duration, currentSong]);
 
-  const showToast = (message) => {
-    setToast(message);
-    setTimeout(() => setToast(null), 3000);
-  };
-
-  const setVolume = useCallback((val) => {
-    setVolumeState(val);
-    audioRef.current.volume = val;
-  }, []);
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2500); };
+  const setVolume = useCallback((v) => { setVolumeState(v); audioRef.current.volume = v; }, []);
 
   const playSong = useCallback((song, songList = null) => {
+    if (!song) return;
     const audio = audioRef.current;
-
-    // Set song state
     setCurrentSong(song);
     setCurrentTime(0);
     setIsPlaying(true);
     setIsBuffering(true);
 
-    // Load and play audio
+    // Add to recently played (max 30)
+    setRecentlyPlayed(prev => {
+      const filtered = prev.filter(s => s.id !== song.id);
+      return [song, ...filtered].slice(0, 30);
+    });
+
     if (song.audio) {
       audio.src = song.audio;
       audio.load();
-      audio.play().catch((err) => {
-        console.warn('Playback failed:', err.message);
-        setIsBuffering(false);
-      });
+      audio.play().catch(() => setIsBuffering(false));
+    } else {
+      setIsBuffering(false);
     }
 
-    // Set queue from song list
     if (songList) {
-      const currentIndex = songList.findIndex((s) => s.id === song.id);
-      const upNext = songList.slice(currentIndex + 1);
-      setQueue(upNext);
+      const idx = songList.findIndex(s => s.id === song.id);
+      setQueue(songList.slice(idx + 1));
     }
   }, []);
 
   const togglePlay = useCallback(() => {
+    if (!currentSong) return;
     const audio = audioRef.current;
-
-    if (!currentSong) {
-      if (songs.length > 0) {
-        playSong(songs[0], songs);
-      }
-      return;
-    }
-
-    if (isPlaying) {
-      audio.pause();
-      setIsPlaying(false);
-    } else {
-      audio.play().catch((err) => console.warn('Play failed:', err.message));
-      setIsPlaying(true);
-    }
-  }, [currentSong, isPlaying, playSong]);
+    if (isPlaying) { audio.pause(); setIsPlaying(false); }
+    else { audio.play().catch(() => {}); setIsPlaying(true); }
+  }, [currentSong, isPlaying]);
 
   const handleNext = useCallback(() => {
     if (repeatMode === 'one' && currentSong) {
@@ -182,120 +138,84 @@ export const PlayerProvider = ({ children }) => {
       audioRef.current.play().catch(() => {});
       return;
     }
-
     if (queue.length > 0) {
-      if (shuffleMode) {
-        const randomIndex = Math.floor(Math.random() * queue.length);
-        const nextSong = queue[randomIndex];
-        const newQueue = queue.filter((_, i) => i !== randomIndex);
-        setQueue(newQueue);
-        playSong(nextSong);
-      } else {
-        const [nextSong, ...rest] = queue;
-        setQueue(rest);
-        playSong(nextSong);
-      }
-    } else if (repeatMode === 'all') {
-      playSong(songs[0], songs);
+      const idx = shuffleMode ? Math.floor(Math.random() * queue.length) : 0;
+      const next = queue[idx];
+      setQueue(prev => prev.filter((_, i) => i !== idx));
+      playSong(next);
+    } else if (repeatMode === 'all' && history.length > 0) {
+      playSong(history[0], history);
     } else {
       audioRef.current.pause();
       setIsPlaying(false);
     }
-  }, [queue, shuffleMode, repeatMode, currentSong, playSong]);
+  }, [queue, shuffleMode, repeatMode, currentSong, history, playSong]);
 
   const handlePrevious = useCallback(() => {
     if (currentTime > 3) {
       audioRef.current.currentTime = 0;
       setCurrentTime(0);
-    } else {
-      const currentIndex = songs.findIndex((s) => s.id === currentSong?.id);
-      if (currentIndex > 0) {
-        playSong(songs[currentIndex - 1]);
-      }
+    } else if (recentlyPlayed.length > 1) {
+      playSong(recentlyPlayed[1]);
     }
-  }, [currentTime, currentSong, playSong]);
+  }, [currentTime, recentlyPlayed, playSong]);
 
-  const seekTo = useCallback((time) => {
-    audioRef.current.currentTime = time;
-    setCurrentTime(time);
-  }, []);
+  const seekTo = useCallback((t) => { audioRef.current.currentTime = t; setCurrentTime(t); }, []);
 
   const addToQueue = useCallback((song) => {
-    setQueue((prev) => [...prev, song]);
+    setQueue(prev => [...prev, song]);
     showToast('Added to queue');
   }, []);
 
-  const removeFromQueue = useCallback((index) => {
-    setQueue((prev) => prev.filter((_, i) => i !== index));
+  const removeFromQueue = useCallback((idx) => {
+    setQueue(prev => prev.filter((_, i) => i !== idx));
   }, []);
 
-  const clearQueue = useCallback(() => {
-    setQueue([]);
-    showToast('Queue cleared');
-  }, []);
+  const clearQueue = useCallback(() => { setQueue([]); showToast('Queue cleared'); }, []);
 
-  const toggleLike = useCallback((songId) => {
-    setLikedSongs((prev) => {
-      if (prev.includes(songId)) {
-        showToast('Removed from liked songs');
-        return prev.filter((id) => id !== songId);
+  // Like - stores full song object
+  const toggleLike = useCallback((song) => {
+    if (!song) return;
+    setLikedSongs(prev => {
+      const exists = prev.find(s => s.id === song.id);
+      if (exists) {
+        showToast('Removed from liked');
+        return prev.filter(s => s.id !== song.id);
       } else {
-        showToast('Added to liked songs');
-        return [...prev, songId];
+        showToast('Liked ❤️');
+        return [song, ...prev];
       }
     });
   }, []);
 
+  const isLiked = useCallback((songId) => {
+    return likedSongs.some(s => s.id === songId);
+  }, [likedSongs]);
+
   const toggleShuffle = useCallback(() => {
-    setShuffleMode((prev) => !prev);
+    setShuffleMode(p => !p);
     showToast(shuffleMode ? 'Shuffle off' : 'Shuffle on');
   }, [shuffleMode]);
 
   const toggleRepeat = useCallback(() => {
-    setRepeatMode((prev) => {
+    setRepeatMode(p => {
       const modes = ['none', 'all', 'one'];
-      const currentIndex = modes.indexOf(prev);
-      const next = modes[(currentIndex + 1) % modes.length];
+      const next = modes[(modes.indexOf(p) + 1) % 3];
       showToast(`Repeat: ${next === 'none' ? 'off' : next}`);
       return next;
     });
   }, []);
 
-  const value = {
-    currentSong,
-    isPlaying,
-    volume,
-    currentTime,
-    duration,
-    queue,
-    shuffleMode,
-    repeatMode,
-    isExpanded,
-    isQueueOpen,
-    likedSongs,
-    toast,
-    isBuffering,
-    audioRef,
-
-    playSong,
-    togglePlay,
-    handleNext,
-    handlePrevious,
-    seekTo,
-    setVolume,
-    addToQueue,
-    removeFromQueue,
-    clearQueue,
-    toggleLike,
-    toggleShuffle,
-    toggleRepeat,
-    setIsExpanded,
-    setIsQueueOpen,
-    showToast,
-  };
-
   return (
-    <PlayerContext.Provider value={value}>
+    <PlayerContext.Provider value={{
+      currentSong, isPlaying, volume, currentTime, duration,
+      queue, shuffleMode, repeatMode, isExpanded, isQueueOpen,
+      likedSongs, recentlyPlayed, toast, isBuffering,
+      playSong, togglePlay, handleNext, handlePrevious, seekTo,
+      setVolume, addToQueue, removeFromQueue, clearQueue,
+      toggleLike, isLiked, toggleShuffle, toggleRepeat,
+      setIsExpanded, setIsQueueOpen, showToast,
+    }}>
       {children}
     </PlayerContext.Provider>
   );
