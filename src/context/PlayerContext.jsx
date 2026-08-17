@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 import { addToHistory, getNextSongs, resetPlayed } from '../data/algorithm';
+import { initAudioProcessing, resumeAudioContext } from '../components/AudioSettings';
 
 const Ctx = createContext();
 export const usePlayer = () => useContext(Ctx);
@@ -53,6 +54,8 @@ export function PlayerProvider({ children }) {
   useEffect(() => {
     audioA.current = new Audio();
     audioB.current = new Audio();
+    audioA.current.crossOrigin = 'anonymous';
+    audioB.current.crossOrigin = 'anonymous';
     audioA.current.volume = volumeRef.current;
     audioB.current.volume = 0;
 
@@ -156,6 +159,10 @@ export function PlayerProvider({ children }) {
   function playDirect(song) {
     if (!song) return;
     cancelFade();
+    // Initialize audio processing on first play (needs user gesture)
+    initAudioProcessing(audioA.current, audioB.current);
+    resumeAudioContext();
+
     audioA.current.pause(); audioA.current.src = '';
     audioB.current.pause(); audioB.current.src = '';
     activeRef.current = 'A';
