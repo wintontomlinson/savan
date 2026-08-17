@@ -14,14 +14,9 @@ import SearchResults from'./pages/SearchResults';
 import ArtistPage from'./pages/ArtistPage';
 import AlbumPage from'./pages/AlbumPage';
 import PlaylistPage from'./pages/PlaylistPage';
-import Premium from'./pages/Premium';
 import MobileNav from'./components/MobileNav';
 
-function MobileNav2(){return(
-  <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#1A1A1A] border-t border-[#383838] h-[56px]">
-    <MobileNav/>
-  </nav>
-);}
+function MobileNav2(){return<nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#1A1A1A] border-t border-[#383838] h-[56px]"><MobileNav/></nav>;}
 
 export default function App(){
   return(
@@ -39,7 +34,6 @@ export default function App(){
               <Route path="/artist/:id" element={<ArtistPage/>}/>
               <Route path="/album/:id" element={<AlbumPage/>}/>
               <Route path="/playlist/:id" element={<PlaylistPage/>}/>
-              <Route path="/premium" element={<Premium/>}/>
             </Routes>
           </main>
         </div>
