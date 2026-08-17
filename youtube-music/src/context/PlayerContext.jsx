@@ -1,6 +1,6 @@
 import{createContext,useContext,useState,useRef,useEffect,useCallback}from'react';
 import{searchSongs}from'../data/api';
-import{addToHistory,getRelatedQuery}from'../data/algorithm';
+import{addToHistory,getRelatedQueries}from'../data/algorithm';
 
 const Ctx=createContext();
 export const usePlayer=()=>useContext(Ctx);
@@ -18,6 +18,7 @@ export function PlayerProvider({children}){
   const[isExpanded,setExpanded]=useState(false);
   const[likedSongs,setLikedSongs]=useState(()=>{try{return JSON.parse(localStorage.getItem('liked'))||[]}catch{return[]}});
   const[toasts,setToasts]=useState([]);
+  const[upNext,setUpNext]=useState([]); // Related songs suggestion
 
   useEffect(()=>{
     audioRef.current=new Audio();audioRef.current.volume=volume;
@@ -25,9 +26,25 @@ export function PlayerProvider({children}){
     a.addEventListener('timeupdate',()=>setCurrentTime(a.currentTime));
     a.addEventListener('loadedmetadata',()=>setDuration(a.duration));
     a.addEventListener('ended',()=>playNext());
-    a.addEventListener('error',()=>playNext()); // skip broken tracks
+    a.addEventListener('error',()=>playNext());
     return()=>{a.pause();a.src='';}
   },[]);
+
+  // When current song changes, fetch related songs for "Up Next"
+  useEffect(()=>{
+    if(!currentSong)return;
+    async function fetchRelated(){
+      const queries=getRelatedQueries(currentSong);
+      if(!queries.length)return;
+      // Try first query (same artist)
+      const results=await searchSongs(queries[0],15);
+      const filtered=results.filter(s=>s.id!==currentSong.id);
+      setUpNext(filtered);
+      // If queue is empty, auto-fill it with related songs
+      setQueue(prev=>prev.length>0?prev:filtered.slice(0,10));
+    }
+    fetchRelated();
+  },[currentSong]);
 
   useEffect(()=>{try{localStorage.setItem('liked',JSON.stringify(likedSongs))}catch{}},[likedSongs]);
   useEffect(()=>{try{localStorage.setItem('vol',volume.toString())}catch{}},[volume]);
@@ -39,7 +56,7 @@ export function PlayerProvider({children}){
     if(!song)return;
     setCurrentSong(song);setCurrentTime(0);setIsPlaying(true);
     if(newQueue)setQueue(newQueue.filter(s=>s.id!==song.id));
-    addToHistory(song); // Track in algorithm
+    addToHistory(song);
     if(audioRef.current&&song.audio){audioRef.current.src=song.audio;audioRef.current.play().catch(()=>{});}
   },[]);
 
@@ -51,16 +68,38 @@ export function PlayerProvider({children}){
 
   const playNext=useCallback(async()=>{
     if(repeatMode==='one'&&currentSong){audioRef.current.currentTime=0;audioRef.current.play().catch(()=>{});return;}
+
+    // Play from queue
     if(queue.length>0){
       const idx=shuffleMode?Math.floor(Math.random()*queue.length):0;
-      const next=queue[idx];setQueue(p=>p.filter((_,i)=>i!==idx));playSong(next);return;
+      const next=queue[idx];
+      setQueue(p=>p.filter((_,i)=>i!==idx));
+      setCurrentSong(next);setCurrentTime(0);setIsPlaying(true);
+      addToHistory(next);
+      if(audioRef.current&&next.audio){audioRef.current.src=next.audio;audioRef.current.play().catch(()=>{});}
+      return;
     }
-    // Algorithm: auto-fetch related songs
-    const q=getRelatedQuery(currentSong);
-    if(q){const related=await searchSongs(q,10);const filtered=related.filter(s=>s.id!==currentSong?.id);if(filtered.length){playSong(filtered[0],filtered);return;}}
+
+    // Queue empty — fetch related songs (try multiple queries)
+    const queries=getRelatedQueries(currentSong);
+    for(const q of queries){
+      const results=await searchSongs(q,10);
+      const filtered=results.filter(s=>s.id!==currentSong?.id);
+      if(filtered.length>0){
+        const next=filtered[0];
+        setQueue(filtered.slice(1));
+        setUpNext(filtered);
+        setCurrentSong(next);setCurrentTime(0);setIsPlaying(true);
+        addToHistory(next);
+        if(audioRef.current&&next.audio){audioRef.current.src=next.audio;audioRef.current.play().catch(()=>{});}
+        return;
+      }
+    }
+
+    // Nothing found
     if(repeatMode==='all'&&currentSong){audioRef.current.currentTime=0;audioRef.current.play().catch(()=>{});}
     else setIsPlaying(false);
-  },[queue,shuffleMode,repeatMode,currentSong,playSong]);
+  },[queue,shuffleMode,repeatMode,currentSong]);
 
   const playPrev=useCallback(()=>{if(currentTime>3){audioRef.current.currentTime=0;setCurrentTime(0);}},[currentTime]);
   const seekTo=useCallback((t)=>{if(audioRef.current){audioRef.current.currentTime=t;setCurrentTime(t);}},[]);
@@ -72,5 +111,5 @@ export function PlayerProvider({children}){
   const clearQueue=useCallback(()=>{setQueue([]);showToast('Queue cleared');},[showToast]);
   const toggleLike=useCallback((songId)=>{setLikedSongs(p=>{if(p.includes(songId)){showToast('Removed from Liked');return p.filter(id=>id!==songId);}showToast('Liked ❤️','success');return[...p,songId];});},[showToast]);
 
-  return<Ctx.Provider value={{currentSong,queue,isPlaying,volume,currentTime,duration,shuffleMode,repeatMode,isExpanded,likedSongs,toasts,playSong,togglePlay,playNext,playPrev,seekTo,setVolume,toggleShuffle,cycleRepeat,addToQueue,removeFromQueue,clearQueue,toggleLike,setExpanded,showToast,dismissToast}}>{children}</Ctx.Provider>;
+  return<Ctx.Provider value={{currentSong,queue,upNext,isPlaying,volume,currentTime,duration,shuffleMode,repeatMode,isExpanded,likedSongs,toasts,playSong,togglePlay,playNext,playPrev,seekTo,setVolume,toggleShuffle,cycleRepeat,addToQueue,removeFromQueue,clearQueue,toggleLike,setExpanded,showToast,dismissToast}}>{children}</Ctx.Provider>;
 }
