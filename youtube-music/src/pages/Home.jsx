@@ -1,5 +1,5 @@
 import{useState,useEffect,useMemo}from'react';
-import{Play,Loader2,Clock,TrendingUp,Radio}from'lucide-react';
+import{Play,Loader2,Clock,Radio}from'lucide-react';
 import{getGreeting}from'../data/mockData';
 import{searchSongs}from'../data/api';
 import{getSmartQueries,analyzePreferences,getHistory}from'../data/algorithm';
@@ -70,17 +70,10 @@ export default function Home(){
         </section>
       )}
 
-      {/* Algorithm-driven sections (changes based on what you're listening) */}
+      {/* Algorithm-driven sections */}
       {queries.map(sec=>{
         const songs=sections[sec.key]||[];
         if(!songs.length)return null;
-        // Show first section as chart, rest as carousels
-        if(sec.key==='trending')return(
-          <section key={sec.key} className="mb-6">
-            <div className="flex items-center gap-2 mb-3"><TrendingUp size={16} className="text-[#FF0000]"/><h2 className="text-base font-semibold text-white">{sec.title}</h2></div>
-            <div className="bg-[#1A1A1A] rounded-xl overflow-hidden">{songs.slice(0,8).map((s,i)=><SongRow key={s.id} song={s} index={i} songList={songs}/>)}</div>
-          </section>
-        );
         return<HorizontalScroll key={sec.key} title={sec.title}>{songs.map(s=><SongCard key={s.id} song={s}/>)}</HorizontalScroll>;
       })}
     </div>

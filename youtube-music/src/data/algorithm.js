@@ -49,10 +49,8 @@ export function getSmartQueries(currentSong) {
     const artist = currentSong.artist?.split(',')[0]?.trim();
     if (artist) queries.push({ key: 'now_artist', query: `${artist} best songs`, title: `More ${artist}` });
     if (currentSong.album) queries.push({ key: 'now_album', query: `${currentSong.album} songs`, title: `From ${currentSong.album}` });
-    if (currentSong.language) queries.push({ key: 'now_lang', query: `${currentSong.language} similar ${artist || ''}`, title: `Similar in ${currentSong.language}` });
+    if (currentSong.language && artist) queries.push({ key: 'now_lang', query: `${currentSong.language} similar ${artist}`, title: `${currentSong.language} Similar` });
   }
-
-  queries.push({ key: 'trending', query: 'trending hindi 2024', title: '🔥 Trending' });
 
   if (!prefs || prefs.totalPlays < 3) {
     queries.push(
@@ -60,6 +58,8 @@ export function getSmartQueries(currentSong) {
       { key: 'punjabi', query: 'punjabi hits 2024', title: '🎵 Punjabi' },
       { key: 'english', query: 'english pop hits 2024', title: '🌍 English' },
       { key: 'romantic', query: 'romantic hindi songs', title: '❤️ Romance' },
+      { key: 'lofi', query: 'lofi chill hindi beats', title: '😌 Lo-Fi' },
+      { key: 'party', query: 'party dance bollywood', title: '🎉 Party' },
     );
     return queries;
   }
