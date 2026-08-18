@@ -1,173 +1,158 @@
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Volume2, Download, Share2, Mic2 } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Download, Share2, Mic2 } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { formatDuration } from '../data/mockData';
 import { downloadSong, getLyrics } from '../data/api';
-import Equalizer from './Equalizer';
 import AudioSettings from './AudioSettings';
 import SleepTimer from './SleepTimer';
 import { useState, useRef, useEffect } from 'react';
 
 export default function ExpandedPlayer() {
-  const { currentSong, isPlaying, togglePlay, playNext, playPrev, currentTime, duration, seekTo, volume, setVolume, shuffleMode, toggleShuffle, repeatMode, cycleRepeat, toggleLike, likedSongs, isExpanded, setExpanded, showToast, queue } = usePlayer();
+  const { currentSong, isPlaying, togglePlay, playNext, playPrev, currentTime, duration, seekTo, shuffleMode, toggleShuffle, repeatMode, cycleRepeat, toggleLike, likedSongs, isExpanded, setExpanded, showToast, queue } = usePlayer();
   const [showLyrics, setShowLyrics] = useState(false);
   const [lyrics, setLyrics] = useState(null);
   const [lyricsLoading, setLyricsLoading] = useState(false);
   const touchStartY = useRef(0);
 
-  // Fetch lyrics when song changes or lyrics panel opened
   useEffect(() => {
     if (!currentSong || !showLyrics) return;
     setLyricsLoading(true);
     setLyrics(null);
-    
-    // If song has lyrics flag, fetch directly
-    if (currentSong.hasLyrics) {
-      getLyrics(currentSong.id).then(l => { setLyrics(l); setLyricsLoading(false); });
-    } else {
-      // Try anyway — sometimes hasLyrics is false but lyrics exist
-      getLyrics(currentSong.id).then(l => {
-        if (l) { setLyrics(l); }
-        else { setLyrics(null); }
-        setLyricsLoading(false);
-      });
-    }
+    getLyrics(currentSong.id).then(l => { setLyrics(l || null); setLyricsLoading(false); }).catch(() => setLyricsLoading(false));
   }, [currentSong?.id, showLyrics]);
 
   if (!isExpanded || !currentSong) return null;
   const liked = likedSongs.includes(currentSong.id);
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
-  // Swipe down to close
   const onTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; };
   const onTouchEnd = (e) => { if (e.changedTouches[0].clientY - touchStartY.current > 80) setExpanded(false); };
 
-  // Share
   const shareSong = async () => {
-    const text = `🎵 ${currentSong.title} - ${currentSong.artist}`;
+    const text = `${currentSong.title} - ${currentSong.artist}`;
     if (navigator.share) {
       try { await navigator.share({ title: currentSong.title, text }); } catch {}
     } else {
       await navigator.clipboard?.writeText(text);
-      showToast('Copied to clipboard!');
+      showToast('Copied!');
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex flex-col animate-up" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-      {/* BG */}
+    <div className="fixed inset-0 z-[70] flex flex-col" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      {/* Background */}
       <div className="absolute inset-0">
-        <img src={currentSong.thumbnail} alt="" className="w-full h-full object-cover blur-[100px] scale-150 opacity-25" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/80 to-black" />
+        <img src={currentSong.thumbnail} alt="" className="w-full h-full object-cover blur-[80px] scale-125 opacity-30" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-[#0a0a0a]/85 to-[#0a0a0a]" />
       </div>
 
-      <div className="relative flex-1 flex flex-col scroll-y">
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
-          <button onClick={() => setExpanded(false)} className="p-2 -ml-2 active:scale-90 transition-transform rounded-full hover:bg-white/10">
-            <ChevronDown size={26} className="text-white/80" />
+      <div className="relative flex-1 flex flex-col">
+        {/* Top Bar */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
+          <button onClick={() => setExpanded(false)} className="w-10 h-10 rounded-full bg-white/[0.08] flex items-center justify-center active:scale-90 transition-transform backdrop-blur-md">
+            <ChevronDown size={22} className="text-white" />
           </button>
-          <div className="flex items-center gap-1">
-            {isPlaying && <Equalizer />}
-            {queue.length > 0 && <span className="text-[10px] text-[#666] ml-2">{queue.length} in queue</span>}
+          <div className="text-center">
+            <p className="text-[10px] text-white/50 uppercase tracking-[0.15em] font-medium">Playing from</p>
+            <p className="text-[12px] text-white/80 font-medium mt-0.5 max-w-[180px] truncate">{currentSong.album || 'Library'}</p>
           </div>
-          <div className="flex items-center gap-0.5">
+          <div className="flex items-center">
             <SleepTimer />
             <AudioSettings />
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 flex flex-col items-center justify-center px-8 sm:px-12 pb-8 gap-5">
-          {/* Art with vinyl effect */}
-          <div className="relative">
-            <div className={`w-[220px] h-[220px] sm:w-[280px] sm:h-[280px] md:w-[320px] md:h-[320px] rounded-full overflow-hidden shadow-2xl shadow-black/60 ring-4 ring-white/5 ${isPlaying ? 'animate-[spin_20s_linear_infinite]' : ''}`} style={{ animationPlayState: isPlaying ? 'running' : 'paused' }}>
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col items-center justify-center px-8 sm:px-14 gap-6">
+          
+          {/* Album Art */}
+          <div className={`relative transition-all duration-700 ease-out ${showLyrics ? 'w-[100px] h-[100px] sm:w-[120px] sm:h-[120px]' : 'w-[260px] h-[260px] sm:w-[300px] sm:h-[300px] md:w-[340px] md:h-[340px]'}`}>
+            <div className={`w-full h-full rounded-3xl overflow-hidden shadow-2xl shadow-black/70 ring-1 ring-white/[0.08] transition-transform duration-500 ${isPlaying ? 'scale-100' : 'scale-[0.96]'}`}>
               <img src={currentSong.thumbnail} alt="" className="w-full h-full object-cover" />
-              {/* Vinyl hole */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-12 h-12 rounded-full bg-black/80 ring-2 ring-white/10" />
-              </div>
-            </div>
-            {/* Glow */}
-            {isPlaying && <div className="absolute -inset-3 rounded-full bg-red-500/10 blur-xl animate-pulse pointer-events-none" />}
-          </div>
-
-          {/* Song Info */}
-          <div className="w-full max-w-xs sm:max-w-sm text-center mt-2">
-            <h1 className="text-lg sm:text-xl font-bold text-white truncate">{currentSong.title}</h1>
-            <p className="text-[14px] text-[#aaa] truncate mt-0.5">{currentSong.artist}</p>
-            {currentSong.language && <span className="inline-block mt-1.5 text-[10px] bg-white/10 text-[#888] px-2 py-0.5 rounded-full capitalize">{currentSong.language}</span>}
-          </div>
-
-          {/* Progress */}
-          <div className="w-full max-w-xs sm:max-w-sm">
-            <div className="w-full h-[5px] bg-white/10 rounded-full cursor-pointer group" onClick={e => { const r = e.currentTarget.getBoundingClientRect(); seekTo((e.clientX - r.left) / r.width * duration); }}>
-              <div className="h-full bg-gradient-to-r from-[#FF0000] to-[#ff4444] rounded-full relative transition-[width] duration-200" style={{ width: `${progress}%` }}>
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity" />
-              </div>
-            </div>
-            <div className="flex justify-between mt-2 text-[11px] text-[#666] tabular-nums">
-              <span>{formatDuration(currentTime)}</span>
-              <span>-{formatDuration(Math.max(0, duration - currentTime))}</span>
             </div>
           </div>
 
-          {/* Controls */}
-          <div className="flex items-center justify-between w-full max-w-[300px]">
-            <button onClick={toggleShuffle} className={`p-2 transition-colors ${shuffleMode ? 'text-[#FF0000]' : 'text-[#777]'}`}><Shuffle size={20} /></button>
-            <button onClick={playPrev} className="p-2 text-white active:scale-90 transition-transform"><SkipBack size={28} fill="white" /></button>
-            <button onClick={togglePlay} className="w-16 h-16 bg-white rounded-full flex items-center justify-center active:scale-90 transition-transform shadow-xl shadow-white/10">
-              {isPlaying ? <Pause size={28} className="text-black" fill="black" /> : <Play size={28} className="text-black ml-1" fill="black" />}
-            </button>
-            <button onClick={playNext} className="p-2 text-white active:scale-90 transition-transform"><SkipForward size={28} fill="white" /></button>
-            <button onClick={cycleRepeat} className={`p-2 transition-colors ${repeatMode !== 'none' ? 'text-[#FF0000]' : 'text-[#777]'}`}>
-              {repeatMode === 'one' ? <Repeat1 size={20} /> : <Repeat size={20} />}
-            </button>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2 flex-wrap justify-center">
-            <button onClick={() => toggleLike(currentSong.id)} className={`p-2.5 rounded-full transition-all active:scale-90 ${liked ? 'text-[#FF0000] bg-red-500/10' : 'text-[#777]'}`}>
-              <Heart size={22} fill={liked ? 'currentColor' : 'none'} />
-            </button>
-            <button onClick={shareSong} className="p-2.5 text-[#777] hover:text-white active:scale-90 transition-all rounded-full">
-              <Share2 size={20} />
-            </button>
-            <button onClick={() => setShowLyrics(!showLyrics)} className={`p-2.5 active:scale-90 transition-all rounded-full ${showLyrics ? 'text-[#FF0000] bg-red-500/10' : 'text-[#777]'}`}>
-              <Mic2 size={20} />
-            </button>
-            <button onClick={async () => { showToast('Downloading...'); const ok = await downloadSong(currentSong); showToast(ok ? 'Downloaded ✓' : 'Failed', ok ? 'success' : 'error'); }}
-              className="p-2.5 text-[#777] hover:text-white active:scale-90 transition-all rounded-full">
-              <Download size={20} />
-            </button>
-            {/* Volume (desktop) */}
-            <div className="hidden sm:flex items-center gap-2">
-              <Volume2 size={15} className="text-[#666]" />
-              <input type="range" min="0" max="1" step="0.01" value={volume} onChange={e => setVolume(parseFloat(e.target.value))}
-                className="w-20 h-1 rounded-full appearance-none bg-white/10 cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white" />
-            </div>
-          </div>
-
-          {/* Lyrics Panel */}
+          {/* Lyrics */}
           {showLyrics && (
-            <div className="w-full max-w-xs sm:max-w-sm mt-4 mb-4 bg-white/5 rounded-2xl p-5 max-h-[250px] scroll-y border border-white/5">
+            <div className="w-full max-w-sm max-h-[30vh] scroll-y animate-in">
               {lyricsLoading && (
-                <div className="flex items-center justify-center py-6">
-                  <div className="w-5 h-5 border-2 border-[#FF0000] border-t-transparent rounded-full animate-spin" />
-                  <span className="ml-2 text-[12px] text-[#888]">Loading lyrics...</span>
+                <div className="flex justify-center py-8">
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 </div>
               )}
               {!lyricsLoading && !lyrics && (
-                <p className="text-[13px] text-[#666] text-center py-6">Lyrics not available for this song</p>
+                <p className="text-[14px] text-white/40 text-center py-8">Lyrics not available</p>
               )}
               {!lyricsLoading && lyrics && (
-                <div className="space-y-2">
+                <div className="space-y-3 text-center">
                   {lyrics.split('\n').map((line, i) => (
-                    <p key={i} className={`text-[14px] leading-relaxed ${line.trim() ? 'text-white/90' : 'h-3'}`}>{line || ' '}</p>
+                    <p key={i} className={`text-[16px] sm:text-[18px] font-semibold leading-relaxed ${line.trim() ? 'text-white/85' : 'h-3'}`}>{line || ' '}</p>
                   ))}
                 </div>
               )}
             </div>
           )}
+
+          {/* Song Info */}
+          <div className="w-full max-w-sm">
+            <div className="flex items-center justify-between">
+              <div className="min-w-0 flex-1 mr-4">
+                <h1 className="text-[20px] sm:text-[22px] font-bold text-white truncate">{currentSong.title}</h1>
+                <p className="text-[14px] text-white/60 truncate mt-0.5">{currentSong.artist}</p>
+              </div>
+              <button onClick={() => toggleLike(currentSong.id)} className={`p-2 rounded-full transition-all active:scale-90 ${liked ? 'text-rose-500' : 'text-white/40'}`}>
+                <Heart size={24} fill={liked ? 'currentColor' : 'none'} strokeWidth={liked ? 0 : 1.5} />
+              </button>
+            </div>
+          </div>
+
+          {/* Progress */}
+          <div className="w-full max-w-sm">
+            <div className="w-full h-[4px] bg-white/[0.12] rounded-full cursor-pointer group" onClick={e => { const r = e.currentTarget.getBoundingClientRect(); seekTo((e.clientX - r.left) / r.width * duration); }}>
+              <div className="h-full bg-white rounded-full relative transition-[width] duration-150 ease-linear" style={{ width: `${progress}%` }}>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[14px] h-[14px] bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity" />
+              </div>
+            </div>
+            <div className="flex justify-between mt-2.5 text-[11px] text-white/40 tabular-nums font-medium">
+              <span>{formatDuration(currentTime)}</span>
+              <span>{formatDuration(duration)}</span>
+            </div>
+          </div>
+
+          {/* Controls */}
+          <div className="flex items-center justify-between w-full max-w-[320px]">
+            <button onClick={toggleShuffle} className={`p-2.5 rounded-full transition-all ${shuffleMode ? 'text-white bg-white/[0.1]' : 'text-white/40'}`}>
+              <Shuffle size={20} />
+            </button>
+            <button onClick={playPrev} className="p-2 text-white active:scale-90 transition-transform">
+              <SkipBack size={32} fill="white" />
+            </button>
+            <button onClick={togglePlay} className="w-[72px] h-[72px] bg-white rounded-full flex items-center justify-center active:scale-90 transition-all shadow-2xl shadow-white/20 hover:shadow-white/30">
+              {isPlaying ? <Pause size={30} className="text-black" fill="black" /> : <Play size={30} className="text-black ml-1" fill="black" />}
+            </button>
+            <button onClick={playNext} className="p-2 text-white active:scale-90 transition-transform">
+              <SkipForward size={32} fill="white" />
+            </button>
+            <button onClick={cycleRepeat} className={`p-2.5 rounded-full transition-all ${repeatMode !== 'none' ? 'text-white bg-white/[0.1]' : 'text-white/40'}`}>
+              {repeatMode === 'one' ? <Repeat1 size={20} /> : <Repeat size={20} />}
+            </button>
+          </div>
+
+          {/* Bottom Actions */}
+          <div className="flex items-center justify-center gap-6 pb-4">
+            <button onClick={() => setShowLyrics(!showLyrics)} className={`flex flex-col items-center gap-1 transition-all active:scale-90 ${showLyrics ? 'text-white' : 'text-white/40'}`}>
+              <Mic2 size={20} />
+              <span className="text-[9px] font-medium">Lyrics</span>
+            </button>
+            <button onClick={shareSong} className="flex flex-col items-center gap-1 text-white/40 active:scale-90 transition-all">
+              <Share2 size={20} />
+              <span className="text-[9px] font-medium">Share</span>
+            </button>
+            <button onClick={async () => { showToast('Downloading...'); const ok = await downloadSong(currentSong); showToast(ok ? 'Downloaded ✓' : 'Failed'); }}
+              className="flex flex-col items-center gap-1 text-white/40 active:scale-90 transition-all">
+              <Download size={20} />
+              <span className="text-[9px] font-medium">Download</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
