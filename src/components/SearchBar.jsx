@@ -1,16 +1,18 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, X, Loader2 } from 'lucide-react';
 import { searchSongs } from '../data/api';
+import { ytmSearchSongs } from '../data/ytmusic';
 
 export default function SearchBar() {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
   const ref = useRef(null);
   const timer = useRef(null);
-  const requestId = useRef(0);
+  const requestId = useRef(0); // Track latest request
   const nav = useNavigate();
 
   useEffect(() => {
@@ -21,15 +23,23 @@ export default function SearchBar() {
   }, []);
 
   useEffect(() => {
-    if (query.length < 2) { setResults([]); setLoading(false); return; }
+    if (query.length < 2) { setResults([]); setLoading(false); setError(false); return; }
     setLoading(true);
+    setError(false);
     if (timer.current) clearTimeout(timer.current);
 
     timer.current = setTimeout(async () => {
       const id = ++requestId.current;
-      const songs = await searchSongs(query, 6) || [];
+      // Fetch from both APIs in parallel
+      const [saavnResults, ytResults] = await Promise.all([
+        searchSongs(query, 4),
+        ytmSearchSongs(query, 3),
+      ]);
       if (id !== requestId.current) return;
-      setResults(songs);
+      // Combine: JioSaavn first (playable), then YT Music
+      const combined = [...saavnResults, ...ytResults.map(r => ({ ...r, ytOnly: true }))];
+      if (combined.length === 0 && query.length >= 2) setError(true);
+      setResults(combined);
       setLoading(false);
     }, 400);
 
@@ -52,15 +62,21 @@ export default function SearchBar() {
           placeholder="Search songs, artists..."
           className="w-full bg-[#1a1a1a] text-white text-[14px] pl-10 pr-10 py-2.5 rounded-full placeholder:text-[#555] focus:outline-none focus:bg-[#222] transition-colors"
         />
-        {query && <button type="button" onClick={() => { setQuery(''); setResults([]); }} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#555]"><X size={16} /></button>}
+        {query && <button type="button" onClick={() => { setQuery(''); setResults([]); setError(false); }} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#555]"><X size={16} /></button>}
       </form>
 
-      {open && (results.length > 0 || loading) && (
+      {open && (results.length > 0 || loading || error) && (
         <div className="absolute top-full mt-2 w-full bg-[#141414] rounded-2xl border border-[#222] shadow-2xl overflow-hidden z-50 max-h-[70vh] scroll-y">
           {loading && <div className="flex justify-center py-4"><Loader2 size={18} className="text-[#FF0000] animate-spin" /></div>}
+          {error && !loading && <p className="text-[13px] text-[#666] text-center py-4">No results found</p>}
           {results.map((s, i) => (
             <button key={s.id || i} onClick={() => {
-              nav(`/search?q=${encodeURIComponent(s.title)}`);
+              if (s.ytOnly) {
+                // YT Music result — search on JioSaavn for playback
+                nav(`/search?q=${encodeURIComponent(s.title + ' ' + s.artist)}`);
+              } else {
+                nav(`/search?q=${encodeURIComponent(s.title)}`);
+              }
               setOpen(false); setQuery(s.title);
             }}
               className="flex items-center gap-3 w-full px-4 py-3 active:bg-[#222] hover:bg-[#1a1a1a] transition-colors text-left">
@@ -69,6 +85,7 @@ export default function SearchBar() {
                 <p className="text-[13px] text-white truncate font-medium">{s.title}</p>
                 <p className="text-[11px] text-[#777] truncate">{s.artist}</p>
               </div>
+              {s.ytOnly && <span className="text-[9px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full shrink-0">YT</span>}
             </button>
           ))}
         </div>

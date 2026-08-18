@@ -74,24 +74,11 @@ function bestImage(images) {
   return images[images.length - 1]?.url || images[0]?.url;
 }
 
-// Quality priority order - always try to get the best available
-const QUALITY_PRIORITY = {
-  '320kbps': ['320kbps', '160kbps', '96kbps', '48kbps'],
-  '160kbps': ['160kbps', '96kbps', '48kbps'],
-  '96kbps': ['96kbps', '48kbps'],
-  '48kbps': ['48kbps'],
-};
-
 function getAudioByQuality(urls, quality) {
   if (!urls?.length) return '';
-  // Try requested quality first, then fallback to next best
-  const priorities = QUALITY_PRIORITY[quality] || QUALITY_PRIORITY['320kbps'];
-  for (const q of priorities) {
-    const match = urls.find(u => u.quality === q);
-    if (match?.url) return match.url;
-  }
-  // Final fallback: highest available (last in array is usually highest)
-  return urls[urls.length - 1]?.url || urls[0]?.url || '';
+  const match = urls.find(u => u.quality === quality);
+  if (match) return match.url;
+  return urls[urls.length - 1]?.url || '';
 }
 
 export function getQuality() {
@@ -100,12 +87,6 @@ export function getQuality() {
 
 export function setQuality(q) {
   try { localStorage.setItem('audio_quality', q); } catch {}
-}
-
-// Get all available quality options for a song
-export function getAvailableQualities(audioAll) {
-  if (!audioAll?.length) return [];
-  return audioAll.map(u => u.quality).filter(Boolean);
 }
 
 function mapSong(s) {
@@ -239,14 +220,7 @@ export async function refreshStreamUrl(songId) {
 export async function downloadSong(song) {
   if (!song) return false;
   const urls = song.audioAll || [];
-  // Always download at highest available quality
-  const qualityOrder = ['320kbps', '160kbps', '96kbps', '48kbps'];
-  let best = null;
-  for (const q of qualityOrder) {
-    best = urls.find(u => u.quality === q);
-    if (best?.url) break;
-  }
-  if (!best?.url) best = urls[urls.length - 1];
+  const best = urls.find(u => u.quality === '320kbps') || urls[urls.length - 1];
   if (!best?.url) return false;
 
   try {
@@ -256,7 +230,7 @@ export async function downloadSong(song) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${song.title} - ${song.artist} [${best.quality || 'HQ'}].mp4`;
+    a.download = `${song.title} - ${song.artist}.mp4`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

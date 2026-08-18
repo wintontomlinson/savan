@@ -19,9 +19,9 @@ export default function SearchResults() {
     setLoading(true);
     setError(false);
     const id = ++requestId.current;
-    const s = await searchSongs(q, 30) || [];
+    const s = await searchSongs(q, 30);
     if (id !== requestId.current) return;
-    if (s.length === 0) { setError(true); setLoading(false); return; }
+    if (s === null) { setError(true); setLoading(false); return; }
     setSongs(s);
     setLoading(false);
   };
@@ -40,11 +40,19 @@ export default function SearchResults() {
       {error && !loading && (
         <div className="text-center py-16">
           <SearchX size={36} className="text-[#333] mx-auto mb-3" />
-          <p className="text-white text-sm">No results for "{q}"</p>
-          <p className="text-[12px] text-[#666] mt-1 mb-4">Try different keywords</p>
+          <p className="text-white text-sm">Unable to load results</p>
+          <p className="text-[12px] text-[#666] mt-1 mb-4">Please check your connection</p>
           <button onClick={doSearch} className="flex items-center gap-2 mx-auto px-4 py-2 bg-[#FF0000] text-white text-[13px] rounded-full active:scale-95">
             <RefreshCw size={14} /> Retry
           </button>
+        </div>
+      )}
+
+      {!loading && !error && !songs.length && (
+        <div className="text-center py-16">
+          <SearchX size={36} className="text-[#333] mx-auto mb-3" />
+          <p className="text-white text-sm">No results for "{q}"</p>
+          <p className="text-[12px] text-[#666] mt-1">Try different keywords</p>
         </div>
       )}
 
