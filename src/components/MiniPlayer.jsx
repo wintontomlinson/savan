@@ -22,9 +22,8 @@ export default function MiniPlayer() {
         </div>
       </div>
       {/* Content */}
-      <div className="flex items-center h-[66px] px-3 sm:px-4 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/[0.04]">
+      <div className="flex items-center h-[66px] px-4 md:px-6 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/[0.04]">
         <div className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer" onClick={() => setExpanded(true)}>
-          {/* Thumbnail with glow */}
           <div className="relative">
             <div className={`w-12 h-12 rounded-xl overflow-hidden shadow-lg shrink-0 ring-1 ring-white/[0.08] ${isPlaying ? 'shadow-rose-500/20' : ''}`}>
               <img src={currentSong.thumbnail} alt="" className="w-full h-full object-cover" />
@@ -38,14 +37,14 @@ export default function MiniPlayer() {
           {isPlaying && <div className="shrink-0 hidden sm:block"><Equalizer /></div>}
         </div>
         {/* Controls */}
-        <div className="flex items-center gap-1 shrink-0">
-          <button onClick={e => { e.stopPropagation(); toggleLike(currentSong.id); }} className={`p-2 btn-press transition-colors ${liked ? 'text-rose-400' : 'text-[#555] hover:text-white'}`}>
+        <div className="flex items-center gap-1 shrink-0 ml-3">
+          <button onClick={e => { e.stopPropagation(); toggleLike(currentSong.id); }} className={`p-2 btn-press transition-colors hidden md:block ${liked ? 'text-rose-400' : 'text-[#555] hover:text-white'}`}>
             <Heart size={18} fill={liked ? 'currentColor' : 'none'} strokeWidth={liked ? 0 : 1.5} />
           </button>
-          <button onClick={e => { e.stopPropagation(); playPrev(); }} className="p-2 text-[#aaa] hover:text-white hidden sm:block btn-press">
+          <button onClick={e => { e.stopPropagation(); playPrev(); }} className="p-2 text-[#aaa] hover:text-white hidden md:block btn-press">
             <SkipBack size={18} fill="currentColor" />
           </button>
-          <button onClick={e => { e.stopPropagation(); togglePlay(); }} className="w-11 h-11 rounded-full flex items-center justify-center btn-press ml-1 bg-white shadow-lg shadow-white/10 hover:shadow-white/20 transition-shadow">
+          <button onClick={e => { e.stopPropagation(); togglePlay(); }} className="w-11 h-11 rounded-full flex items-center justify-center btn-press bg-white shadow-lg shadow-white/10 hover:shadow-white/20 transition-shadow">
             {isPlaying ? <Pause size={18} className="text-black" fill="black" /> : <Play size={18} className="text-black ml-0.5" fill="black" />}
           </button>
           <button onClick={e => { e.stopPropagation(); playNext(); }} className="p-2 text-white btn-press">

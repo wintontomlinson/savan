@@ -2,8 +2,10 @@ import SearchBar from './SearchBar';
 
 export default function Header() {
   return (
-    <header className="fixed top-0 left-0 right-0 h-14 z-40 flex items-center px-3 sm:px-4 md:pl-[88px] lg:pl-[256px] glass border-b border-white/5">
-      <SearchBar />
+    <header className="sticky top-0 z-40 h-16 flex items-center px-4 sm:px-6 lg:px-8 xl:px-10 bg-[#080808]/90 backdrop-blur-xl border-b border-white/[0.04]">
+      <div className="max-w-[1400px] mx-auto w-full">
+        <SearchBar />
+      </div>
     </header>
   );
 }
