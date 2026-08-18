@@ -21,18 +21,24 @@ export default function SearchResults() {
     setError(false);
     const id = ++requestId.current;
     
-    // Search both JioSaavn and YouTube Music in parallel
-    const [saavnResults, ytResults] = await Promise.all([
-      searchSongs(q, 20),
-      ytmSearchSongs(q, 10),
-    ]);
+    // JioSaavn is primary — always try it
+    let saavnResults = [];
+    let ytResults = [];
+    try {
+      saavnResults = await searchSongs(q, 25) || [];
+    } catch { saavnResults = []; }
+    
+    // YT Music is optional bonus — don't let it break anything
+    try {
+      ytResults = await ytmSearchSongs(q, 5) || [];
+    } catch { ytResults = []; }
     
     if (id !== requestId.current) return;
-    if (saavnResults === null && ytResults.length === 0) { setError(true); setLoading(false); return; }
+    if (saavnResults.length === 0 && ytResults.length === 0) { setError(true); setLoading(false); return; }
     
     // Combine: JioSaavn first (directly playable), then YT results
     const combined = [
-      ...(saavnResults || []),
+      ...saavnResults,
       ...ytResults.map(r => ({ ...r, ytOnly: true })),
     ];
     
@@ -43,13 +49,24 @@ export default function SearchResults() {
   // Play a song — handles both JioSaavn (direct) and YT (needs stream fetch)
   const handlePlay = async (song, songList) => {
     if (song.ytOnly && song.videoId) {
-      showToast('Loading from YouTube...');
-      const audioUrl = await getYtAudioStream(song.videoId);
-      if (audioUrl) {
-        const playableSong = { ...song, audio: audioUrl, ytOnly: undefined };
-        playSong(playableSong, songList?.filter(s => !s.ytOnly));
-      } else {
-        showToast('Failed to load stream', 'error');
+      showToast('Loading...');
+      try {
+        const audioUrl = await getYtAudioStream(song.videoId);
+        if (audioUrl) {
+          const playableSong = { ...song, audio: audioUrl, ytOnly: undefined };
+          playSong(playableSong, songList?.filter(s => !s.ytOnly));
+        } else {
+          // Fallback: search this song on JioSaavn instead
+          showToast('Searching on JioSaavn...');
+          const fallback = await searchSongs(`${song.title} ${song.artist}`, 1);
+          if (fallback?.length > 0) {
+            playSong(fallback[0], songList?.filter(s => !s.ytOnly));
+          } else {
+            showToast('Song not available', 'error');
+          }
+        }
+      } catch {
+        showToast('Error loading song', 'error');
       }
     } else {
       playSong(song, songList);

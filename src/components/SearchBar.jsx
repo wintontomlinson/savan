@@ -2,8 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, X, Loader2 } from 'lucide-react';
 import { searchSongs } from '../data/api';
-import { ytmSearchSongs, getYtAudioStream } from '../data/ytmusic';
-import { usePlayer } from '../context/PlayerContext';
+import { ytmSearchSongs } from '../data/ytmusic';
 
 export default function SearchBar() {
   const [query, setQuery] = useState('');
@@ -13,9 +12,8 @@ export default function SearchBar() {
   const [error, setError] = useState(false);
   const ref = useRef(null);
   const timer = useRef(null);
-  const requestId = useRef(0); // Track latest request
+  const requestId = useRef(0);
   const nav = useNavigate();
-  const { playSong, showToast } = usePlayer();
 
   useEffect(() => {
     const h = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
@@ -32,13 +30,17 @@ export default function SearchBar() {
 
     timer.current = setTimeout(async () => {
       const id = ++requestId.current;
-      // Fetch from both APIs in parallel
-      const [saavnResults, ytResults] = await Promise.all([
-        searchSongs(query, 4),
-        ytmSearchSongs(query, 3),
-      ]);
+      // Try JioSaavn first (always works), YT is optional bonus
+      let saavnResults = [];
+      let ytResults = [];
+      try {
+        saavnResults = await searchSongs(query, 6) || [];
+      } catch { saavnResults = []; }
+      try {
+        ytResults = await ytmSearchSongs(query, 3) || [];
+      } catch { ytResults = []; }
       if (id !== requestId.current) return;
-      // Combine: JioSaavn first (playable), then YT Music
+      // Combine: JioSaavn first (playable), then YT Music (if any)
       const combined = [...saavnResults, ...ytResults.map(r => ({ ...r, ytOnly: true }))];
       if (combined.length === 0 && query.length >= 2) setError(true);
       setResults(combined);
@@ -73,18 +75,10 @@ export default function SearchBar() {
           {error && !loading && <p className="text-[13px] text-[#666] text-center py-4">No results found</p>}
           {results.map((s, i) => (
             <button key={s.id || i} onClick={async () => {
-              if (s.ytOnly && s.videoId) {
-                // YT Music result — get audio stream and play directly
+              if (s.ytOnly) {
+                // YT result — just search on JioSaavn for guaranteed playback
                 setOpen(false); setQuery(s.title);
-                showToast('Loading from YouTube...');
-                const audioUrl = await getYtAudioStream(s.videoId);
-                if (audioUrl) {
-                  playSong({ ...s, audio: audioUrl, ytOnly: undefined });
-                } else {
-                  // Fallback: search on JioSaavn
-                  nav(`/search?q=${encodeURIComponent(s.title + ' ' + s.artist)}`);
-                  showToast('YT stream failed, searching JioSaavn...');
-                }
+                nav(`/search?q=${encodeURIComponent(s.title + ' ' + s.artist)}`);
               } else {
                 nav(`/search?q=${encodeURIComponent(s.title)}`);
                 setOpen(false); setQuery(s.title);
