@@ -1,4 +1,4 @@
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Volume2, Download, Settings, Share2, Mic2 } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Volume2, VolumeX, Download, Settings, Share2, Mic2, Disc3, Zap } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { formatDuration } from '../data/mockData';
 import { downloadSong, getQuality, setQuality, getLyrics } from '../data/api';
@@ -143,25 +143,51 @@ export default function ExpandedPlayer() {
             </button>
             {/* Quality */}
             <div className="relative">
-              <button onClick={() => setShowQuality(!showQuality)} className="flex items-center gap-1 px-3 py-1.5 bg-white/5 rounded-full text-[11px] text-[#aaa] border border-white/10">
+              <button onClick={() => setShowQuality(!showQuality)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] border transition-all ${
+                quality === '320kbps' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-white/5 text-[#aaa] border-white/10'
+              }`}>
+                {quality === '320kbps' && <Zap size={10} />}
                 <Settings size={11} />{quality}
               </button>
               {showQuality && (
-                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-[#151515] border border-[#222] rounded-2xl overflow-hidden shadow-2xl z-10 w-32 animate-scale">
-                  {['320kbps', '160kbps', '96kbps', '48kbps'].map(q => (
-                    <button key={q} onClick={() => { setQuality(q); setQualityState(q); setShowQuality(false); showToast(`Quality: ${q}`); }}
-                      className={`w-full px-4 py-2.5 text-[12px] text-left ${quality === q ? 'text-[#FF0000] bg-red-500/10' : 'text-white hover:bg-white/5'}`}>
-                      {q}{q === '320kbps' ? ' HD' : ''}
-                    </button>
-                  ))}
-                </div>
+                <>
+                  <div className="fixed inset-0 z-[5]" onClick={() => setShowQuality(false)} />
+                  <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-[#111] border border-[#222] rounded-2xl overflow-hidden shadow-2xl z-10 w-44 animate-scale">
+                    <p className="px-4 pt-3 pb-1.5 text-[10px] uppercase text-[#555] font-semibold tracking-wide">Streaming Quality</p>
+                    {[
+                      { q: '320kbps', label: '320kbps', badge: 'HD', desc: 'Best quality', color: 'emerald' },
+                      { q: '160kbps', label: '160kbps', badge: 'HQ', desc: 'High quality', color: 'blue' },
+                      { q: '96kbps', label: '96kbps', badge: '', desc: 'Normal', color: 'gray' },
+                      { q: '48kbps', label: '48kbps', badge: '', desc: 'Data saver', color: 'gray' },
+                    ].map(item => (
+                      <button key={item.q} onClick={() => { setQuality(item.q); setQualityState(item.q); setShowQuality(false); showToast(`Quality: ${item.q} ${item.badge}`); }}
+                        className={`w-full px-4 py-2.5 text-left flex items-center justify-between transition-colors ${quality === item.q ? 'bg-white/[0.06]' : 'hover:bg-white/[0.03]'}`}>
+                        <div>
+                          <span className={`text-[12px] font-medium ${quality === item.q ? 'text-white' : 'text-[#ccc]'}`}>{item.label}</span>
+                          <span className="text-[10px] text-[#555] block">{item.desc}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          {item.badge && <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${item.color === 'emerald' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-blue-500/20 text-blue-400'}`}>{item.badge}</span>}
+                          {quality === item.q && <div className="w-2 h-2 rounded-full bg-rose-500" />}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
-            {/* Volume (desktop) */}
+            {/* Volume (desktop) - supports up to 300% */}
             <div className="hidden sm:flex items-center gap-2">
-              <Volume2 size={15} className="text-[#666]" />
-              <input type="range" min="0" max="1" step="0.01" value={volume} onChange={e => setVolume(parseFloat(e.target.value))}
-                className="w-20 h-1 rounded-full appearance-none bg-white/10 cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white" />
+              <button onClick={() => setVolume(volume > 0 ? 0 : 0.7)} className="p-1">
+                {volume === 0 ? <VolumeX size={15} className="text-[#666]" /> : <Volume2 size={15} className={volume > 1.5 ? 'text-red-400' : volume > 1 ? 'text-orange-400' : 'text-[#666]'} />}
+              </button>
+              <div className="relative group">
+                <input type="range" min="0" max="3" step="0.01" value={volume} onChange={e => setVolume(parseFloat(e.target.value))}
+                  className="w-24 h-1.5 rounded-full appearance-none bg-white/10 cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md" />
+                <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] font-bold tabular-nums opacity-0 group-hover:opacity-100 transition-opacity bg-black/80 px-1.5 py-0.5 rounded pointer-events-none text-white">
+                  {Math.round(volume * 100)}%
+                </span>
+              </div>
             </div>
           </div>
 

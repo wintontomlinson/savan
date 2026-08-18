@@ -1,103 +1,138 @@
-// YouTube Music API - Search & Discovery
-// Audio playback uses JioSaavn (YT doesn't provide direct stream URLs)
+// YouTube Music Search via Piped API (reliable alternative to broken YT Music internal API)
+// Piped provides search + audio streams from YouTube without authentication
 
-const YTM_BASE = 'https://music.youtube.com/youtubei/v1';
-const CLIENT = { clientName: 'WEB_REMIX', clientVersion: '1.20231204.01.00', hl: 'en', gl: 'IN' };
+const PIPED_INSTANCES = [
+  'https://pipedapi.kavin.rocks',
+  'https://pipedapi.adminforge.de',
+  'https://pipedapi.in.projectsegfau.lt',
+  'https://api.piped.privacydev.net',
+  'https://pipedapi.darkness.services',
+];
 
-// Songs filter param
-const SONG_FILTER = 'EgWKAQIIAWoSEAMQBBAJEAoQBRAREBAQFRAV';
+let currentInstance = 0;
 
-async function ytmFetch(endpoint, body) {
-  try {
-    const res = await fetch(`${YTM_BASE}${endpoint}?prettyPrint=false`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ context: { client: CLIENT }, ...body }),
-    });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch { return null; }
+function getApiBase() {
+  return PIPED_INSTANCES[currentInstance % PIPED_INSTANCES.length];
 }
 
-// Search YouTube Music for songs
+function rotateInstance() {
+  currentInstance = (currentInstance + 1) % PIPED_INSTANCES.length;
+}
+
+async function pipedFetch(path, { timeout = 8000, retries = 2 } = {}) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const base = getApiBase();
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeout);
+
+      const res = await fetch(`${base}${path}`, {
+        signal: controller.signal,
+        headers: { 'Accept': 'application/json' },
+      });
+      clearTimeout(timer);
+
+      if (!res.ok) {
+        // Rotate to next instance on server error
+        if (res.status >= 500) {
+          rotateInstance();
+          continue;
+        }
+        return null;
+      }
+
+      return await res.json();
+    } catch (e) {
+      // On timeout or network error, try next instance
+      rotateInstance();
+      if (attempt < retries) continue;
+      return null;
+    }
+  }
+  return null;
+}
+
+// Search YouTube Music for songs using Piped
 export async function ytmSearchSongs(query, limit = 10) {
   if (!query?.trim()) return [];
-  const data = await ytmFetch('/search', { query, params: SONG_FILTER });
-  if (!data) return [];
 
-  try {
-    const sections = data?.contents?.tabbedSearchResultsRenderer?.tabs?.[0]
-      ?.tabRenderer?.content?.sectionListRenderer?.contents || [];
+  const data = await pipedFetch(`/search?q=${encodeURIComponent(query)}&filter=music_songs`);
+  if (!data?.items?.length) return [];
 
-    const results = [];
-    for (const sec of sections) {
-      const items = sec?.musicShelfRenderer?.contents || [];
-      for (const item of items) {
-        if (results.length >= limit) break;
-        const r = item?.musicResponsiveListItemRenderer;
-        if (!r) continue;
+  const results = [];
+  for (const item of data.items) {
+    if (results.length >= limit) break;
+    if (!item?.url || item.duration <= 0) continue;
 
-        const title = r?.flexColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]?.text;
-        const artistRuns = r?.flexColumns?.[1]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs || [];
-        const artist = artistRuns.filter(run => run?.navigationEndpoint?.browseEndpoint?.browseEndpointContextSupportedConfigs).map(run => run.text).join(', ') || artistRuns[0]?.text || '';
-        const videoId = r?.overlay?.musicItemThumbnailOverlayRenderer?.content?.musicPlayButtonRenderer?.playNavigationEndpoint?.watchEndpoint?.videoId;
-        const thumbs = r?.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails || [];
-        const thumbnail = thumbs[thumbs.length - 1]?.url || thumbs[0]?.url || '';
-        const durationText = r?.fixedColumns?.[0]?.musicResponsiveListItemFixedColumnRenderer?.text?.runs?.[0]?.text || '';
-        const duration = parseDuration(durationText);
+    // Extract videoId from URL like /watch?v=xxxxx
+    const videoId = item.url?.replace('/watch?v=', '') || '';
+    if (!videoId) continue;
 
-        if (title && videoId) {
-          results.push({
-            id: `ytm_${videoId}`,
-            videoId,
-            title: title.trim(),
-            artist: artist.trim(),
-            thumbnail: thumbnail.replace(/w60-h60|w120-h120/, 'w300-h300'),
-            duration,
-            source: 'youtube',
-          });
-        }
-      }
-    }
-    return results;
-  } catch { return []; }
+    // Clean up uploader name (remove " - Topic" suffix)
+    const artist = (item.uploaderName || item.uploader || '')
+      .replace(/\s*-\s*Topic$/i, '')
+      .trim();
+
+    results.push({
+      id: `ytm_${videoId}`,
+      videoId,
+      title: (item.title || '').trim(),
+      artist,
+      thumbnail: item.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+      duration: item.duration || 0,
+      source: 'youtube',
+    });
+  }
+
+  return results;
 }
 
-function parseDuration(text) {
-  if (!text) return 0;
-  const parts = text.split(':').map(Number);
-  if (parts.length === 2) return parts[0] * 60 + parts[1];
-  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
-  return 0;
+// Get audio stream URL for a YouTube video via Piped
+export async function getYtAudioStream(videoId) {
+  if (!videoId) return null;
+
+  const data = await pipedFetch(`/streams/${videoId}`);
+  if (!data?.audioStreams?.length) return null;
+
+  // Sort audio streams by bitrate (highest first) and pick the best one
+  const audioStreams = data.audioStreams
+    .filter(s => s.mimeType?.startsWith('audio/') && s.url)
+    .sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0));
+
+  if (audioStreams.length === 0) return null;
+
+  // Prefer mp4/m4a format, otherwise take highest bitrate
+  const m4a = audioStreams.find(s => s.mimeType?.includes('mp4') || s.format === 'M4A');
+  return m4a?.url || audioStreams[0].url;
 }
 
-// Get YTM suggestions/related
+// Get related/suggestions for a video
 export async function ytmGetRelated(videoId) {
   if (!videoId) return [];
-  const data = await ytmFetch('/next', { videoId, isAudioOnly: true });
-  if (!data) return [];
 
-  try {
-    const tabs = data?.contents?.singleColumnMusicWatchNextResultsRenderer?.tabbedRenderer
-      ?.watchNextTabbedResultsRenderer?.tabs || [];
-    const relatedTab = tabs.find(t => t?.tabRenderer?.endpoint?.browseEndpoint?.browseId === 'MPREb_');
-    // Try automix playlist
-    const automix = data?.contents?.singleColumnMusicWatchNextResultsRenderer?.tabbedRenderer
-      ?.watchNextTabbedResultsRenderer?.tabs?.[0]?.tabRenderer?.content
-      ?.musicQueueRenderer?.content?.playlistPanelRenderer?.contents || [];
+  const data = await pipedFetch(`/streams/${videoId}`);
+  if (!data?.relatedStreams?.length) return [];
 
-    return automix.slice(1, 11).map(item => {
-      const r = item?.playlistPanelVideoRenderer;
-      if (!r) return null;
+  return data.relatedStreams
+    .filter(item => item.duration > 0 && item.duration < 600) // Only short videos (likely songs)
+    .slice(0, 10)
+    .map(item => {
+      const id = item.url?.replace('/watch?v=', '') || '';
+      if (!id) return null;
+
+      const artist = (item.uploaderName || '')
+        .replace(/\s*-\s*Topic$/i, '')
+        .trim();
+
       return {
-        id: `ytm_${r.videoId}`,
-        videoId: r.videoId,
-        title: r?.title?.runs?.[0]?.text || '',
-        artist: r?.shortBylineText?.runs?.[0]?.text || '',
-        thumbnail: (r?.thumbnail?.thumbnails || [])[0]?.url?.replace(/w60-h60/, 'w300-h300') || '',
-        duration: parseDuration(r?.lengthText?.runs?.[0]?.text),
+        id: `ytm_${id}`,
+        videoId: id,
+        title: (item.title || '').trim(),
+        artist,
+        thumbnail: item.thumbnail || `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
+        duration: item.duration || 0,
         source: 'youtube',
       };
-    }).filter(Boolean);
-  } catch { return []; }
+    })
+    .filter(Boolean);
 }

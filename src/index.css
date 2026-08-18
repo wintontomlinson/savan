@@ -128,6 +128,84 @@
 .stagger > *:nth-child(7) { animation-delay: 0.21s; }
 .stagger > *:nth-child(8) { animation-delay: 0.24s; }
 
+/* ─── EQ Vertical Slider ─── */
+.eq-slider-vertical {
+  position: absolute;
+  height: 128px;
+  width: 32px;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  cursor: pointer;
+  writing-mode: vertical-lr;
+  direction: rtl;
+}
+
+.eq-slider-vertical::-webkit-slider-track {
+  width: 4px;
+  border-radius: 4px;
+  background: transparent;
+}
+
+.eq-slider-vertical::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.3), 0 2px 8px rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+}
+
+.eq-slider-vertical::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 12px rgba(225, 29, 72, 0.5), 0 2px 12px rgba(0, 0, 0, 0.6);
+}
+
+.eq-slider-vertical::-webkit-slider-thumb:active {
+  transform: scale(1.3);
+  background: #e11d48;
+  border-color: #e11d48;
+  box-shadow: 0 0 16px rgba(225, 29, 72, 0.6), 0 2px 12px rgba(0, 0, 0, 0.6);
+}
+
+.eq-slider-vertical::-moz-range-track {
+  width: 4px;
+  border-radius: 4px;
+  background: transparent;
+}
+
+.eq-slider-vertical::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.3), 0 2px 8px rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+}
+
+/* ─── Audio Settings Panel ─── */
+@keyframes slideUpPanel {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-up {
+  animation: slideUpPanel 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ─── Sleep Timer Progress Ring ─── */
+@keyframes pulseGlow {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(139, 92, 246, 0.3)); }
+  50% { filter: drop-shadow(0 0 12px rgba(139, 92, 246, 0.6)); }
+}
+
+.sleep-ring-active {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
 /* ─── Inter Font ─── */
 @font-face {
   font-family: 'Inter';

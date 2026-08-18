@@ -4,14 +4,19 @@ import { formatDuration } from '../data/mockData';
 import { downloadSong } from '../data/api';
 import Equalizer from './Equalizer';
 
-export default function SongRow({ song, index, songList = [] }) {
+export default function SongRow({ song, index, songList = [], onPlay }) {
   const { playSong, currentSong, isPlaying, toggleLike, likedSongs, showToast } = usePlayer();
   const isActive = currentSong?.id === song.id;
   const liked = likedSongs.includes(song.id);
 
+  const handleClick = () => {
+    if (onPlay) onPlay();
+    else playSong(song, songList);
+  };
+
   return (
     <div className={`group flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-3 rounded-xl transition-all duration-150 cursor-pointer animate-in ${isActive ? 'bg-rose-500/[0.06] ring-1 ring-rose-500/10' : 'hover:bg-white/[0.03]'}`}
-      onClick={() => playSong(song, songList)} style={{ animationDelay: `${index * 30}ms` }}>
+      onClick={handleClick} style={{ animationDelay: `${index * 30}ms` }}>
       {/* # or EQ */}
       <div className="w-6 shrink-0 flex justify-center">
         {isActive && isPlaying ? <Equalizer /> :
@@ -23,7 +28,10 @@ export default function SongRow({ song, index, songList = [] }) {
       {/* Info */}
       <div className="flex-1 min-w-0">
         <p className={`text-[13px] font-medium truncate leading-tight ${isActive ? 'text-rose-400' : 'text-white'}`}>{song.title}</p>
-        <p className="text-[11px] text-[#777] truncate mt-0.5">{song.artist}</p>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <p className="text-[11px] text-[#777] truncate">{song.artist}</p>
+          {song.ytOnly && <span className="text-[8px] bg-red-500/20 text-red-400 px-1 py-0.5 rounded shrink-0 leading-none">YT</span>}
+        </div>
       </div>
       {/* Duration */}
       <span className="text-[11px] text-[#555] tabular-nums shrink-0 hidden sm:block">{formatDuration(song.duration)}</span>

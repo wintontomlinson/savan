@@ -2,7 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, X, Loader2 } from 'lucide-react';
 import { searchSongs } from '../data/api';
-import { ytmSearchSongs } from '../data/ytmusic';
+import { ytmSearchSongs, getYtAudioStream } from '../data/ytmusic';
+import { usePlayer } from '../context/PlayerContext';
 
 export default function SearchBar() {
   const [query, setQuery] = useState('');
@@ -14,6 +15,7 @@ export default function SearchBar() {
   const timer = useRef(null);
   const requestId = useRef(0); // Track latest request
   const nav = useNavigate();
+  const { playSong, showToast } = usePlayer();
 
   useEffect(() => {
     const h = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
@@ -70,14 +72,23 @@ export default function SearchBar() {
           {loading && <div className="flex justify-center py-4"><Loader2 size={18} className="text-[#FF0000] animate-spin" /></div>}
           {error && !loading && <p className="text-[13px] text-[#666] text-center py-4">No results found</p>}
           {results.map((s, i) => (
-            <button key={s.id || i} onClick={() => {
-              if (s.ytOnly) {
-                // YT Music result — search on JioSaavn for playback
-                nav(`/search?q=${encodeURIComponent(s.title + ' ' + s.artist)}`);
+            <button key={s.id || i} onClick={async () => {
+              if (s.ytOnly && s.videoId) {
+                // YT Music result — get audio stream and play directly
+                setOpen(false); setQuery(s.title);
+                showToast('Loading from YouTube...');
+                const audioUrl = await getYtAudioStream(s.videoId);
+                if (audioUrl) {
+                  playSong({ ...s, audio: audioUrl, ytOnly: undefined });
+                } else {
+                  // Fallback: search on JioSaavn
+                  nav(`/search?q=${encodeURIComponent(s.title + ' ' + s.artist)}`);
+                  showToast('YT stream failed, searching JioSaavn...');
+                }
               } else {
                 nav(`/search?q=${encodeURIComponent(s.title)}`);
+                setOpen(false); setQuery(s.title);
               }
-              setOpen(false); setQuery(s.title);
             }}
               className="flex items-center gap-3 w-full px-4 py-3 active:bg-[#222] hover:bg-[#1a1a1a] transition-colors text-left">
               <img src={s.thumbnail} alt="" className="w-11 h-11 rounded-lg object-cover shrink-0" loading="lazy" />
