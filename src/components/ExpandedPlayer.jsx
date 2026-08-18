@@ -21,7 +21,18 @@ export default function ExpandedPlayer() {
     if (!currentSong || !showLyrics) return;
     setLyricsLoading(true);
     setLyrics(null);
-    getLyrics(currentSong.id).then(l => { setLyrics(l); setLyricsLoading(false); });
+    
+    // If song has lyrics flag, fetch directly
+    if (currentSong.hasLyrics) {
+      getLyrics(currentSong.id).then(l => { setLyrics(l); setLyricsLoading(false); });
+    } else {
+      // Try anyway — sometimes hasLyrics is false but lyrics exist
+      getLyrics(currentSong.id).then(l => {
+        if (l) { setLyrics(l); }
+        else { setLyrics(null); }
+        setLyricsLoading(false);
+      });
+    }
   }, [currentSong?.id, showLyrics]);
 
   if (!isExpanded || !currentSong) return null;
@@ -156,13 +167,20 @@ export default function ExpandedPlayer() {
 
           {/* Lyrics Panel */}
           {showLyrics && (
-            <div className="w-full max-w-xs sm:max-w-sm mt-4 mb-4 bg-white/5 rounded-2xl p-4 max-h-[200px] scroll-y border border-white/5">
-              {lyricsLoading && <p className="text-[13px] text-[#666] text-center py-4">Loading lyrics...</p>}
-              {!lyricsLoading && !lyrics && <p className="text-[13px] text-[#666] text-center py-4">Lyrics not available for this song</p>}
+            <div className="w-full max-w-xs sm:max-w-sm mt-4 mb-4 bg-white/5 rounded-2xl p-5 max-h-[250px] scroll-y border border-white/5">
+              {lyricsLoading && (
+                <div className="flex items-center justify-center py-6">
+                  <div className="w-5 h-5 border-2 border-[#FF0000] border-t-transparent rounded-full animate-spin" />
+                  <span className="ml-2 text-[12px] text-[#888]">Loading lyrics...</span>
+                </div>
+              )}
+              {!lyricsLoading && !lyrics && (
+                <p className="text-[13px] text-[#666] text-center py-6">Lyrics not available for this song</p>
+              )}
               {!lyricsLoading && lyrics && (
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   {lyrics.split('\n').map((line, i) => (
-                    <p key={i} className={`text-[13px] leading-relaxed ${line.trim() ? 'text-white/90' : 'h-2'}`}>{line}</p>
+                    <p key={i} className={`text-[14px] leading-relaxed ${line.trim() ? 'text-white/90' : 'h-3'}`}>{line || ' '}</p>
                   ))}
                 </div>
               )}

@@ -49,6 +49,7 @@ function mapSong(s) {
     plays: s.playCount || 0,
     language: s.language || '',
     year: s.year || '',
+    hasLyrics: s.hasLyrics || false,
   };
 }
 
@@ -119,6 +120,34 @@ export async function getLyrics(songId) {
         .replace(/<br\s*\/?>/gi, '\n')
         .replace(/<[^>]+>/g, '')
         .trim();
+    }
+    return null;
+  } catch { return null; }
+}
+
+
+
+// Get song suggestions (related songs) - BETTER than searching by artist
+export async function getSongSuggestions(songId) {
+  if (!songId) return [];
+  try {
+    const res = await fetch(`${BASE}/songs/${songId}/suggestions`);
+    const data = await res.json();
+    if (data.success && data.data) {
+      return data.data.map(mapSong);
+    }
+    return [];
+  } catch { return []; }
+}
+
+// Get full song details
+export async function getSongDetails(songId) {
+  if (!songId) return null;
+  try {
+    const res = await fetch(`${BASE}/songs/${songId}`);
+    const data = await res.json();
+    if (data.success && data.data?.[0]) {
+      return mapSong(data.data[0]);
     }
     return null;
   } catch { return null; }

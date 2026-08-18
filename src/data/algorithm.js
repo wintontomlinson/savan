@@ -1,4 +1,4 @@
-import { searchSongs } from './api';
+import { searchSongs, getSongSuggestions } from './api';
 
 const HISTORY_KEY = 'ma_history';
 const playedSet = new Set();
@@ -29,23 +29,29 @@ export function resetPlayed() {
 export async function getNextSongs(currentSong) {
   if (!currentSong) return [];
 
-  const artist = currentSong.artist?.split(',')[0]?.trim();
-  const lang = currentSong.language || 'hindi';
-
   let results = [];
 
-  // Step 1: Get more from same artist
-  if (artist) {
-    const artistSongs = await searchSongs(`${artist}`, 20);
-    const fresh = artistSongs.filter(s => !playedSet.has(s.id) && s.id !== currentSong.id);
-    results = [...results, ...fresh.slice(0, 5)];
+  // Step 1: Use suggestions API (best quality related songs)
+  const suggestions = await getSongSuggestions(currentSong.id);
+  const freshSuggestions = suggestions.filter(s => !playedSet.has(s.id) && s.id !== currentSong.id);
+  results = [...freshSuggestions];
+
+  // Step 2: If not enough, search same artist
+  if (results.length < 5) {
+    const artist = currentSong.artist?.split(',')[0]?.trim();
+    if (artist) {
+      const artistSongs = await searchSongs(artist, 15);
+      const fresh = artistSongs.filter(s => !playedSet.has(s.id) && s.id !== currentSong.id && !results.find(r => r.id === s.id));
+      results = [...results, ...fresh.slice(0, 5)];
+    }
   }
 
-  // Step 2: Get popular songs in same language (different artists)
-  if (results.length < 8) {
-    const langSongs = await searchSongs(`${lang} top songs 2024`, 20);
+  // Step 3: If still not enough, search by language
+  if (results.length < 5) {
+    const lang = currentSong.language || 'hindi';
+    const langSongs = await searchSongs(`${lang} songs 2024`, 15);
     const fresh = langSongs.filter(s => !playedSet.has(s.id) && s.id !== currentSong.id && !results.find(r => r.id === s.id));
-    results = [...results, ...fresh.slice(0, 8 - results.length)];
+    results = [...results, ...fresh.slice(0, 5)];
   }
 
   return results;
