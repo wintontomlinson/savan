@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, X, Loader2 } from 'lucide-react';
+import { Search, X, Loader2, TrendingUp } from 'lucide-react';
 import { searchSongs } from '../data/api';
+
+const SUGGESTIONS = ['Arijit Singh', 'Diljit Dosanjh', 'AP Dhillon', 'Sidhu Moosewala', 'Shreya Ghoshal', 'Atif Aslam', 'Jubin Nautiyal', 'The Weeknd', 'Karan Aujla', 'Honey Singh'];
 
 export default function SearchBar() {
   const [query, setQuery] = useState('');
@@ -31,7 +33,7 @@ export default function SearchBar() {
       if (id !== requestId.current) return;
       setResults(songs);
       setLoading(false);
-    }, 400);
+    }, 350);
 
     return () => { if (timer.current) clearTimeout(timer.current); };
   }, [query]);
@@ -40,6 +42,8 @@ export default function SearchBar() {
     e.preventDefault();
     if (query.trim()) { nav(`/search?q=${encodeURIComponent(query.trim())}`); setOpen(false); }
   };
+
+  const showSuggestions = open && query.length < 2 && results.length === 0 && !loading;
 
   return (
     <div ref={ref} className="relative w-full max-w-lg">
@@ -55,9 +59,28 @@ export default function SearchBar() {
         {query && <button type="button" onClick={() => { setQuery(''); setResults([]); }} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#555]"><X size={16} /></button>}
       </form>
 
+      {/* Trending Suggestions — show when input focused but empty */}
+      {showSuggestions && (
+        <div className="absolute top-full mt-2 w-full bg-[#141414] rounded-2xl border border-[#222] shadow-2xl overflow-hidden z-50 p-3">
+          <div className="flex items-center gap-1.5 px-2 mb-2">
+            <TrendingUp size={12} className="text-rose-400" />
+            <span className="text-[11px] text-[#888] font-medium">Trending</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {SUGGESTIONS.map(s => (
+              <button key={s} onClick={() => { setQuery(s); nav(`/search?q=${encodeURIComponent(s)}`); setOpen(false); }}
+                className="px-3 py-1.5 bg-white/[0.05] hover:bg-white/[0.1] rounded-full text-[12px] text-white transition-colors">
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Search Results */}
       {open && (results.length > 0 || loading) && (
         <div className="absolute top-full mt-2 w-full bg-[#141414] rounded-2xl border border-[#222] shadow-2xl overflow-hidden z-50 max-h-[70vh] scroll-y">
-          {loading && <div className="flex justify-center py-4"><Loader2 size={18} className="text-[#FF0000] animate-spin" /></div>}
+          {loading && <div className="flex justify-center py-4"><Loader2 size={18} className="text-rose-500 animate-spin" /></div>}
           {results.map((s, i) => (
             <button key={s.id || i} onClick={() => {
               nav(`/search?q=${encodeURIComponent(s.title)}`);
