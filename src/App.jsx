@@ -15,34 +15,24 @@ import SearchResults from './pages/SearchResults';
 export default function App() {
   return (
     <AuthProvider><PlayerProvider><BrowserRouter>
-      <div className="fixed inset-0 flex bg-[#0A0A0B]">
-        {/* Desktop Sidebar */}
+      <div className="fixed inset-0 flex flex-col md:flex-row bg-[#080808]">
         <Sidebar />
-        
-        {/* Main Area */}
-        <div className="flex-1 flex flex-col min-h-0 min-w-0 md:ml-[220px]">
+        <div className="flex-1 flex flex-col min-h-0 md:ml-[72px] lg:ml-[240px]">
           <Header />
-          <main className="flex-1 min-h-0 scroll-y pt-16 pb-[140px] md:pb-[88px]">
-            <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/explore" element={<Explore />} />
-                <Route path="/library" element={<Library />} />
-                <Route path="/search" element={<SearchResults />} />
-              </Routes>
-            </div>
-          </main>
+          <div className="flex-1 min-h-0 scroll-y pt-14 pb-32 md:pb-20 px-3 sm:px-5 lg:px-6">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/explore" element={<Explore />} />
+              <Route path="/library" element={<Library />} />
+              <Route path="/search" element={<SearchResults />} />
+            </Routes>
+          </div>
         </div>
-
-        {/* Player */}
         <MiniPlayer />
         <ExpandedPlayer />
-        
-        {/* Mobile Navigation */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-30">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 glass border-t border-white/5">
           <MobileNav />
         </div>
-        
         <Toast />
       </div>
     </BrowserRouter></PlayerProvider></AuthProvider>
