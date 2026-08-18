@@ -22,7 +22,7 @@ const BANDS_10 = ['32', '64', '125', '250', '500', '1K', '2K', '4K', '8K', '16K'
 const BAND_UNITS = ['Hz', 'Hz', 'Hz', 'Hz', 'Hz', '', '', '', '', ''];
 
 export default function AudioSettings() {
-  const { volume, setVolume, setBassBoost: setContextBassBoost, showToast } = usePlayer();
+  const { volume, setVolume, setVolumeBoost, setBassBoost: setContextBassBoost, initAudioProcessing, showToast } = usePlayer();
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState('eq'); // 'eq' | 'mixer'
   const [bassBoost, setBassBoostState] = useState(() => localStorage.getItem('bass_on') === 'true');
@@ -61,8 +61,7 @@ export default function AudioSettings() {
 
   const handleVolumeBoost = (val) => {
     setBoostLevel(val);
-    // Map 0-300 to actual volume (gain value 0-3.0)
-    setVolume(val / 100);
+    setVolumeBoost(val);
     localStorage.setItem('boost_level', val.toString());
   };
 
@@ -282,7 +281,7 @@ export default function AudioSettings() {
                       <p className="text-[11px] text-[#555]">Low frequency enhancement</p>
                     </div>
                   </div>
-                  <button onClick={() => { const newState = !bassBoost; setBassBoostState(newState); setContextBassBoost(newState); localStorage.setItem('bass_on', newState.toString()); showToast(bassBoost ? 'Bass Boost OFF' : 'Bass Boost ON 🔊'); }}
+                  <button onClick={() => { const newState = !bassBoost; setBassBoostState(newState); setContextBassBoost(newState); localStorage.setItem('bass_on', newState.toString()); showToast(newState ? 'Bass Boost ON 🔊' : 'Bass Boost OFF'); }}
                     className={`w-[54px] h-[30px] rounded-full relative transition-all duration-300 ${
                       bassBoost ? 'bg-gradient-to-r from-amber-500 to-orange-500 shadow-lg shadow-amber-500/30' : 'bg-[#222]'
                     }`}>

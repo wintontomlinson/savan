@@ -179,10 +179,10 @@ export default function ExpandedPlayer() {
             {/* Volume (desktop) - supports up to 300% */}
             <div className="hidden sm:flex items-center gap-2">
               <button onClick={() => setVolume(volume > 0 ? 0 : 0.7)} className="p-1">
-                {volume === 0 ? <VolumeX size={15} className="text-[#666]" /> : <Volume2 size={15} className={volume > 1.5 ? 'text-red-400' : volume > 1 ? 'text-orange-400' : 'text-[#666]'} />}
+                {volume === 0 ? <VolumeX size={15} className="text-[#666]" /> : <Volume2 size={15} className="text-[#666]" />}
               </button>
               <div className="relative group">
-                <input type="range" min="0" max="3" step="0.01" value={volume} onChange={e => setVolume(parseFloat(e.target.value))}
+                <input type="range" min="0" max="1" step="0.01" value={volume} onChange={e => setVolume(parseFloat(e.target.value))}
                   className="w-24 h-1.5 rounded-full appearance-none bg-white/10 cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md" />
                 <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] font-bold tabular-nums opacity-0 group-hover:opacity-100 transition-opacity bg-black/80 px-1.5 py-0.5 rounded pointer-events-none text-white">
                   {Math.round(volume * 100)}%

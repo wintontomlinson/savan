@@ -20,7 +20,7 @@ export function PlayerProvider({ children }) {
   const [queue, _setQueue] = useState([]);
   const [upNext, setUpNext] = useState([]);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, _setVolume] = useState(() => { try { const v = parseFloat(localStorage.getItem('vol')); return (v >= 0 && v <= 3) ? v : 0.7; } catch { return 0.7; } });
+  const [volume, _setVolume] = useState(() => { try { const v = parseFloat(localStorage.getItem('vol')); return (v > 0 && v <= 1) ? v : 0.7; } catch { return 0.7; } });
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [shuffleMode, setShuffle] = useState(false);
@@ -37,100 +37,98 @@ export function PlayerProvider({ children }) {
     });
   };
 
-  // Audio processing nodes (lazily initialized on first user interaction)
-  const gainNodeRef = useRef(null);
+  const setVolume = useCallback(v => {
+    const val = Math.max(0, Math.min(1, v));
+    _setVolume(val);
+    volumeRef.current = val;
+    const a = activeRef.current === 'A' ? audioA.current : audioB.current;
+    if (a) a.volume = val;
+  }, []);
+
+  // Bass boost state (applied via AudioContext only when initialized)
   const audioCtxRef = useRef(null);
+  const gainNodeRef = useRef(null);
+  const bassFilterRef = useRef(null);
   const sourceARef = useRef(null);
   const sourceBRef = useRef(null);
-  const bassFilterRef = useRef(null);
-  const audioCtxInitialized = useRef(false);
+  const audioCtxReady = useRef(false);
 
-  // Initialize AudioContext lazily on first user play action
-  function ensureAudioContext() {
-    if (audioCtxInitialized.current) {
-      // Just resume if suspended
-      if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
-        audioCtxRef.current.resume();
-      }
+  // Call this from AudioSettings when user wants bass/volume boost
+  const initAudioProcessing = useCallback(() => {
+    if (audioCtxReady.current) {
+      if (audioCtxRef.current?.state === 'suspended') audioCtxRef.current.resume();
       return;
     }
-
     try {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContext) return;
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC || !audioA.current || !audioB.current) return;
 
-      audioCtxRef.current = new AudioContext();
+      audioCtxRef.current = new AC();
 
-      // Create bass boost filter (lowshelf at 200Hz)
       bassFilterRef.current = audioCtxRef.current.createBiquadFilter();
       bassFilterRef.current.type = 'lowshelf';
       bassFilterRef.current.frequency.value = 200;
       bassFilterRef.current.gain.value = localStorage.getItem('bass_on') === 'true' ? 12 : 0;
 
-      // Create gain node for volume amplification (supports up to 300%)
       gainNodeRef.current = audioCtxRef.current.createGain();
-      const savedVol = volumeRef.current;
-      gainNodeRef.current.gain.value = savedVol > 1 ? savedVol : 1;
+      gainNodeRef.current.gain.value = 1;
 
-      // Chain: source → bassFilter → gainNode → destination
       bassFilterRef.current.connect(gainNodeRef.current);
       gainNodeRef.current.connect(audioCtxRef.current.destination);
 
-      // Connect audio elements
-      if (audioA.current) {
-        sourceARef.current = audioCtxRef.current.createMediaElementSource(audioA.current);
-        sourceARef.current.connect(bassFilterRef.current);
-      }
-      if (audioB.current) {
-        sourceBRef.current = audioCtxRef.current.createMediaElementSource(audioB.current);
-        sourceBRef.current.connect(bassFilterRef.current);
-      }
+      sourceARef.current = audioCtxRef.current.createMediaElementSource(audioA.current);
+      sourceARef.current.connect(bassFilterRef.current);
 
-      audioCtxInitialized.current = true;
+      sourceBRef.current = audioCtxRef.current.createMediaElementSource(audioB.current);
+      sourceBRef.current.connect(bassFilterRef.current);
 
-      // Resume immediately (we're inside user gesture)
-      if (audioCtxRef.current.state === 'suspended') {
-        audioCtxRef.current.resume();
-      }
+      audioCtxReady.current = true;
+
+      if (audioCtxRef.current.state === 'suspended') audioCtxRef.current.resume();
     } catch (e) {
-      console.warn('AudioContext setup failed:', e);
-    }
-  }
-
-  const setVolume = useCallback(v => {
-    const val = Math.max(0, Math.min(3, v));
-    _setVolume(val);
-    volumeRef.current = val;
-    const a = activeRef.current === 'A' ? audioA.current : audioB.current;
-    if (a) {
-      if (val > 1 && gainNodeRef.current) {
-        a.volume = 1;
-        gainNodeRef.current.gain.value = val;
-      } else if (gainNodeRef.current) {
-        a.volume = val;
-        gainNodeRef.current.gain.value = 1;
-      } else {
-        a.volume = Math.min(1, val);
-      }
+      console.warn('AudioContext init failed:', e);
     }
   }, []);
 
-  // Bass Boost control
   const setBassBoost = useCallback((enabled) => {
+    if (!audioCtxReady.current) initAudioProcessing();
     if (bassFilterRef.current) {
       bassFilterRef.current.gain.value = enabled ? 12 : 0;
     }
-  }, []);
+  }, [initAudioProcessing]);
+
+  // Volume boost beyond 100% via gain node
+  const setVolumeBoost = useCallback((percent) => {
+    // percent: 0-300
+    if (percent <= 100) {
+      // Normal range — use audio.volume directly
+      const val = percent / 100;
+      _setVolume(val);
+      volumeRef.current = val;
+      const a = activeRef.current === 'A' ? audioA.current : audioB.current;
+      if (a) a.volume = val;
+      if (gainNodeRef.current) gainNodeRef.current.gain.value = 1;
+    } else {
+      // Boost range — audio.volume=1, gain amplifies
+      if (!audioCtxReady.current) initAudioProcessing();
+      const val = 1;
+      _setVolume(val);
+      volumeRef.current = val;
+      const a = activeRef.current === 'A' ? audioA.current : audioB.current;
+      if (a) a.volume = 1;
+      if (gainNodeRef.current) gainNodeRef.current.gain.value = percent / 100;
+    }
+  }, [initAudioProcessing]);
 
   const historyStack = useRef([]);
   const cur = () => activeRef.current === 'A' ? audioA.current : audioB.current;
   const playNextRef = useRef(null);
 
-  // ─── Audio Setup (basic - no AudioContext yet) ───
+  // ─── Audio Setup ───
   useEffect(() => {
     audioA.current = new Audio();
     audioB.current = new Audio();
-    audioA.current.volume = Math.min(1, volumeRef.current);
+    audioA.current.volume = volumeRef.current;
     audioB.current.volume = 0;
 
     const onTime = () => {
@@ -147,16 +145,20 @@ export function PlayerProvider({ children }) {
 
     const onMeta = () => setDuration(cur()?.duration || 0);
     const onEnd = () => { if (!fadingRef.current && playNextRef.current) playNextRef.current(); };
-    const onError = async (e) => {
+    const onError = async () => {
       const a = cur();
-      if (!a?.src || !currentSong) return;
+      if (!a?.src) return;
       console.warn('Audio error, attempting stream URL refresh');
-      const freshUrl = await refreshStreamUrl(currentSong.id);
-      if (freshUrl && freshUrl !== a.src) {
-        a.src = freshUrl;
-        a.load();
-        a.play().catch(() => {});
-      } else {
+      try {
+        const freshUrl = await refreshStreamUrl(currentSong?.id);
+        if (freshUrl && freshUrl !== a.src) {
+          a.src = freshUrl;
+          a.load();
+          a.play().catch(() => {});
+        } else {
+          if (playNextRef.current) playNextRef.current();
+        }
+      } catch {
         if (playNextRef.current) playNextRef.current();
       }
     };
@@ -228,7 +230,7 @@ export function PlayerProvider({ children }) {
     const steps = 30;
     const ms = (cfSec * 1000) / steps;
     let step = 0;
-    const vol = Math.min(1, volumeRef.current);
+    const vol = volumeRef.current;
 
     if (fadeTimerRef.current) clearInterval(fadeTimerRef.current);
     fadeTimerRef.current = setInterval(() => {
@@ -261,23 +263,9 @@ export function PlayerProvider({ children }) {
     fadingRef.current = false;
   }
 
-  function applyVolume(audioEl) {
-    const vol = volumeRef.current;
-    if (vol > 1 && gainNodeRef.current) {
-      audioEl.volume = 1;
-      gainNodeRef.current.gain.value = vol;
-    } else {
-      audioEl.volume = Math.min(1, vol);
-      if (gainNodeRef.current) gainNodeRef.current.gain.value = 1;
-    }
-  }
-
   function playDirect(song) {
     if (!song) return;
     cancelFade();
-    // Initialize AudioContext on user gesture (first play)
-    ensureAudioContext();
-    // Push current song to history
     if (currentSong) historyStack.current.push(currentSong);
     audioA.current.pause(); audioA.current.src = '';
     audioB.current.pause(); audioB.current.src = '';
@@ -288,7 +276,7 @@ export function PlayerProvider({ children }) {
     if (song.audio) {
       const a = audioA.current;
       a.src = song.audio;
-      applyVolume(a);
+      a.volume = volumeRef.current;
       setIsPlaying(true);
       a.play().catch(() => setIsPlaying(false));
     } else {
@@ -313,14 +301,13 @@ export function PlayerProvider({ children }) {
 
   const togglePlay = useCallback(() => {
     if (!currentSong) return;
-    ensureAudioContext();
     const a = cur();
     if (isPlaying) { a?.pause(); setIsPlaying(false); }
     else {
       a?.play().then(() => setIsPlaying(true)).catch(() => {
         if (currentSong.audio && a) {
           a.src = currentSong.audio;
-          applyVolume(a);
+          a.volume = volumeRef.current;
           a.play().then(() => setIsPlaying(true)).catch(() => {});
         }
       });
@@ -357,7 +344,6 @@ export function PlayerProvider({ children }) {
       const prev = historyStack.current.pop();
       if (currentSong) setQueue(p => [currentSong, ...p]);
       cancelFade();
-      ensureAudioContext();
       audioA.current.pause(); audioA.current.src = '';
       audioB.current.pause(); audioB.current.src = '';
       activeRef.current = 'A';
@@ -366,7 +352,7 @@ export function PlayerProvider({ children }) {
       setIsPlaying(true);
       if (prev.audio) {
         audioA.current.src = prev.audio;
-        applyVolume(audioA.current);
+        audioA.current.volume = volumeRef.current;
         audioA.current.play().catch(() => setIsPlaying(false));
       }
     } else {
@@ -384,5 +370,5 @@ export function PlayerProvider({ children }) {
     setLikedSongs(p => { if (p.includes(songId)) { showToast('Removed'); return p.filter(id => id !== songId); } showToast('Liked ❤️', 'success'); return [...p, songId]; });
   }, [showToast]);
 
-  return <Ctx.Provider value={{ currentSong, queue, upNext, isPlaying, volume, currentTime, duration, shuffleMode, repeatMode, isExpanded, likedSongs, toasts, playSong, togglePlay, playNext, playPrev, seekTo, setVolume, setBassBoost, toggleShuffle, cycleRepeat, addToQueue, removeFromQueue, clearQueue, toggleLike, setExpanded, showToast, dismissToast }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ currentSong, queue, upNext, isPlaying, volume, currentTime, duration, shuffleMode, repeatMode, isExpanded, likedSongs, toasts, playSong, togglePlay, playNext, playPrev, seekTo, setVolume, setVolumeBoost, setBassBoost, initAudioProcessing, toggleShuffle, cycleRepeat, addToQueue, removeFromQueue, clearQueue, toggleLike, setExpanded, showToast, dismissToast }}>{children}</Ctx.Provider>;
 }
