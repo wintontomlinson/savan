@@ -1,32 +1,87 @@
+// ═══════════════════════════════════════════════
+// MusicArea API Layer — JioSaavn Integration
+// Handles: caching, retries, normalization, errors
+// ═══════════════════════════════════════════════
+
 const BASE = 'https://jiosavan-api2.vercel.app/api';
 
-async function fetchApi(endpoint) {
-  try {
-    const res = await fetch(`${BASE}${endpoint}`);
-    const data = await res.json();
-    if (data.success) return data.data;
-    return null;
-  } catch { return null; }
+// ─── In-Memory Cache ───
+const cache = new Map();
+const CACHE_TTL = {
+  search: 5 * 60 * 1000,    // 5 min
+  song: 30 * 60 * 1000,     // 30 min
+  album: 30 * 60 * 1000,    // 30 min
+  suggestions: 10 * 60 * 1000, // 10 min
+  lyrics: 60 * 60 * 1000,   // 1 hour (lyrics don't change)
+};
+
+function getCached(key, ttl) {
+  const item = cache.get(key);
+  if (!item) return null;
+  if (Date.now() - item.time > ttl) { cache.delete(key); return null; }
+  return item.data;
 }
 
+function setCache(key, data) { cache.set(key, { data, time: Date.now() }); }
+
+// ─── Request with Timeout & Retry ───
+const activeRequests = new Map(); // Prevent duplicate concurrent requests
+
+async function fetchApi(endpoint, { retries = 2, timeout = 8000 } = {}) {
+  const url = `${BASE}${endpoint}`;
+
+  // Dedup: if same request is already in-flight, return its promise
+  if (activeRequests.has(url)) return activeRequests.get(url);
+
+  const request = (async () => {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeout);
+
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(timer);
+
+        if (!res.ok) {
+          if (attempt < retries) { await delay(500 * (attempt + 1)); continue; }
+          return null;
+        }
+
+        const data = await res.json();
+        if (data.success) return data.data;
+        return null;
+      } catch (e) {
+        if (e.name === 'AbortError' && attempt < retries) { await delay(500 * (attempt + 1)); continue; }
+        if (attempt < retries) { await delay(500 * (attempt + 1)); continue; }
+        return null;
+      }
+    }
+    return null;
+  })();
+
+  activeRequests.set(url, request);
+  const result = await request;
+  activeRequests.delete(url);
+  return result;
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ─── Data Normalization ───
 function bestImage(images) {
   if (!images?.length) return 'https://picsum.photos/seed/def/300/300';
   return images[images.length - 1]?.url || images[0]?.url;
 }
 
-// Get audio URL by quality
 function getAudioByQuality(urls, quality) {
   if (!urls?.length) return '';
   const match = urls.find(u => u.quality === quality);
   if (match) return match.url;
-  // Fallback to highest available
   return urls[urls.length - 1]?.url || '';
 }
 
-// Get current quality setting
 export function getQuality() {
-  try { return localStorage.getItem('audio_quality') || '320kbps'; }
-  catch { return '320kbps'; }
+  try { return localStorage.getItem('audio_quality') || '320kbps'; } catch { return '320kbps'; }
 }
 
 export function setQuality(q) {
@@ -34,18 +89,19 @@ export function setQuality(q) {
 }
 
 function mapSong(s) {
+  if (!s) return null;
   const quality = getQuality();
   return {
     id: s.id,
-    title: (s.name || '').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#039;/g, "'"),
+    title: cleanText(s.name),
     artist: s.artists?.primary?.map(a => a.name).join(', ') || s.primaryArtists || '',
     artistId: s.artists?.primary?.[0]?.id || '',
-    album: (s.album?.name || '').replace(/&quot;/g, '"'),
+    album: cleanText(s.album?.name),
     albumId: s.album?.id || '',
     duration: s.duration || 0,
     thumbnail: bestImage(s.image),
     audio: getAudioByQuality(s.downloadUrl, quality),
-    audioAll: s.downloadUrl || [], // All quality URLs for download
+    audioAll: s.downloadUrl || [],
     plays: s.playCount || 0,
     language: s.language || '',
     year: s.year || '',
@@ -54,9 +110,10 @@ function mapSong(s) {
 }
 
 function mapAlbum(a) {
+  if (!a) return null;
   return {
     id: a.id,
-    title: (a.name || '').replace(/&quot;/g, '"').replace(/&amp;/g, '&'),
+    title: cleanText(a.name),
     artist: a.artists?.primary?.map(x => x.name).join(', ') || a.primaryArtists || '',
     artistId: a.artists?.primary?.[0]?.id || '',
     year: a.year || '',
@@ -65,32 +122,109 @@ function mapAlbum(a) {
   };
 }
 
+function cleanText(str) {
+  if (!str) return '';
+  return str.replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#039;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+}
+
+// ─── Public API Functions ───
+
 export async function searchSongs(query, limit = 15) {
+  if (!query?.trim()) return [];
+  const cacheKey = `search:${query}:${limit}`;
+  const cached = getCached(cacheKey, CACHE_TTL.search);
+  if (cached) return cached;
+
   const data = await fetchApi(`/search/songs?query=${encodeURIComponent(query)}&limit=${limit}`);
-  return (data?.results || []).map(mapSong);
+  const results = (data?.results || []).map(mapSong).filter(Boolean);
+  if (results.length > 0) setCache(cacheKey, results);
+  return results;
 }
 
 export async function searchAlbums(query, limit = 10) {
+  if (!query?.trim()) return [];
+  const cacheKey = `albums:${query}:${limit}`;
+  const cached = getCached(cacheKey, CACHE_TTL.search);
+  if (cached) return cached;
+
   const data = await fetchApi(`/search/albums?query=${encodeURIComponent(query)}&limit=${limit}`);
-  return (data?.results || []).map(mapAlbum);
+  const results = (data?.results || []).map(mapAlbum).filter(Boolean);
+  if (results.length > 0) setCache(cacheKey, results);
+  return results;
 }
 
 export async function getAlbumById(id) {
+  if (!id) return null;
+  const cacheKey = `album:${id}`;
+  const cached = getCached(cacheKey, CACHE_TTL.album);
+  if (cached) return cached;
+
   const data = await fetchApi(`/albums?id=${id}`);
   if (!data) return null;
-  return { ...mapAlbum(data), songs: (data.songs || []).map(mapSong) };
+  const result = { ...mapAlbum(data), songs: (data.songs || []).map(mapSong).filter(Boolean) };
+  setCache(cacheKey, result);
+  return result;
 }
 
-// Download a song
+export async function getSongSuggestions(songId) {
+  if (!songId) return [];
+  const cacheKey = `suggest:${songId}`;
+  const cached = getCached(cacheKey, CACHE_TTL.suggestions);
+  if (cached) return cached;
+
+  const data = await fetchApi(`/songs/${songId}/suggestions`);
+  if (!data) return [];
+  const results = (Array.isArray(data) ? data : []).map(mapSong).filter(Boolean);
+  if (results.length > 0) setCache(cacheKey, results);
+  return results;
+}
+
+export async function getSongDetails(songId) {
+  if (!songId) return null;
+  const cacheKey = `song:${songId}`;
+  const cached = getCached(cacheKey, CACHE_TTL.song);
+  if (cached) return cached;
+
+  const data = await fetchApi(`/songs/${songId}`);
+  if (!data?.[0]) return null;
+  const result = mapSong(data[0]);
+  if (result) setCache(cacheKey, result);
+  return result;
+}
+
+export async function getLyrics(songId) {
+  if (!songId) return null;
+  const cacheKey = `lyrics:${songId}`;
+  const cached = getCached(cacheKey, CACHE_TTL.lyrics);
+  if (cached) return cached;
+
+  const data = await fetchApi(`/songs/${songId}/lyrics`, { retries: 1, timeout: 5000 });
+  if (!data?.lyrics) return null;
+  const result = data.lyrics.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim();
+  if (result) setCache(cacheKey, result);
+  return result;
+}
+
+// ─── Stream URL Refresh ───
+// If a stream URL fails, re-fetch song details to get fresh URL
+export async function refreshStreamUrl(songId) {
+  if (!songId) return null;
+  // Clear song cache to force fresh fetch
+  cache.delete(`song:${songId}`);
+  const song = await getSongDetails(songId);
+  return song?.audio || null;
+}
+
+// ─── Download ───
 export async function downloadSong(song) {
-  if (!song) return;
-  // Get highest quality URL
+  if (!song) return false;
   const urls = song.audioAll || [];
   const best = urls.find(u => u.quality === '320kbps') || urls[urls.length - 1];
-  if (!best?.url) return;
+  if (!best?.url) return false;
 
   try {
     const response = await fetch(best.url);
+    if (!response.ok) return false;
     const blob = await response.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -101,54 +235,9 @@ export async function downloadSong(song) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     return true;
-  } catch {
-    return false;
-  }
+  } catch { return false; }
 }
 
-
-
-// Fetch song lyrics
-export async function getLyrics(songId) {
-  if (!songId) return null;
-  try {
-    const res = await fetch(`${BASE}/songs/${songId}/lyrics`);
-    const data = await res.json();
-    if (data.success && data.data?.lyrics) {
-      // Convert <br> to newlines, strip HTML
-      return data.data.lyrics
-        .replace(/<br\s*\/?>/gi, '\n')
-        .replace(/<[^>]+>/g, '')
-        .trim();
-    }
-    return null;
-  } catch { return null; }
-}
-
-
-
-// Get song suggestions (related songs) - BETTER than searching by artist
-export async function getSongSuggestions(songId) {
-  if (!songId) return [];
-  try {
-    const res = await fetch(`${BASE}/songs/${songId}/suggestions`);
-    const data = await res.json();
-    if (data.success && data.data) {
-      return data.data.map(mapSong);
-    }
-    return [];
-  } catch { return []; }
-}
-
-// Get full song details
-export async function getSongDetails(songId) {
-  if (!songId) return null;
-  try {
-    const res = await fetch(`${BASE}/songs/${songId}`);
-    const data = await res.json();
-    if (data.success && data.data?.[0]) {
-      return mapSong(data.data[0]);
-    }
-    return null;
-  } catch { return null; }
-}
+// ─── Cache Management ───
+export function clearCache() { cache.clear(); }
+export function getCacheSize() { return cache.size; }

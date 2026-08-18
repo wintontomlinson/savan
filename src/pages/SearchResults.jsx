@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Play, Loader2, SearchX } from 'lucide-react';
+import { Play, Loader2, SearchX, RefreshCw } from 'lucide-react';
 import { searchSongs } from '../data/api';
 import { usePlayer } from '../context/PlayerContext';
 import SongRow from '../components/SongRow';
@@ -11,12 +11,22 @@ export default function SearchResults() {
   const { playSong } = usePlayer();
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const requestId = useRef(0);
 
-  useEffect(() => {
+  const doSearch = async () => {
     if (!q) return;
     setLoading(true);
-    searchSongs(q, 30).then(s => { setSongs(s); setLoading(false); });
-  }, [q]);
+    setError(false);
+    const id = ++requestId.current;
+    const s = await searchSongs(q, 30);
+    if (id !== requestId.current) return;
+    if (s === null) { setError(true); setLoading(false); return; }
+    setSongs(s);
+    setLoading(false);
+  };
+
+  useEffect(() => { doSearch(); }, [q]);
 
   if (!q) return <div className="text-center py-20"><p className="text-base text-white">Search for music</p><p className="text-sm text-[#666] mt-1">Type in the search bar above</p></div>;
 
@@ -27,7 +37,18 @@ export default function SearchResults() {
 
       {loading && <div className="flex justify-center py-16"><Loader2 size={22} className="text-[#FF0000] animate-spin" /></div>}
 
-      {!loading && !songs.length && (
+      {error && !loading && (
+        <div className="text-center py-16">
+          <SearchX size={36} className="text-[#333] mx-auto mb-3" />
+          <p className="text-white text-sm">Unable to load results</p>
+          <p className="text-[12px] text-[#666] mt-1 mb-4">Please check your connection</p>
+          <button onClick={doSearch} className="flex items-center gap-2 mx-auto px-4 py-2 bg-[#FF0000] text-white text-[13px] rounded-full active:scale-95">
+            <RefreshCw size={14} /> Retry
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && !songs.length && (
         <div className="text-center py-16">
           <SearchX size={36} className="text-[#333] mx-auto mb-3" />
           <p className="text-white text-sm">No results for "{q}"</p>
@@ -35,12 +56,11 @@ export default function SearchResults() {
         </div>
       )}
 
-      {!loading && songs.length > 0 && (
+      {!loading && !error && songs.length > 0 && (
         <>
-          {/* Top result */}
           <button onClick={() => playSong(songs[0], songs)}
             className="flex items-center gap-3 p-3 bg-[#111] rounded-2xl border border-[#1a1a1a] w-full sm:w-[340px] mb-5 active:scale-[0.98] transition-transform text-left">
-            <img src={songs[0].thumbnail} alt="" className="w-14 h-14 rounded-xl object-cover" />
+            <img src={songs[0].thumbnail} alt="" className="w-14 h-14 rounded-xl object-cover" loading="lazy" />
             <div className="flex-1 min-w-0">
               <p className="text-[15px] font-bold text-white truncate">{songs[0].title}</p>
               <p className="text-[12px] text-[#888]">{songs[0].artist}</p>
@@ -49,10 +69,8 @@ export default function SearchResults() {
               <Play size={14} className="text-white ml-0.5" fill="white" />
             </div>
           </button>
-
-          {/* All results */}
           <div className="bg-[#111] rounded-2xl overflow-hidden border border-[#1a1a1a]">
-            {songs.map((s, i) => <SongRow key={s.id} song={s} index={i} songList={songs} />)}
+            {songs.map((s, i) => <SongRow key={`${s.id}-${i}`} song={s} index={i} songList={songs} />)}
           </div>
         </>
       )}

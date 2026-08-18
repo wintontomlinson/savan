@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 import { addToHistory, getNextSongs, resetPlayed } from '../data/algorithm';
 import { initAudioProcessing, resumeAudioContext } from '../components/AudioSettings';
+import { refreshStreamUrl } from '../data/api';
 
 const Ctx = createContext();
 export const usePlayer = () => useContext(Ctx);
@@ -76,7 +77,21 @@ export function PlayerProvider({ children }) {
 
     const onMeta = () => setDuration(cur()?.duration || 0);
     const onEnd = () => { if (!fadingRef.current && playNextRef.current) playNextRef.current(); };
-    const onError = (e) => { console.warn('Audio error:', e?.target?.error?.message || 'unknown'); };
+    const onError = async (e) => {
+      const a = cur();
+      if (!a?.src || !currentSong) return;
+      console.warn('Audio error, attempting stream URL refresh');
+      // Try to get a fresh stream URL
+      const freshUrl = await refreshStreamUrl(currentSong.id);
+      if (freshUrl && freshUrl !== a.src) {
+        a.src = freshUrl;
+        a.load();
+        a.play().catch(() => {});
+      } else {
+        // Can't recover — skip to next
+        if (playNextRef.current) playNextRef.current();
+      }
+    };
 
     [audioA.current, audioB.current].forEach(a => {
       a.addEventListener('timeupdate', onTime);
