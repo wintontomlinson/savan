@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 import { addToHistory, getNextSongs, resetPlayed } from '../data/algorithm';
-import { initAudioProcessing, resumeAudioContext } from '../components/AudioSettings';
 import { refreshStreamUrl } from '../data/api';
 
 const Ctx = createContext();
@@ -187,10 +186,6 @@ export function PlayerProvider({ children }) {
     cancelFade();
     // Push current song to history stack (for prev)
     if (currentSong) historyStack.current.push(currentSong);
-    // Initialize audio processing on first play
-    initAudioProcessing(audioA.current, audioB.current);
-    resumeAudioContext();
-
     audioA.current.pause(); audioA.current.src = '';
     audioB.current.pause(); audioB.current.src = '';
     activeRef.current = 'A';
