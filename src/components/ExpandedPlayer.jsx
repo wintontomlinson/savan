@@ -80,7 +80,7 @@ export default function ExpandedPlayer() {
 
           {/* Lyrics */}
           {showLyrics && (
-            <div className="w-full max-w-sm max-h-[30vh] scroll-y animate-in">
+            <div className="w-full max-w-sm max-h-[30vh] scroll-y animate-in" id="lyrics-container">
               {lyricsLoading && (
                 <div className="flex justify-center py-8">
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -90,11 +90,7 @@ export default function ExpandedPlayer() {
                 <p className="text-[14px] text-white/40 text-center py-8">Lyrics not available</p>
               )}
               {!lyricsLoading && lyrics && (
-                <div className="space-y-3 text-center">
-                  {lyrics.split('\n').map((line, i) => (
-                    <p key={i} className={`text-[16px] sm:text-[18px] font-semibold leading-relaxed ${line.trim() ? 'text-white/85' : 'h-3'}`}>{line || ' '}</p>
-                  ))}
-                </div>
+                <SyncedLyrics lyrics={lyrics} currentTime={currentTime} duration={duration} />
               )}
             </div>
           )}
@@ -162,6 +158,49 @@ export default function ExpandedPlayer() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+
+// Synced lyrics — highlights line by line based on song progress
+function SyncedLyrics({ lyrics, currentTime, duration }) {
+  const containerRef = useRef(null);
+  const lines = lyrics.split('\n').filter(l => l.trim());
+
+  // Distribute lines across song duration (skip intro/outro)
+  const startTime = duration * 0.05;
+  const endTime = duration * 0.92;
+  const activeRange = endTime - startTime;
+  const timePerLine = activeRange / lines.length;
+
+  const activeIndex = Math.min(
+    lines.length - 1,
+    Math.max(0, Math.floor((currentTime - startTime) / timePerLine))
+  );
+
+  // Auto-scroll to active line
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const el = containerRef.current.querySelector('[data-active="true"]');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [activeIndex]);
+
+  return (
+    <div ref={containerRef} className="space-y-4 text-center py-4">
+      {lines.map((line, i) => (
+        <p key={i}
+          data-active={i === activeIndex ? 'true' : undefined}
+          className={`text-[16px] sm:text-[18px] font-semibold leading-relaxed transition-all duration-300 ${
+            i === activeIndex
+              ? 'text-white scale-[1.03]'
+              : i < activeIndex
+                ? 'text-white/25'
+                : 'text-white/45'
+          }`}>
+          {line}
+        </p>
+      ))}
     </div>
   );
 }
