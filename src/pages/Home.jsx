@@ -9,12 +9,14 @@ import HorizontalScroll from '../components/HorizontalScroll';
 import SongRow from '../components/SongRow';
 
 const MOODS = [
-  { label: 'Chill', query: 'lofi chill hindi relax', color: 'from-sky-500/20 to-blue-600/10', emoji: '😌' },
-  { label: 'Party', query: 'party bollywood dance hits', color: 'from-pink-500/20 to-rose-600/10', emoji: '🎉' },
-  { label: 'Sad', query: 'sad hindi heartbreak songs', color: 'from-indigo-500/20 to-purple-600/10', emoji: '💔' },
-  { label: 'Workout', query: 'workout gym motivation hindi', color: 'from-orange-500/20 to-red-600/10', emoji: '💪' },
-  { label: 'Romance', query: 'romantic hindi love songs', color: 'from-rose-500/20 to-pink-600/10', emoji: '❤️' },
-  { label: 'Drive', query: 'road trip hindi songs', color: 'from-emerald-500/20 to-green-600/10', emoji: '🚗' },
+  { label: 'Chill', query: 'lofi chill hindi relax', color: 'from-[#1a237e] to-[#0d47a1]', icon: '🎧' },
+  { label: 'Party', query: 'party bollywood dance hits', color: 'from-[#880e4f] to-[#ad1457]', icon: '🪩' },
+  { label: 'Sad', query: 'sad hindi heartbreak songs', color: 'from-[#1a1a2e] to-[#2d2d44]', icon: '🌧️' },
+  { label: 'Workout', query: 'workout gym motivation hindi', color: 'from-[#b71c1c] to-[#e65100]', icon: '🔥' },
+  { label: 'Romance', query: 'romantic hindi love songs', color: 'from-[#4a148c] to-[#7b1fa2]', icon: '💕' },
+  { label: 'Drive', query: 'road trip hindi songs', color: 'from-[#004d40] to-[#00695c]', icon: '🛣️' },
+  { label: 'Sleep', query: 'sleep calm peaceful hindi', color: 'from-[#1a237e] to-[#283593]', icon: '🌙' },
+  { label: 'Focus', query: 'study focus instrumental', color: 'from-[#33691e] to-[#558b2f]', icon: '🎯' },
 ];
 
 export default function Home() {
@@ -98,17 +100,18 @@ export default function Home() {
 
       {/* Moods & Genres */}
       <section className="mb-7 animate-in" style={{ animationDelay: '0.1s' }}>
-        <h2 className="text-[15px] font-bold text-white mb-3 flex items-center gap-2">
-          <Music size={15} className="text-[#888]" /> Moods
-        </h2>
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+        <h2 className="text-[15px] font-bold text-white mb-3">Browse by Mood</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
           {MOODS.map(m => (
             <button key={m.label} onClick={() => loadMood(m)}
-              className={`flex flex-col items-center gap-1.5 py-4 px-2 rounded-2xl transition-all btn-press border ${
-                activeMood === m.label ? 'ring-2 ring-rose-500/40 border-rose-500/30' : 'border-white/[0.04] hover:border-white/[0.08]'
-              } bg-gradient-to-b ${m.color}`}>
-              <span className="text-[20px]">{m.emoji}</span>
-              <span className="text-[11px] font-medium text-white">{m.label}</span>
+              className={`relative overflow-hidden rounded-2xl p-4 h-[72px] sm:h-[80px] flex items-end text-left btn-press transition-all ${
+                activeMood === m.label ? 'ring-2 ring-white/40 scale-[0.98]' : ''
+              }`}>
+              <div className={`absolute inset-0 bg-gradient-to-br ${m.color}`} />
+              <div className="relative flex items-center gap-2">
+                <span className="text-[18px]">{m.icon}</span>
+                <span className="text-[13px] font-semibold text-white">{m.label}</span>
+              </div>
             </button>
           ))}
         </div>
@@ -116,15 +119,15 @@ export default function Home() {
         {/* Mood Results */}
         {moodLoading && <div className="flex justify-center py-8"><Loader2 size={20} className="text-rose-500 animate-spin" /></div>}
         {!moodLoading && moodSongs && moodSongs.length > 0 && (
-          <div className="mt-4">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[13px] text-[#999]">{activeMood} vibes</p>
-              <button onClick={() => playSong(moodSongs[0], moodSongs)} className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500 rounded-full text-[11px] text-white font-medium btn-press">
-                <Play size={10} fill="white" /> Play All
+          <div className="mt-4 animate-in">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[14px] text-white font-medium">{activeMood} vibes</p>
+              <button onClick={() => playSong(moodSongs[0], moodSongs)} className="flex items-center gap-1.5 px-3.5 py-2 bg-white rounded-full text-[11px] text-black font-semibold btn-press">
+                <Play size={10} fill="black" /> Play All
               </button>
             </div>
-            <div className="flex gap-3 scroll-x pb-1">
-              {moodSongs.slice(0, 8).map(s => <SongCard key={s.id} song={s} />)}
+            <div className="flex gap-3 scroll-x pb-1 stagger">
+              {moodSongs.slice(0, 10).map(s => <SongCard key={s.id} song={s} />)}
             </div>
           </div>
         )}
