@@ -105,10 +105,33 @@ export function PlayerProvider({ children }) {
   useEffect(() => { try { localStorage.setItem('liked', JSON.stringify(likedSongs)); } catch {} }, [likedSongs]);
   useEffect(() => { try { localStorage.setItem('vol', volume.toString()); } catch {} }, [volume]);
   useEffect(() => { volumeRef.current = volume; }, [volume]);
+  // Update media session playback state
+  useEffect(() => { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused'; }, [isPlaying]);
 
   // Load related when song changes
   useEffect(() => {
     if (!currentSong) return;
+
+    // ─── Media Session API (Android notification controls) ───
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: currentSong.title || 'Unknown',
+        artist: currentSong.artist || 'Unknown',
+        album: currentSong.album || '',
+        artwork: [
+          { src: currentSong.thumbnail, sizes: '512x512', type: 'image/jpeg' }
+        ]
+      });
+      navigator.mediaSession.setActionHandler('play', () => togglePlay());
+      navigator.mediaSession.setActionHandler('pause', () => togglePlay());
+      navigator.mediaSession.setActionHandler('previoustrack', () => { if (playNextRef.current) playPrev(); });
+      navigator.mediaSession.setActionHandler('nexttrack', () => { if (playNextRef.current) playNext(); });
+      navigator.mediaSession.setActionHandler('seekto', (details) => { if (details.seekTime != null) seekTo(details.seekTime); });
+    }
+
+    // Update browser tab title
+    document.title = `${currentSong.title} — ${currentSong.artist} | Music Area`;
+
     getNextSongs(currentSong).then(songs => {
       // Deduplicate: remove current song and any already in queue
       const currentQueue = queueRef.current;
