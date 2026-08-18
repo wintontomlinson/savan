@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Play, Loader2, SearchX, TrendingUp, Clock, RefreshCw, Music } from 'lucide-react';
+import { Search, X, Play, Loader2, SearchX, TrendingUp, Clock, RefreshCw, Music } from 'lucide-react';
 import { searchSongs } from '../data/api';
 import { usePlayer } from '../context/PlayerContext';
 import { getHistory } from '../data/algorithm';
@@ -12,10 +12,15 @@ export default function SearchResults() {
   const [params, setParams] = useSearchParams();
   const q = params.get('q') || '';
   const { playSong } = usePlayer();
+  const [query, setQuery] = useState(q);
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const requestId = useRef(0);
+  const inputRef = useRef(null);
+
+  useEffect(() => { setQuery(q); }, [q]);
+  useEffect(() => { if (!q) inputRef.current?.focus(); }, []);
 
   const doSearch = async () => {
     if (!q?.trim()) return;
@@ -31,13 +36,37 @@ export default function SearchResults() {
 
   useEffect(() => { if (q) doSearch(); }, [q]);
 
-  const quickSearch = (term) => setParams({ q: term });
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (query.trim()) setParams({ q: query.trim() });
+  };
+
+  const quickSearch = (term) => { setQuery(term); setParams({ q: term }); };
 
   const recentArtists = [...new Set(getHistory().slice(0, 20).map(s => s.artist?.split(',')[0]?.trim()).filter(Boolean))].slice(0, 6);
 
   // No query — show discover page
   if (!q) return (
     <div className="pb-6 pt-2 animate-in">
+      {/* Search Input */}
+      <form onSubmit={handleSubmit} className="relative mb-6">
+        <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#555]" />
+        <input
+          ref={inputRef}
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="What do you want to listen to?"
+          className="w-full bg-[#161616] text-white text-[15px] pl-12 pr-12 py-3.5 rounded-2xl placeholder:text-[#555] focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:bg-[#1a1a1a] transition-all border border-white/[0.04]"
+          autoComplete="off"
+          spellCheck="false"
+        />
+        {query && (
+          <button type="button" onClick={() => setQuery('')}
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">
+            <X size={12} className="text-[#999]" />
+          </button>
+        )}
+      </form>
       {/* Recent */}
       {recentArtists.length > 0 && (
         <div className="mb-7">
@@ -77,6 +106,25 @@ export default function SearchResults() {
 
   return (
     <div className="pb-6 pt-2">
+      {/* Search Input */}
+      <form onSubmit={handleSubmit} className="relative mb-5">
+        <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#555]" />
+        <input
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="What do you want to listen to?"
+          className="w-full bg-[#161616] text-white text-[15px] pl-12 pr-12 py-3.5 rounded-2xl placeholder:text-[#555] focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:bg-[#1a1a1a] transition-all border border-white/[0.04]"
+          autoComplete="off"
+          spellCheck="false"
+        />
+        {query && (
+          <button type="button" onClick={() => { setQuery(''); setParams({}); setSongs([]); setError(false); }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">
+            <X size={12} className="text-[#999]" />
+          </button>
+        )}
+      </form>
+
       {/* Results Header */}
       <div className="flex items-center justify-between mb-5 animate-in">
         <div>
