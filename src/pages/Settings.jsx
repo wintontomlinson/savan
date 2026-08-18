@@ -113,7 +113,7 @@ export default function Settings() {
       {/* Crossfade */}
       <Section title="Crossfade">
         <Item icon={Timer} label="Song Transition" desc={crossfade === 0 ? 'Off' : `${crossfade}s smooth fade`}>
-          <input type="range" min="0" max="12" step="1" value={crossfade}
+          <input type="range" min="0" max="30" step="1" value={crossfade}
             onChange={e => handleCrossfade(parseInt(e.target.value))}
             className="w-20 h-1.5 rounded-full appearance-none bg-white/10 cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white" />
         </Item>
