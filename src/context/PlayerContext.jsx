@@ -46,6 +46,8 @@ export function PlayerProvider({ children }) {
     if (a) a.volume = val;
   }, []);
 
+  const historyStack = useRef([]); // Stack of previously played songs
+
   const cur = () => activeRef.current === 'A' ? audioA.current : audioB.current;
 
   const playNextRef = useRef(null);
@@ -168,7 +170,9 @@ export function PlayerProvider({ children }) {
   function playDirect(song) {
     if (!song) return;
     cancelFade();
-    // Initialize audio processing on first play (needs user gesture)
+    // Push current song to history stack (for prev)
+    if (currentSong) historyStack.current.push(currentSong);
+    // Initialize audio processing on first play
     initAudioProcessing(audioA.current, audioB.current);
     resumeAudioContext();
 
@@ -255,7 +259,33 @@ export function PlayerProvider({ children }) {
   // Keep ref updated for audio event handler
   useEffect(() => { playNextRef.current = playNext; }, [playNext]);
 
-  const playPrev = useCallback(() => { cur().currentTime = 0; setCurrentTime(0); }, []);
+  const playPrev = useCallback(() => {
+    // If more than 3 seconds in, restart current song
+    if (currentTime > 3) { cur().currentTime = 0; setCurrentTime(0); return; }
+    // Otherwise go to previous song from history
+    if (historyStack.current.length > 0) {
+      const prev = historyStack.current.pop();
+      // Put current song back at front of queue
+      if (currentSong) setQueue(p => [currentSong, ...p]);
+      // Play previous
+      cancelFade();
+      audioA.current.pause(); audioA.current.src = '';
+      audioB.current.pause(); audioB.current.src = '';
+      activeRef.current = 'A';
+      setCurrentSong(prev);
+      setCurrentTime(0);
+      if (prev.audio) {
+        audioA.current.src = prev.audio;
+        audioA.current.volume = volumeRef.current;
+        const onReady = () => { audioA.current.removeEventListener('canplaythrough', onReady); audioA.current.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false)); };
+        audioA.current.addEventListener('canplaythrough', onReady);
+        audioA.current.load();
+      }
+    } else {
+      // No history — just restart
+      cur().currentTime = 0; setCurrentTime(0);
+    }
+  }, [currentTime, currentSong]);
   const seekTo = useCallback(t => { const a = cur(); if (a) { a.currentTime = t; setCurrentTime(t); } }, []);
   const toggleShuffle = useCallback(() => setShuffle(p => !p), []);
   const cycleRepeat = useCallback(() => setRepeat(p => p === 'none' ? 'all' : p === 'all' ? 'one' : 'none'), []);
