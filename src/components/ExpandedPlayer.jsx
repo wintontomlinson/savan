@@ -1,4 +1,4 @@
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Volume2, VolumeX, Download, Settings, Share2, Mic2, Disc3, Zap } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Volume2, VolumeX, Download, Settings, Share2, Mic2 } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { formatDuration } from '../data/mockData';
 import { downloadSong, getQuality, setQuality, getLyrics } from '../data/api';

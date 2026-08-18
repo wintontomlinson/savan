@@ -44,19 +44,6 @@ export function PlayerProvider({ children }) {
     if (a) a.volume = val;
   }, []);
 
-  // Bass boost & volume boost — simple approach without AudioContext
-  // These just adjust the volume level. No Web Audio API needed.
-  const setBassBoost = useCallback(() => {}, []);
-  const setVolumeBoost = useCallback((percent) => {
-    // Clamp to 100% max for actual audio (no AudioContext)
-    const val = Math.min(percent, 100) / 100;
-    _setVolume(val);
-    volumeRef.current = val;
-    const a = activeRef.current === 'A' ? audioA.current : audioB.current;
-    if (a) a.volume = val;
-  }, []);
-  const initAudioProcessing = useCallback(() => {}, []);
-
   const historyStack = useRef([]);
   const cur = () => activeRef.current === 'A' ? audioA.current : audioB.current;
   const playNextRef = useRef(null);
@@ -295,5 +282,5 @@ export function PlayerProvider({ children }) {
     setLikedSongs(p => { if (p.includes(songId)) { showToast('Removed'); return p.filter(id => id !== songId); } showToast('Liked ❤️', 'success'); return [...p, songId]; });
   }, [showToast]);
 
-  return <Ctx.Provider value={{ currentSong, queue, upNext, isPlaying, volume, currentTime, duration, shuffleMode, repeatMode, isExpanded, likedSongs, toasts, playSong, togglePlay, playNext, playPrev, seekTo, setVolume, setVolumeBoost, setBassBoost, initAudioProcessing, toggleShuffle, cycleRepeat, addToQueue, removeFromQueue, clearQueue, toggleLike, setExpanded, showToast, dismissToast }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ currentSong, queue, upNext, isPlaying, volume, currentTime, duration, shuffleMode, repeatMode, isExpanded, likedSongs, toasts, playSong, togglePlay, playNext, playPrev, seekTo, setVolume, toggleShuffle, cycleRepeat, addToQueue, removeFromQueue, clearQueue, toggleLike, setExpanded, showToast, dismissToast }}>{children}</Ctx.Provider>;
 }
