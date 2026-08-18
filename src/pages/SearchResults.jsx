@@ -1,78 +1,159 @@
 import { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Play, Loader2, SearchX, RefreshCw } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Search, X, Play, Loader2, SearchX, TrendingUp, Clock, RefreshCw } from 'lucide-react';
 import { searchSongs } from '../data/api';
 import { usePlayer } from '../context/PlayerContext';
+import { getHistory } from '../data/algorithm';
 import SongRow from '../components/SongRow';
 
+const TRENDING = ['Arijit Singh', 'Diljit Dosanjh', 'AP Dhillon', 'Shreya Ghoshal', 'Sidhu Moose Wala', 'Atif Aslam', 'KK', 'Jubin Nautiyal'];
+
 export default function SearchResults() {
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const q = params.get('q') || '';
+  const nav = useNavigate();
   const { playSong } = usePlayer();
+  const [query, setQuery] = useState(q);
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const requestId = useRef(0);
+  const inputRef = useRef(null);
 
-  const doSearch = async () => {
-    if (!q) return;
+  // Auto-focus search input on mount
+  useEffect(() => { if (!q) inputRef.current?.focus(); }, []);
+
+  // Sync query with URL param
+  useEffect(() => { setQuery(q); }, [q]);
+
+  const doSearch = async (searchQuery) => {
+    const term = searchQuery || q;
+    if (!term?.trim()) return;
     setLoading(true);
     setError(false);
     const id = ++requestId.current;
-    const s = await searchSongs(q, 30);
+    const s = await searchSongs(term, 30) || [];
     if (id !== requestId.current) return;
-    if (s === null) { setError(true); setLoading(false); return; }
+    if (s.length === 0) { setError(true); setLoading(false); return; }
     setSongs(s);
     setLoading(false);
   };
 
-  useEffect(() => { doSearch(); }, [q]);
+  useEffect(() => { if (q) doSearch(q); }, [q]);
 
-  if (!q) return <div className="text-center py-20"><p className="text-base text-white">Search for music</p><p className="text-sm text-[#666] mt-1">Type in the search bar above</p></div>;
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (query.trim()) {
+      setParams({ q: query.trim() });
+    }
+  };
+
+  const quickSearch = (term) => {
+    setQuery(term);
+    setParams({ q: term });
+  };
+
+  // Recent searches from history
+  const recentArtists = [...new Set(getHistory().slice(0, 20).map(s => s.artist?.split(',')[0]?.trim()).filter(Boolean))].slice(0, 5);
 
   return (
-    <div className="pb-6 pt-2">
-      <h1 className="text-lg sm:text-xl font-bold text-white mb-1">"{q}"</h1>
-      <p className="text-[12px] text-[#666] mb-5">{loading ? 'Searching...' : `${songs.length} results`}</p>
+    <div className="pb-6 -mt-14 pt-0">
+      {/* Search Header */}
+      <div className="sticky top-0 z-30 bg-[#080808] pt-4 pb-3 px-1">
+        <form onSubmit={handleSubmit} className="relative">
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#555]" />
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Songs, artists, albums..."
+            className="w-full bg-[#161616] text-white text-[15px] pl-12 pr-12 py-3.5 rounded-2xl placeholder:text-[#555] focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:bg-[#1a1a1a] transition-all border border-white/[0.04]"
+            autoComplete="off"
+            spellCheck="false"
+          />
+          {query && (
+            <button type="button" onClick={() => { setQuery(''); setSongs([]); setError(false); inputRef.current?.focus(); }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">
+              <X size={12} className="text-[#999]" />
+            </button>
+          )}
+        </form>
+      </div>
 
-      {loading && <div className="flex justify-center py-16"><Loader2 size={22} className="text-[#FF0000] animate-spin" /></div>}
-
-      {error && !loading && (
-        <div className="text-center py-16">
-          <SearchX size={36} className="text-[#333] mx-auto mb-3" />
-          <p className="text-white text-sm">Unable to load results</p>
-          <p className="text-[12px] text-[#666] mt-1 mb-4">Please check your connection</p>
-          <button onClick={doSearch} className="flex items-center gap-2 mx-auto px-4 py-2 bg-[#FF0000] text-white text-[13px] rounded-full active:scale-95">
-            <RefreshCw size={14} /> Retry
-          </button>
-        </div>
-      )}
-
-      {!loading && !error && !songs.length && (
-        <div className="text-center py-16">
-          <SearchX size={36} className="text-[#333] mx-auto mb-3" />
-          <p className="text-white text-sm">No results for "{q}"</p>
-          <p className="text-[12px] text-[#666] mt-1">Try different keywords</p>
-        </div>
-      )}
-
-      {!loading && !error && songs.length > 0 && (
-        <>
-          <button onClick={() => playSong(songs[0], songs)}
-            className="flex items-center gap-3 p-3 bg-[#111] rounded-2xl border border-[#1a1a1a] w-full sm:w-[340px] mb-5 active:scale-[0.98] transition-transform text-left">
-            <img src={songs[0].thumbnail} alt="" className="w-14 h-14 rounded-xl object-cover" loading="lazy" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[15px] font-bold text-white truncate">{songs[0].title}</p>
-              <p className="text-[12px] text-[#888]">{songs[0].artist}</p>
+      {/* No query — show suggestions */}
+      {!q && (
+        <div className="mt-4 animate-in">
+          {/* Recent */}
+          {recentArtists.length > 0 && (
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-3 px-1">
+                <Clock size={14} className="text-[#666]" />
+                <p className="text-[13px] text-[#888] font-medium">Recent</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {recentArtists.map(a => (
+                  <button key={a} onClick={() => quickSearch(a)}
+                    className="px-4 py-2 bg-[#161616] hover:bg-[#1e1e1e] rounded-full text-[13px] text-white border border-white/[0.04] transition-colors btn-press">
+                    {a}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="w-9 h-9 bg-[#FF0000] rounded-full flex items-center justify-center shrink-0">
-              <Play size={14} className="text-white ml-0.5" fill="white" />
+          )}
+
+          {/* Trending */}
+          <div>
+            <div className="flex items-center gap-2 mb-3 px-1">
+              <TrendingUp size={14} className="text-rose-400" />
+              <p className="text-[13px] text-[#888] font-medium">Trending</p>
             </div>
-          </button>
-          <div className="bg-[#111] rounded-2xl overflow-hidden border border-[#1a1a1a]">
-            {songs.map((s, i) => <SongRow key={`${s.id}-${i}`} song={s} index={i} songList={songs} />)}
+            <div className="flex flex-wrap gap-2">
+              {TRENDING.map(t => (
+                <button key={t} onClick={() => quickSearch(t)}
+                  className="px-4 py-2 bg-[#161616] hover:bg-[#1e1e1e] rounded-full text-[13px] text-white border border-white/[0.04] transition-colors btn-press">
+                  {t}
+                </button>
+              ))}
+            </div>
           </div>
-        </>
+        </div>
+      )}
+
+      {/* Search results */}
+      {q && (
+        <div className="mt-2">
+          <div className="flex items-center justify-between mb-4 px-1">
+            <div>
+              <h2 className="text-[16px] font-bold text-white">"{q}"</h2>
+              <p className="text-[11px] text-[#666] mt-0.5">{loading ? 'Searching...' : songs.length > 0 ? `${songs.length} songs found` : ''}</p>
+            </div>
+            {songs.length > 0 && (
+              <button onClick={() => playSong(songs[0], songs)}
+                className="flex items-center gap-2 px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white text-[12px] font-semibold rounded-full transition-colors btn-press">
+                <Play size={12} fill="white" /> Play All
+              </button>
+            )}
+          </div>
+
+          {loading && <div className="flex justify-center py-16"><Loader2 size={22} className="text-rose-500 animate-spin" /></div>}
+
+          {error && !loading && (
+            <div className="text-center py-16 animate-in">
+              <SearchX size={36} className="text-[#333] mx-auto mb-3" />
+              <p className="text-white text-sm">No results found</p>
+              <p className="text-[12px] text-[#666] mt-1 mb-4">Try different keywords</p>
+              <button onClick={() => doSearch(q)} className="flex items-center gap-2 mx-auto px-4 py-2 bg-rose-500 text-white text-[13px] rounded-full btn-press">
+                <RefreshCw size={14} /> Retry
+              </button>
+            </div>
+          )}
+
+          {!loading && !error && songs.length > 0 && (
+            <div className="bg-[#0e0e0e] rounded-2xl overflow-hidden border border-white/[0.03]">
+              {songs.map((s, i) => <SongRow key={`${s.id}-${i}`} song={s} index={i} songList={songs} />)}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
