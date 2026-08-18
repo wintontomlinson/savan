@@ -1,10 +1,9 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Compass, Search, Library } from 'lucide-react';
+import { Home, Compass, Library } from 'lucide-react';
 
 const items = [
   { to: '/', icon: Home, label: 'Home' },
   { to: '/explore', icon: Compass, label: 'Explore' },
-  { to: '/search', icon: Search, label: 'Search' },
   { to: '/library', icon: Library, label: 'Library' },
 ];
 

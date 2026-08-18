@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Search, X, Play, Loader2, SearchX, TrendingUp, Clock, RefreshCw } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Play, Loader2, SearchX, TrendingUp, Clock, RefreshCw } from 'lucide-react';
 import { searchSongs } from '../data/api';
 import { usePlayer } from '../context/PlayerContext';
 import { getHistory } from '../data/algorithm';
@@ -11,45 +11,27 @@ const TRENDING = ['Arijit Singh', 'Diljit Dosanjh', 'AP Dhillon', 'Shreya Ghosha
 export default function SearchResults() {
   const [params, setParams] = useSearchParams();
   const q = params.get('q') || '';
-  const nav = useNavigate();
   const { playSong } = usePlayer();
-  const [query, setQuery] = useState(q);
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const requestId = useRef(0);
-  const inputRef = useRef(null);
 
-  // Auto-focus search input on mount
-  useEffect(() => { if (!q) inputRef.current?.focus(); }, []);
-
-  // Sync query with URL param
-  useEffect(() => { setQuery(q); }, [q]);
-
-  const doSearch = async (searchQuery) => {
-    const term = searchQuery || q;
-    if (!term?.trim()) return;
+  const doSearch = async () => {
+    if (!q?.trim()) return;
     setLoading(true);
     setError(false);
     const id = ++requestId.current;
-    const s = await searchSongs(term, 30) || [];
+    const s = await searchSongs(q, 30) || [];
     if (id !== requestId.current) return;
     if (s.length === 0) { setError(true); setLoading(false); return; }
     setSongs(s);
     setLoading(false);
   };
 
-  useEffect(() => { if (q) doSearch(q); }, [q]);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (query.trim()) {
-      setParams({ q: query.trim() });
-    }
-  };
+  useEffect(() => { if (q) doSearch(); }, [q]);
 
   const quickSearch = (term) => {
-    setQuery(term);
     setParams({ q: term });
   };
 
@@ -57,29 +39,7 @@ export default function SearchResults() {
   const recentArtists = [...new Set(getHistory().slice(0, 20).map(s => s.artist?.split(',')[0]?.trim()).filter(Boolean))].slice(0, 5);
 
   return (
-    <div className="pb-6 -mt-14 pt-0">
-      {/* Search Header */}
-      <div className="sticky top-0 z-30 bg-[#080808] pt-4 pb-3 px-1">
-        <form onSubmit={handleSubmit} className="relative">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#555]" />
-          <input
-            ref={inputRef}
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            placeholder="Songs, artists, albums..."
-            className="w-full bg-[#161616] text-white text-[15px] pl-12 pr-12 py-3.5 rounded-2xl placeholder:text-[#555] focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:bg-[#1a1a1a] transition-all border border-white/[0.04]"
-            autoComplete="off"
-            spellCheck="false"
-          />
-          {query && (
-            <button type="button" onClick={() => { setQuery(''); setSongs([]); setError(false); inputRef.current?.focus(); }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">
-              <X size={12} className="text-[#999]" />
-            </button>
-          )}
-        </form>
-      </div>
-
+    <div className="pb-6 pt-2">
       {/* No query — show suggestions */}
       {!q && (
         <div className="mt-4 animate-in">
