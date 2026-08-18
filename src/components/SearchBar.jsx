@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, X, Loader2 } from 'lucide-react';
 import { searchSongs } from '../data/api';
+import { ytmSearchSongs } from '../data/ytmusic';
 
 export default function SearchBar() {
   const [query, setQuery] = useState('');
@@ -28,12 +29,17 @@ export default function SearchBar() {
     if (timer.current) clearTimeout(timer.current);
 
     timer.current = setTimeout(async () => {
-      const id = ++requestId.current; // Increment to invalidate old requests
-      const s = await searchSongs(query, 6);
-      // Only update if this is still the latest request
+      const id = ++requestId.current;
+      // Fetch from both APIs in parallel
+      const [saavnResults, ytResults] = await Promise.all([
+        searchSongs(query, 4),
+        ytmSearchSongs(query, 3),
+      ]);
       if (id !== requestId.current) return;
-      if (s.length === 0 && query.length >= 2) setError(true);
-      setResults(s);
+      // Combine: JioSaavn first (playable), then YT Music
+      const combined = [...saavnResults, ...ytResults.map(r => ({ ...r, ytOnly: true }))];
+      if (combined.length === 0 && query.length >= 2) setError(true);
+      setResults(combined);
       setLoading(false);
     }, 400);
 
@@ -63,14 +69,23 @@ export default function SearchBar() {
         <div className="absolute top-full mt-2 w-full bg-[#141414] rounded-2xl border border-[#222] shadow-2xl overflow-hidden z-50 max-h-[70vh] scroll-y">
           {loading && <div className="flex justify-center py-4"><Loader2 size={18} className="text-[#FF0000] animate-spin" /></div>}
           {error && !loading && <p className="text-[13px] text-[#666] text-center py-4">No results found</p>}
-          {results.map(s => (
-            <button key={s.id} onClick={() => { nav(`/search?q=${encodeURIComponent(s.title)}`); setOpen(false); setQuery(s.title); }}
+          {results.map((s, i) => (
+            <button key={s.id || i} onClick={() => {
+              if (s.ytOnly) {
+                // YT Music result — search on JioSaavn for playback
+                nav(`/search?q=${encodeURIComponent(s.title + ' ' + s.artist)}`);
+              } else {
+                nav(`/search?q=${encodeURIComponent(s.title)}`);
+              }
+              setOpen(false); setQuery(s.title);
+            }}
               className="flex items-center gap-3 w-full px-4 py-3 active:bg-[#222] hover:bg-[#1a1a1a] transition-colors text-left">
               <img src={s.thumbnail} alt="" className="w-11 h-11 rounded-lg object-cover shrink-0" loading="lazy" />
               <div className="min-w-0 flex-1">
                 <p className="text-[13px] text-white truncate font-medium">{s.title}</p>
                 <p className="text-[11px] text-[#777] truncate">{s.artist}</p>
               </div>
+              {s.ytOnly && <span className="text-[9px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full shrink-0">YT</span>}
             </button>
           ))}
         </div>

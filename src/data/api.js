@@ -1,6 +1,7 @@
 // ═══════════════════════════════════════════════
-// MusicArea API Layer — JioSaavn Integration
-// Handles: caching, retries, normalization, errors
+// MusicArea API Layer — JioSaavn + YouTube Music
+// JioSaavn: audio playback, lyrics, suggestions
+// YT Music: search discovery, trending
 // ═══════════════════════════════════════════════
 
 const BASE = 'https://jiosavan-api2.vercel.app/api';
