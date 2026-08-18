@@ -1,11 +1,13 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Compass, Library, Music, Disc3 } from 'lucide-react';
+import { Home, Compass, Search, Library, Settings, Music, Disc3 } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 
 const nav = [
   { to: '/', icon: Home, label: 'Home' },
   { to: '/explore', icon: Compass, label: 'Explore' },
+  { to: '/search', icon: Search, label: 'Search' },
   { to: '/library', icon: Library, label: 'Library' },
+  { to: '/settings', icon: Settings, label: 'Settings' },
 ];
 
 export default function Sidebar() {

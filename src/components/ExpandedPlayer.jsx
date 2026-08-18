@@ -2,7 +2,6 @@ import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, Ch
 import { usePlayer } from '../context/PlayerContext';
 import { formatDuration } from '../data/mockData';
 import { downloadSong, getLyrics } from '../data/api';
-import AudioSettings from './AudioSettings';
 import SleepTimer from './SleepTimer';
 import { useState, useRef, useEffect } from 'react';
 
@@ -64,7 +63,6 @@ export default function ExpandedPlayer() {
           </div>
           <div className="flex items-center">
             <SleepTimer />
-            <AudioSettings />
           </div>
         </div>
 

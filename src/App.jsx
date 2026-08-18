@@ -11,6 +11,7 @@ import Home from './pages/Home';
 import Explore from './pages/Explore';
 import Library from './pages/Library';
 import SearchResults from './pages/SearchResults';
+import Settings from './pages/Settings';
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
                 <Route path="/explore" element={<Explore />} />
                 <Route path="/library" element={<Library />} />
                 <Route path="/search" element={<SearchResults />} />
+                <Route path="/settings" element={<Settings />} />
               </Routes>
             </div>
           </main>
