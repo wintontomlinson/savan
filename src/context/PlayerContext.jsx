@@ -276,9 +276,16 @@ export function PlayerProvider({ children }) {
     if (song.audio) {
       const a = audioA.current;
       a.src = song.audio;
-      a.volume = volumeRef.current;
+      // Ensure volume is always audible
+      const vol = volumeRef.current;
+      a.volume = (vol > 0 && vol <= 1) ? vol : 0.7;
       setIsPlaying(true);
-      a.play().catch(() => setIsPlaying(false));
+      a.play().then(() => {
+        setIsPlaying(true);
+      }).catch((err) => {
+        console.warn('Play failed:', err);
+        setIsPlaying(false);
+      });
     } else {
       setIsPlaying(false);
     }
