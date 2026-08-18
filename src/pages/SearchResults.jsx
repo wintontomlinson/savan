@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Play, Loader2, SearchX, TrendingUp, Clock, RefreshCw } from 'lucide-react';
+import { Play, Loader2, SearchX, TrendingUp, Clock, RefreshCw, Music } from 'lucide-react';
 import { searchSongs } from '../data/api';
 import { usePlayer } from '../context/PlayerContext';
 import { getHistory } from '../data/algorithm';
 import SongRow from '../components/SongRow';
 
-const TRENDING = ['Arijit Singh', 'Diljit Dosanjh', 'AP Dhillon', 'Shreya Ghoshal', 'Sidhu Moose Wala', 'Atif Aslam', 'KK', 'Jubin Nautiyal'];
+const TRENDING = ['Arijit Singh', 'Diljit Dosanjh', 'AP Dhillon', 'Shreya Ghoshal', 'Sidhu Moose Wala', 'Atif Aslam', 'Jubin Nautiyal', 'The Weeknd'];
 
 export default function SearchResults() {
   const [params, setParams] = useSearchParams();
@@ -31,88 +31,116 @@ export default function SearchResults() {
 
   useEffect(() => { if (q) doSearch(); }, [q]);
 
-  const quickSearch = (term) => {
-    setParams({ q: term });
-  };
+  const quickSearch = (term) => setParams({ q: term });
 
-  // Recent searches from history
-  const recentArtists = [...new Set(getHistory().slice(0, 20).map(s => s.artist?.split(',')[0]?.trim()).filter(Boolean))].slice(0, 5);
+  const recentArtists = [...new Set(getHistory().slice(0, 20).map(s => s.artist?.split(',')[0]?.trim()).filter(Boolean))].slice(0, 6);
 
-  return (
-    <div className="pb-6 pt-2">
-      {/* No query — show suggestions */}
-      {!q && (
-        <div className="mt-4 animate-in">
-          {/* Recent */}
-          {recentArtists.length > 0 && (
-            <div className="mb-6">
-              <div className="flex items-center gap-2 mb-3 px-1">
-                <Clock size={14} className="text-[#666]" />
-                <p className="text-[13px] text-[#888] font-medium">Recent</p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {recentArtists.map(a => (
-                  <button key={a} onClick={() => quickSearch(a)}
-                    className="px-4 py-2 bg-[#161616] hover:bg-[#1e1e1e] rounded-full text-[13px] text-white border border-white/[0.04] transition-colors btn-press">
-                    {a}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Trending */}
-          <div>
-            <div className="flex items-center gap-2 mb-3 px-1">
-              <TrendingUp size={14} className="text-rose-400" />
-              <p className="text-[13px] text-[#888] font-medium">Trending</p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {TRENDING.map(t => (
-                <button key={t} onClick={() => quickSearch(t)}
-                  className="px-4 py-2 bg-[#161616] hover:bg-[#1e1e1e] rounded-full text-[13px] text-white border border-white/[0.04] transition-colors btn-press">
-                  {t}
-                </button>
-              ))}
-            </div>
+  // No query — show discover page
+  if (!q) return (
+    <div className="pb-6 pt-2 animate-in">
+      {/* Recent */}
+      {recentArtists.length > 0 && (
+        <div className="mb-7">
+          <div className="flex items-center gap-2 mb-3">
+            <Clock size={14} className="text-[#666]" />
+            <p className="text-[13px] text-white font-semibold">Recent Searches</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {recentArtists.map(a => (
+              <button key={a} onClick={() => quickSearch(a)}
+                className="px-4 py-2.5 bg-[#111] hover:bg-[#181818] rounded-full text-[13px] text-white border border-white/[0.04] hover:border-white/[0.08] transition-all btn-press">
+                {a}
+              </button>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Search results */}
-      {q && (
-        <div className="mt-2">
-          <div className="flex items-center justify-between mb-4 px-1">
-            <div>
-              <h2 className="text-[16px] font-bold text-white">"{q}"</h2>
-              <p className="text-[11px] text-[#666] mt-0.5">{loading ? 'Searching...' : songs.length > 0 ? `${songs.length} songs found` : ''}</p>
-            </div>
-            {songs.length > 0 && (
-              <button onClick={() => playSong(songs[0], songs)}
-                className="flex items-center gap-2 px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white text-[12px] font-semibold rounded-full transition-colors btn-press">
-                <Play size={12} fill="white" /> Play All
-              </button>
-            )}
+      {/* Trending */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <TrendingUp size={14} className="text-rose-400" />
+          <p className="text-[13px] text-white font-semibold">Trending Now</p>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {TRENDING.map((t, i) => (
+            <button key={t} onClick={() => quickSearch(t)}
+              className="flex items-center gap-3 p-3 bg-[#111] hover:bg-[#161616] rounded-xl border border-white/[0.04] hover:border-white/[0.08] transition-all btn-press text-left">
+              <span className="text-[12px] text-rose-400 font-bold w-5">{i + 1}</span>
+              <span className="text-[13px] text-white font-medium truncate">{t}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="pb-6 pt-2">
+      {/* Results Header */}
+      <div className="flex items-center justify-between mb-5 animate-in">
+        <div>
+          <h2 className="text-[18px] font-bold text-white">"{q}"</h2>
+          <p className="text-[11px] text-[#666] mt-0.5">{loading ? 'Searching...' : songs.length > 0 ? `${songs.length} songs found` : ''}</p>
+        </div>
+        {songs.length > 0 && (
+          <button onClick={() => playSong(songs[0], songs)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-[12px] font-semibold rounded-full transition-colors btn-press shadow-lg shadow-rose-500/20">
+            <Play size={13} fill="white" /> Play All
+          </button>
+        )}
+      </div>
+
+      {/* Loading */}
+      {loading && (
+        <div className="flex flex-col items-center justify-center py-20">
+          <Loader2 size={24} className="text-rose-500 animate-spin mb-3" />
+          <p className="text-[12px] text-[#666]">Searching...</p>
+        </div>
+      )}
+
+      {/* Error */}
+      {error && !loading && (
+        <div className="text-center py-20 animate-in">
+          <div className="w-16 h-16 mx-auto mb-4 bg-white/[0.04] rounded-2xl flex items-center justify-center">
+            <SearchX size={28} className="text-[#333]" />
+          </div>
+          <p className="text-[14px] text-white font-medium">No results found</p>
+          <p className="text-[12px] text-[#666] mt-1 mb-5">Try different keywords or check spelling</p>
+          <button onClick={doSearch} className="flex items-center gap-2 mx-auto px-4 py-2.5 bg-rose-500 text-white text-[13px] rounded-full btn-press font-medium">
+            <RefreshCw size={14} /> Retry
+          </button>
+        </div>
+      )}
+
+      {/* Results */}
+      {!loading && !error && songs.length > 0 && (
+        <div className="animate-in">
+          {/* Top Result - Featured Card */}
+          <div className="mb-5">
+            <p className="text-[12px] text-[#666] uppercase tracking-wider font-medium mb-3">Top Result</p>
+            <button onClick={() => playSong(songs[0], songs)}
+              className="group flex items-center gap-4 p-4 bg-gradient-to-r from-[#111] to-[#0e0e0e] rounded-2xl border border-white/[0.04] hover:border-white/[0.08] w-full sm:w-auto sm:max-w-md text-left transition-all btn-press">
+              <img src={songs[0].thumbnail} alt="" className="w-20 h-20 rounded-xl object-cover shadow-lg ring-1 ring-white/[0.06]" loading="lazy" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[16px] font-bold text-white truncate">{songs[0].title}</p>
+                <p className="text-[13px] text-[#888] truncate mt-0.5">{songs[0].artist}</p>
+                <div className="flex items-center gap-2 mt-2">
+                  <Music size={10} className="text-[#555]" />
+                  <span className="text-[10px] text-[#555] capitalize">{songs[0].language || 'Song'}</span>
+                </div>
+              </div>
+              <div className="w-12 h-12 bg-rose-500 rounded-full flex items-center justify-center shadow-xl shadow-rose-500/30 opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100 shrink-0">
+                <Play size={18} className="text-white ml-0.5" fill="white" />
+              </div>
+            </button>
           </div>
 
-          {loading && <div className="flex justify-center py-16"><Loader2 size={22} className="text-rose-500 animate-spin" /></div>}
-
-          {error && !loading && (
-            <div className="text-center py-16 animate-in">
-              <SearchX size={36} className="text-[#333] mx-auto mb-3" />
-              <p className="text-white text-sm">No results found</p>
-              <p className="text-[12px] text-[#666] mt-1 mb-4">Try different keywords</p>
-              <button onClick={() => doSearch(q)} className="flex items-center gap-2 mx-auto px-4 py-2 bg-rose-500 text-white text-[13px] rounded-full btn-press">
-                <RefreshCw size={14} /> Retry
-              </button>
-            </div>
-          )}
-
-          {!loading && !error && songs.length > 0 && (
-            <div className="bg-[#0e0e0e] rounded-2xl overflow-hidden border border-white/[0.03]">
-              {songs.map((s, i) => <SongRow key={`${s.id}-${i}`} song={s} index={i} songList={songs} />)}
-            </div>
-          )}
+          {/* All Songs */}
+          <p className="text-[12px] text-[#666] uppercase tracking-wider font-medium mb-3">Songs</p>
+          <div className="bg-[#0e0e0e] rounded-2xl overflow-hidden border border-white/[0.04]">
+            {songs.map((s, i) => <SongRow key={`${s.id}-${i}`} song={s} index={i} songList={songs} />)}
+          </div>
         </div>
       )}
     </div>

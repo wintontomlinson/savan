@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Compass, Library, Music } from 'lucide-react';
+import { Home, Compass, Library, Music, Disc3 } from 'lucide-react';
+import { usePlayer } from '../context/PlayerContext';
 
 const nav = [
   { to: '/', icon: Home, label: 'Home' },
@@ -8,31 +9,61 @@ const nav = [
 ];
 
 export default function Sidebar() {
+  const { currentSong, isPlaying } = usePlayer();
+
   return (
-    <aside className="hidden md:flex flex-col w-[72px] lg:w-[240px] h-full bg-[#060606] border-r border-white/[0.04] fixed left-0 top-0 z-20 pt-14">
+    <aside className="hidden md:flex flex-col w-[72px] lg:w-[240px] h-full bg-[#040404] border-r border-white/[0.04] fixed left-0 top-0 z-20">
       {/* Brand */}
       <div className="px-4 lg:px-5 py-5 flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-rose-500 to-rose-600 flex items-center justify-center shadow-lg shadow-rose-500/20">
-          <Music size={15} className="text-white" />
+        <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-rose-500 to-rose-600 flex items-center justify-center shadow-lg shadow-rose-500/25">
+          <Music size={16} className="text-white" />
         </div>
-        <span className="hidden lg:block text-[15px] font-bold text-white tracking-tight">Music Area</span>
+        <span className="hidden lg:block text-[16px] font-bold text-white tracking-tight">Music Area</span>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-2 lg:px-3 mt-3 space-y-1">
+      <nav className="flex-1 px-2 lg:px-3 mt-4 space-y-1">
         {nav.map(item => (
           <NavLink key={item.to} to={item.to} className={({ isActive }) =>
-            `flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-150 ${
+            `flex items-center gap-3 px-3 py-3 rounded-xl text-[13px] font-medium transition-all duration-200 group ${
               isActive
-                ? 'bg-white/[0.06] text-white shadow-sm'
-                : 'text-[#888] hover:text-white hover:bg-white/[0.03]'
+                ? 'bg-white/[0.08] text-white'
+                : 'text-[#777] hover:text-white hover:bg-white/[0.04]'
             }`
           }>
-            <item.icon size={19} strokeWidth={1.7} />
-            <span className="hidden lg:block">{item.label}</span>
+            {({ isActive }) => (
+              <>
+                <item.icon size={20} strokeWidth={isActive ? 2 : 1.5} className={isActive ? 'text-rose-400' : ''} />
+                <span className="hidden lg:block">{item.label}</span>
+                {isActive && <div className="hidden lg:block ml-auto w-1.5 h-1.5 rounded-full bg-rose-400" />}
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
+
+      {/* Now Playing */}
+      {currentSong && (
+        <div className="px-2 lg:px-3 pb-4 mt-auto">
+          <div className="p-2.5 lg:p-3 bg-white/[0.04] rounded-2xl border border-white/[0.06]">
+            <div className="flex items-center gap-2.5">
+              <div className={`w-10 h-10 rounded-xl overflow-hidden shrink-0 ring-1 ring-white/[0.08] ${isPlaying ? 'shadow-lg shadow-rose-500/20' : ''}`}>
+                <img src={currentSong.thumbnail} alt="" className="w-full h-full object-cover" />
+              </div>
+              <div className="hidden lg:block min-w-0 flex-1">
+                <p className="text-[11px] font-medium text-white truncate">{currentSong.title}</p>
+                <p className="text-[10px] text-[#666] truncate">{currentSong.artist}</p>
+              </div>
+            </div>
+            {isPlaying && (
+              <div className="hidden lg:flex items-center gap-1.5 mt-2.5 px-0.5">
+                <Disc3 size={12} className="text-rose-400 animate-[spin_3s_linear_infinite]" />
+                <span className="text-[9px] text-rose-400 font-medium">Now Playing</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

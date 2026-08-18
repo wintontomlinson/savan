@@ -9,16 +9,20 @@ const items = [
 
 export default function MobileNav() {
   return (
-    <div className="glass border-t border-white/[0.04]">
+    <div className="bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/[0.04]">
       <div className="flex items-center justify-around h-[52px]">
         {items.map(i => (
           <NavLink key={i.to} to={i.to} className={({ isActive }) =>
-            `flex flex-col items-center justify-center gap-0.5 py-1.5 px-4 rounded-xl transition-all duration-150 ${
-              isActive ? 'text-rose-400' : 'text-[#555]'
+            `flex flex-col items-center justify-center gap-0.5 py-1.5 px-5 rounded-xl transition-all duration-200 ${
+              isActive ? 'text-white' : 'text-[#555]'
             }`
           }>
-            <i.icon size={20} strokeWidth={1.7} />
-            <span className="text-[9px] font-medium">{i.label}</span>
+            {({ isActive }) => (
+              <>
+                <i.icon size={20} strokeWidth={isActive ? 2 : 1.5} className={isActive ? 'text-rose-400' : ''} />
+                <span className={`text-[9px] font-medium ${isActive ? 'text-rose-400' : ''}`}>{i.label}</span>
+              </>
+            )}
           </NavLink>
         ))}
       </div>
