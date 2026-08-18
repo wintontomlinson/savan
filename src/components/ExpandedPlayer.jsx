@@ -1,7 +1,7 @@
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Volume2, Download, Settings, Share2, Mic2 } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Volume2, Download, Share2, Mic2 } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { formatDuration } from '../data/mockData';
-import { downloadSong, getQuality, setQuality, getLyrics } from '../data/api';
+import { downloadSong, getLyrics } from '../data/api';
 import Equalizer from './Equalizer';
 import AudioSettings from './AudioSettings';
 import SleepTimer from './SleepTimer';
@@ -9,8 +9,6 @@ import { useState, useRef, useEffect } from 'react';
 
 export default function ExpandedPlayer() {
   const { currentSong, isPlaying, togglePlay, playNext, playPrev, currentTime, duration, seekTo, volume, setVolume, shuffleMode, toggleShuffle, repeatMode, cycleRepeat, toggleLike, likedSongs, isExpanded, setExpanded, showToast, queue } = usePlayer();
-  const [showQuality, setShowQuality] = useState(false);
-  const [quality, setQualityState] = useState(getQuality());
   const [showLyrics, setShowLyrics] = useState(false);
   const [lyrics, setLyrics] = useState(null);
   const [lyricsLoading, setLyricsLoading] = useState(false);
@@ -141,22 +139,6 @@ export default function ExpandedPlayer() {
               className="p-2.5 text-[#777] hover:text-white active:scale-90 transition-all rounded-full">
               <Download size={20} />
             </button>
-            {/* Quality */}
-            <div className="relative">
-              <button onClick={() => setShowQuality(!showQuality)} className="flex items-center gap-1 px-3 py-1.5 bg-white/5 rounded-full text-[11px] text-[#aaa] border border-white/10">
-                <Settings size={11} />{quality}
-              </button>
-              {showQuality && (
-                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-[#151515] border border-[#222] rounded-2xl overflow-hidden shadow-2xl z-10 w-32 animate-scale">
-                  {['320kbps', '160kbps', '96kbps', '48kbps'].map(q => (
-                    <button key={q} onClick={() => { setQuality(q); setQualityState(q); setShowQuality(false); showToast(`Quality: ${q}`); }}
-                      className={`w-full px-4 py-2.5 text-[12px] text-left ${quality === q ? 'text-[#FF0000] bg-red-500/10' : 'text-white hover:bg-white/5'}`}>
-                      {q}{q === '320kbps' ? ' HD' : ''}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
             {/* Volume (desktop) */}
             <div className="hidden sm:flex items-center gap-2">
               <Volume2 size={15} className="text-[#666]" />
