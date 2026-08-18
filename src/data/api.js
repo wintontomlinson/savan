@@ -76,8 +76,15 @@ function bestImage(images) {
 
 function getAudioByQuality(urls, quality) {
   if (!urls?.length) return '';
+  // Try requested quality first
   const match = urls.find(u => u.quality === quality);
-  if (match) return match.url;
+  if (match?.url) return match.url;
+  // Fallback: try highest to lowest
+  const order = ['320kbps', '160kbps', '96kbps', '48kbps'];
+  for (const q of order) {
+    const m = urls.find(u => u.quality === q);
+    if (m?.url) return m.url;
+  }
   return urls[urls.length - 1]?.url || '';
 }
 
