@@ -104,3 +104,22 @@ export async function downloadSong(song) {
     return false;
   }
 }
+
+
+
+// Fetch song lyrics
+export async function getLyrics(songId) {
+  if (!songId) return null;
+  try {
+    const res = await fetch(`${BASE}/songs/${songId}/lyrics`);
+    const data = await res.json();
+    if (data.success && data.data?.lyrics) {
+      // Convert <br> to newlines, strip HTML
+      return data.data.lyrics
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<[^>]+>/g, '')
+        .trim();
+    }
+    return null;
+  } catch { return null; }
+}

@@ -1,17 +1,28 @@
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Volume2, Download, Settings, Share2 } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Volume2, Download, Settings, Share2, Mic2 } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { formatDuration } from '../data/mockData';
-import { downloadSong, getQuality, setQuality } from '../data/api';
+import { downloadSong, getQuality, setQuality, getLyrics } from '../data/api';
 import Equalizer from './Equalizer';
 import AudioSettings from './AudioSettings';
 import SleepTimer from './SleepTimer';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 export default function ExpandedPlayer() {
   const { currentSong, isPlaying, togglePlay, playNext, playPrev, currentTime, duration, seekTo, volume, setVolume, shuffleMode, toggleShuffle, repeatMode, cycleRepeat, toggleLike, likedSongs, isExpanded, setExpanded, showToast, queue } = usePlayer();
   const [showQuality, setShowQuality] = useState(false);
   const [quality, setQualityState] = useState(getQuality());
+  const [showLyrics, setShowLyrics] = useState(false);
+  const [lyrics, setLyrics] = useState(null);
+  const [lyricsLoading, setLyricsLoading] = useState(false);
   const touchStartY = useRef(0);
+
+  // Fetch lyrics when song changes or lyrics panel opened
+  useEffect(() => {
+    if (!currentSong || !showLyrics) return;
+    setLyricsLoading(true);
+    setLyrics(null);
+    getLyrics(currentSong.id).then(l => { setLyrics(l); setLyricsLoading(false); });
+  }, [currentSong?.id, showLyrics]);
 
   if (!isExpanded || !currentSong) return null;
   const liked = likedSongs.includes(currentSong.id);
@@ -112,6 +123,9 @@ export default function ExpandedPlayer() {
             <button onClick={shareSong} className="p-2.5 text-[#777] hover:text-white active:scale-90 transition-all rounded-full">
               <Share2 size={20} />
             </button>
+            <button onClick={() => setShowLyrics(!showLyrics)} className={`p-2.5 active:scale-90 transition-all rounded-full ${showLyrics ? 'text-[#FF0000] bg-red-500/10' : 'text-[#777]'}`}>
+              <Mic2 size={20} />
+            </button>
             <button onClick={async () => { showToast('Downloading...'); const ok = await downloadSong(currentSong); showToast(ok ? 'Downloaded ✓' : 'Failed', ok ? 'success' : 'error'); }}
               className="p-2.5 text-[#777] hover:text-white active:scale-90 transition-all rounded-full">
               <Download size={20} />
@@ -139,6 +153,21 @@ export default function ExpandedPlayer() {
                 className="w-20 h-1 rounded-full appearance-none bg-white/10 cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white" />
             </div>
           </div>
+
+          {/* Lyrics Panel */}
+          {showLyrics && (
+            <div className="w-full max-w-xs sm:max-w-sm mt-4 mb-4 bg-white/5 rounded-2xl p-4 max-h-[200px] scroll-y border border-white/5">
+              {lyricsLoading && <p className="text-[13px] text-[#666] text-center py-4">Loading lyrics...</p>}
+              {!lyricsLoading && !lyrics && <p className="text-[13px] text-[#666] text-center py-4">Lyrics not available for this song</p>}
+              {!lyricsLoading && lyrics && (
+                <div className="space-y-1.5">
+                  {lyrics.split('\n').map((line, i) => (
+                    <p key={i} className={`text-[13px] leading-relaxed ${line.trim() ? 'text-white/90' : 'h-2'}`}>{line}</p>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
