@@ -8,17 +8,23 @@ import { useState, useRef, useEffect } from 'react';
 
 export default function ExpandedPlayer() {
   const { currentSong, isPlaying, togglePlay, playNext, playPrev, currentTime, duration, seekTo, shuffleMode, toggleShuffle, repeatMode, cycleRepeat, toggleLike, likedSongs, isExpanded, setExpanded, showToast, queue } = usePlayer();
-  const [showLyrics, setShowLyrics] = useState(true);
+  const [showLyrics, setShowLyrics] = useState(false);
   const [lyrics, setLyrics] = useState(null);
   const [lyricsLoading, setLyricsLoading] = useState(false);
   const touchStartY = useRef(0);
 
-  // Auto-fetch lyrics when song changes
+  // Fetch lyrics when user opens lyrics panel
   useEffect(() => {
-    if (!currentSong) return;
+    if (!currentSong || !showLyrics) return;
     setLyricsLoading(true);
     setLyrics(null);
     getLyrics(currentSong.id).then(l => { setLyrics(l || null); setLyricsLoading(false); }).catch(() => setLyricsLoading(false));
+  }, [currentSong?.id, showLyrics]);
+
+  // Close lyrics when song changes
+  useEffect(() => {
+    setShowLyrics(false);
+    setLyrics(null);
   }, [currentSong?.id]);
 
   if (!isExpanded || !currentSong) return null;
