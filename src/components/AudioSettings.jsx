@@ -53,6 +53,7 @@ export default function AudioSettings() {
             </div>
             <div className="grid grid-cols-2 gap-2">
               {[
+                { q: 'auto', label: 'Auto', badge: '✦', desc: 'Based on network' },
                 { q: '320kbps', label: '320 kbps', badge: 'HD', desc: 'Best quality' },
                 { q: '160kbps', label: '160 kbps', badge: 'HQ', desc: 'High quality' },
                 { q: '96kbps', label: '96 kbps', badge: '', desc: 'Normal' },
