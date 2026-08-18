@@ -1,22 +1,39 @@
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Volume2, Download, Settings } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Volume2, Download, Settings, Share2 } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { formatDuration } from '../data/mockData';
 import { downloadSong, getQuality, setQuality } from '../data/api';
 import Equalizer from './Equalizer';
 import AudioSettings from './AudioSettings';
-import { useState } from 'react';
+import SleepTimer from './SleepTimer';
+import { useState, useRef } from 'react';
 
 export default function ExpandedPlayer() {
-  const { currentSong, isPlaying, togglePlay, playNext, playPrev, currentTime, duration, seekTo, volume, setVolume, shuffleMode, toggleShuffle, repeatMode, cycleRepeat, toggleLike, likedSongs, isExpanded, setExpanded, showToast } = usePlayer();
+  const { currentSong, isPlaying, togglePlay, playNext, playPrev, currentTime, duration, seekTo, volume, setVolume, shuffleMode, toggleShuffle, repeatMode, cycleRepeat, toggleLike, likedSongs, isExpanded, setExpanded, showToast, queue } = usePlayer();
   const [showQuality, setShowQuality] = useState(false);
   const [quality, setQualityState] = useState(getQuality());
+  const touchStartY = useRef(0);
 
   if (!isExpanded || !currentSong) return null;
   const liked = likedSongs.includes(currentSong.id);
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
+  // Swipe down to close
+  const onTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; };
+  const onTouchEnd = (e) => { if (e.changedTouches[0].clientY - touchStartY.current > 80) setExpanded(false); };
+
+  // Share
+  const shareSong = async () => {
+    const text = `🎵 ${currentSong.title} - ${currentSong.artist}`;
+    if (navigator.share) {
+      try { await navigator.share({ title: currentSong.title, text }); } catch {}
+    } else {
+      await navigator.clipboard?.writeText(text);
+      showToast('Copied to clipboard!');
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-[70] flex flex-col animate-up">
+    <div className="fixed inset-0 z-[70] flex flex-col animate-up" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       {/* BG */}
       <div className="absolute inset-0">
         <img src={currentSong.thumbnail} alt="" className="w-full h-full object-cover blur-[100px] scale-150 opacity-25" />
@@ -29,34 +46,48 @@ export default function ExpandedPlayer() {
           <button onClick={() => setExpanded(false)} className="p-2 -ml-2 active:scale-90 transition-transform rounded-full hover:bg-white/10">
             <ChevronDown size={26} className="text-white/80" />
           </button>
-          {isPlaying && <Equalizer />}
-          <AudioSettings />
+          <div className="flex items-center gap-1">
+            {isPlaying && <Equalizer />}
+            {queue.length > 0 && <span className="text-[10px] text-[#666] ml-2">{queue.length} in queue</span>}
+          </div>
+          <div className="flex items-center gap-0.5">
+            <SleepTimer />
+            <AudioSettings />
+          </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 flex flex-col items-center justify-center px-8 sm:px-12 pb-8 gap-6">
-          {/* Art */}
+        <div className="flex-1 flex flex-col items-center justify-center px-8 sm:px-12 pb-8 gap-5">
+          {/* Art with vinyl effect */}
           <div className="relative">
-            <img src={currentSong.thumbnail} alt="" className="w-[220px] h-[220px] sm:w-[280px] sm:h-[280px] md:w-[320px] md:h-[320px] rounded-3xl object-cover shadow-2xl shadow-black/50 ring-1 ring-white/10" />
-            {isPlaying && <div className="absolute -inset-1 rounded-3xl bg-gradient-to-br from-red-500/20 to-transparent animate-pulse pointer-events-none" />}
+            <div className={`w-[220px] h-[220px] sm:w-[280px] sm:h-[280px] md:w-[320px] md:h-[320px] rounded-full overflow-hidden shadow-2xl shadow-black/60 ring-4 ring-white/5 ${isPlaying ? 'animate-[spin_20s_linear_infinite]' : ''}`} style={{ animationPlayState: isPlaying ? 'running' : 'paused' }}>
+              <img src={currentSong.thumbnail} alt="" className="w-full h-full object-cover" />
+              {/* Vinyl hole */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-black/80 ring-2 ring-white/10" />
+              </div>
+            </div>
+            {/* Glow */}
+            {isPlaying && <div className="absolute -inset-3 rounded-full bg-red-500/10 blur-xl animate-pulse pointer-events-none" />}
           </div>
 
-          {/* Info */}
-          <div className="w-full max-w-xs sm:max-w-sm text-center">
+          {/* Song Info */}
+          <div className="w-full max-w-xs sm:max-w-sm text-center mt-2">
             <h1 className="text-lg sm:text-xl font-bold text-white truncate">{currentSong.title}</h1>
             <p className="text-[14px] text-[#aaa] truncate mt-0.5">{currentSong.artist}</p>
+            {currentSong.language && <span className="inline-block mt-1.5 text-[10px] bg-white/10 text-[#888] px-2 py-0.5 rounded-full capitalize">{currentSong.language}</span>}
           </div>
 
           {/* Progress */}
           <div className="w-full max-w-xs sm:max-w-sm">
             <div className="w-full h-[5px] bg-white/10 rounded-full cursor-pointer group" onClick={e => { const r = e.currentTarget.getBoundingClientRect(); seekTo((e.clientX - r.left) / r.width * duration); }}>
               <div className="h-full bg-gradient-to-r from-[#FF0000] to-[#ff4444] rounded-full relative transition-[width] duration-200" style={{ width: `${progress}%` }}>
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity" />
               </div>
             </div>
             <div className="flex justify-between mt-2 text-[11px] text-[#666] tabular-nums">
               <span>{formatDuration(currentTime)}</span>
-              <span>{formatDuration(duration)}</span>
+              <span>-{formatDuration(Math.max(0, duration - currentTime))}</span>
             </div>
           </div>
 
@@ -74,14 +105,18 @@ export default function ExpandedPlayer() {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-3 flex-wrap justify-center">
+          <div className="flex items-center gap-2 flex-wrap justify-center">
             <button onClick={() => toggleLike(currentSong.id)} className={`p-2.5 rounded-full transition-all active:scale-90 ${liked ? 'text-[#FF0000] bg-red-500/10' : 'text-[#777]'}`}>
               <Heart size={22} fill={liked ? 'currentColor' : 'none'} />
+            </button>
+            <button onClick={shareSong} className="p-2.5 text-[#777] hover:text-white active:scale-90 transition-all rounded-full">
+              <Share2 size={20} />
             </button>
             <button onClick={async () => { showToast('Downloading...'); const ok = await downloadSong(currentSong); showToast(ok ? 'Downloaded ✓' : 'Failed', ok ? 'success' : 'error'); }}
               className="p-2.5 text-[#777] hover:text-white active:scale-90 transition-all rounded-full">
               <Download size={20} />
             </button>
+            {/* Quality */}
             <div className="relative">
               <button onClick={() => setShowQuality(!showQuality)} className="flex items-center gap-1 px-3 py-1.5 bg-white/5 rounded-full text-[11px] text-[#aaa] border border-white/10">
                 <Settings size={11} />{quality}
@@ -97,6 +132,7 @@ export default function ExpandedPlayer() {
                 </div>
               )}
             </div>
+            {/* Volume (desktop) */}
             <div className="hidden sm:flex items-center gap-2">
               <Volume2 size={15} className="text-[#666]" />
               <input type="range" min="0" max="1" step="0.01" value={volume} onChange={e => setVolume(parseFloat(e.target.value))}

@@ -2,6 +2,13 @@ import { Play } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import Equalizer from './Equalizer';
 
+function formatPlays(n) {
+  if (!n) return '';
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(0) + 'K';
+  return n.toString();
+}
+
 export default function SongCard({ song }) {
   const { playSong, currentSong, isPlaying } = usePlayer();
   const isActive = currentSong?.id === song.id;
@@ -20,6 +27,12 @@ export default function SongCard({ song }) {
         {isActive && isPlaying && (
           <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm rounded-full px-2 py-1">
             <Equalizer />
+          </div>
+        )}
+        {/* Plays badge */}
+        {song.plays > 0 && (
+          <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm rounded-full px-1.5 py-0.5 text-[9px] text-white/80 font-medium">
+            {formatPlays(song.plays)} ▶
           </div>
         )}
       </div>
