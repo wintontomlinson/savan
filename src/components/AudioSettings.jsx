@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { SlidersHorizontal, X, Zap, Volume2, Timer, Music2, Waves, RotateCcw, ChevronDown, Sparkles } from 'lucide-react';
+import { SlidersHorizontal, X, Zap, Volume2, Timer, Music2, Waves, RotateCcw, ChevronDown, Sparkles, Radio } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
+import { getQuality, setQuality as setApiQuality } from '../data/api';
 
 const EQ_PRESETS = [
   { name: 'Flat', icon: '➖', values: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], desc: 'No change' },
@@ -27,6 +28,7 @@ export default function AudioSettings() {
   const [bassBoost, setBassBoost] = useState(() => localStorage.getItem('bass_on') === 'true');
   const [boostLevel, setBoostLevel] = useState(() => parseFloat(localStorage.getItem('boost_level') || '100'));
   const [crossfade, setCrossfade] = useState(() => parseInt(localStorage.getItem('crossfade_dur') || '5'));
+  const [streamQuality, setStreamQuality] = useState(() => getQuality());
   const [activePreset, setActivePreset] = useState(() => localStorage.getItem('eq_preset') || 'Flat');
   const [eqValues, setEqValues] = useState(() => {
     try { const s = JSON.parse(localStorage.getItem('eq_vals_10')); return s?.length === 10 ? s : [0,0,0,0,0,0,0,0,0,0]; }
@@ -314,6 +316,52 @@ export default function AudioSettings() {
                   <span>6s</span>
                   <span>9s</span>
                   <span>12s</span>
+                </div>
+              </div>
+
+              {/* Streaming Quality */}
+              <div className="p-5 bg-[#0f0f11] rounded-2xl mb-4 border border-white/[0.04]">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`w-11 h-11 rounded-2xl flex items-center justify-center border transition-all ${
+                    streamQuality === '320kbps' ? 'bg-gradient-to-br from-emerald-500/20 to-green-500/10 border-emerald-500/20' : 'bg-white/[0.04] border-white/[0.04]'
+                  }`}>
+                    <Radio size={20} className={streamQuality === '320kbps' ? 'text-emerald-400' : 'text-rose-400'} />
+                  </div>
+                  <div>
+                    <p className="text-[14px] text-white font-semibold">Streaming Quality</p>
+                    <p className="text-[11px] text-[#555]">Higher = better sound, more data</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { q: '320kbps', label: '320 kbps', badge: 'HD', desc: 'Maximum quality', color: 'emerald' },
+                    { q: '160kbps', label: '160 kbps', badge: 'HQ', desc: 'High quality', color: 'blue' },
+                    { q: '96kbps', label: '96 kbps', badge: '', desc: 'Normal', color: 'gray' },
+                    { q: '48kbps', label: '48 kbps', badge: 'SAVE', desc: 'Data saver', color: 'yellow' },
+                  ].map(item => (
+                    <button key={item.q} onClick={() => { setApiQuality(item.q); setStreamQuality(item.q); showToast(`Quality: ${item.label} ${item.badge}`); }}
+                      className={`flex flex-col items-start p-3 rounded-xl transition-all duration-200 btn-press border ${
+                        streamQuality === item.q
+                          ? item.color === 'emerald' ? 'bg-emerald-500/10 border-emerald-500/30 shadow-sm' : item.color === 'blue' ? 'bg-blue-500/10 border-blue-500/30' : 'bg-white/[0.06] border-white/[0.08]'
+                          : 'bg-white/[0.02] border-white/[0.04] hover:bg-white/[0.04]'
+                      }`}>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-[13px] font-bold ${
+                          streamQuality === item.q
+                            ? item.color === 'emerald' ? 'text-emerald-300' : item.color === 'blue' ? 'text-blue-300' : 'text-white'
+                            : 'text-white'
+                        }`}>{item.label}</span>
+                        {item.badge && <span className={`text-[8px] font-bold px-1 py-0.5 rounded ${
+                          item.color === 'emerald' ? 'bg-emerald-500/20 text-emerald-400' :
+                          item.color === 'blue' ? 'bg-blue-500/20 text-blue-400' :
+                          item.color === 'yellow' ? 'bg-yellow-500/20 text-yellow-400' : ''
+                        }`}>{item.badge}</span>}
+                      </div>
+                      <span className="text-[10px] text-[#555] mt-0.5">{item.desc}</span>
+                      {streamQuality === item.q && <div className="w-1.5 h-1.5 rounded-full bg-current mt-1.5 opacity-60" />}
+                    </button>
+                  ))}
                 </div>
               </div>
             </>
