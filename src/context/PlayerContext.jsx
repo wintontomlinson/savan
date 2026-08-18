@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 import { addToHistory, getNextSongs, resetPlayed } from '../data/algorithm';
-import { refreshStreamUrl } from '../data/api';
 
 const Ctx = createContext();
 export const usePlayer = () => useContext(Ctx);
@@ -83,21 +82,11 @@ export function PlayerProvider({ children }) {
 
     const onMeta = () => setDuration(cur()?.duration || 0);
     const onEnd = () => { if (!fadingRef.current && playNextRef.current) playNextRef.current(); };
-    const onError = async () => {
+    // Don't auto-skip on error — just log it. Let the user decide.
+    const onError = (e) => {
       const a = cur();
       if (!a?.src) return;
-      try {
-        const freshUrl = await refreshStreamUrl(currentSong?.id);
-        if (freshUrl && freshUrl !== a.src) {
-          a.src = freshUrl;
-          a.load();
-          a.play().catch(() => {});
-        } else {
-          if (playNextRef.current) playNextRef.current();
-        }
-      } catch {
-        if (playNextRef.current) playNextRef.current();
-      }
+      console.warn('Audio error event:', e?.target?.error?.message || 'unknown');
     };
 
     [audioA.current, audioB.current].forEach(a => {
