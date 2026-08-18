@@ -94,8 +94,17 @@ export function PlayerProvider({ children }) {
   useEffect(() => {
     if (!currentSong) return;
     getNextSongs(currentSong).then(songs => {
-      setUpNext(songs);
-      if (queueRef.current.length === 0) setQueue(songs);
+      // Deduplicate: remove current song and any already in queue
+      const currentQueue = queueRef.current;
+      const existingIds = new Set([currentSong.id, ...currentQueue.map(s => s.id)]);
+      const unique = songs.filter(s => !existingIds.has(s.id));
+      
+      // Remove duplicates within the results themselves
+      const seen = new Set();
+      const deduped = unique.filter(s => { if (seen.has(s.id)) return false; seen.add(s.id); return true; });
+      
+      setUpNext(deduped);
+      if (currentQueue.length === 0) setQueue(deduped);
     });
   }, [currentSong]);
 
@@ -197,7 +206,11 @@ export function PlayerProvider({ children }) {
   const playSong = useCallback((song, newQueue) => {
     if (!song) return;
     cancelFade();
-    if (newQueue) setQueue(newQueue.filter(s => s.id !== song.id));
+    if (newQueue) {
+      const seen = new Set([song.id]);
+      const deduped = newQueue.filter(s => { if (seen.has(s.id)) return false; seen.add(s.id); return true; });
+      setQueue(deduped);
+    }
     playDirect(song);
   }, []);
 

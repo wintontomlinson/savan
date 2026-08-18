@@ -30,19 +30,27 @@ export async function getNextSongs(currentSong) {
   if (!currentSong) return [];
 
   let results = [];
+  const seenIds = new Set([currentSong.id]);
+
+  const addUnique = (songs) => {
+    songs.forEach(s => {
+      if (!seenIds.has(s.id) && !playedSet.has(s.id)) {
+        seenIds.add(s.id);
+        results.push(s);
+      }
+    });
+  };
 
   // Step 1: Use suggestions API (best quality related songs)
   const suggestions = await getSongSuggestions(currentSong.id);
-  const freshSuggestions = suggestions.filter(s => !playedSet.has(s.id) && s.id !== currentSong.id);
-  results = [...freshSuggestions];
+  addUnique(suggestions);
 
   // Step 2: If not enough, search same artist
   if (results.length < 5) {
     const artist = currentSong.artist?.split(',')[0]?.trim();
     if (artist) {
       const artistSongs = await searchSongs(artist, 15);
-      const fresh = artistSongs.filter(s => !playedSet.has(s.id) && s.id !== currentSong.id && !results.find(r => r.id === s.id));
-      results = [...results, ...fresh.slice(0, 5)];
+      addUnique(artistSongs);
     }
   }
 
@@ -50,8 +58,7 @@ export async function getNextSongs(currentSong) {
   if (results.length < 5) {
     const lang = currentSong.language || 'hindi';
     const langSongs = await searchSongs(`${lang} songs 2024`, 15);
-    const fresh = langSongs.filter(s => !playedSet.has(s.id) && s.id !== currentSong.id && !results.find(r => r.id === s.id));
-    results = [...results, ...fresh.slice(0, 5)];
+    addUnique(langSongs);
   }
 
   return results;

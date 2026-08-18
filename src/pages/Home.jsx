@@ -54,7 +54,7 @@ export default function Home() {
             <h2 className="text-base font-semibold text-white">Playing Next</h2>
           </div>
           <div className="bg-[#1A1A1A] rounded-xl overflow-hidden">
-            {upNext.slice(0, 5).map((s, i) => <SongRow key={s.id} song={s} index={i} songList={upNext} />)}
+            {upNext.slice(0, 5).map((s, i) => <SongRow key={`${s.id}-${i}`} song={s} index={i} songList={upNext} />)}
           </div>
         </section>
       )}
