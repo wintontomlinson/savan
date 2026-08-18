@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Play, Loader2, RefreshCw, Headphones, Music } from 'lucide-react';
+import { Play, Loader2, RefreshCw, Headphones, Sparkles, Music } from 'lucide-react';
 import { getGreeting } from '../data/mockData';
 import { searchSongs } from '../data/api';
 import { getHomeQueries, getHistory, analyzePreferences } from '../data/algorithm';
@@ -56,16 +56,19 @@ export default function Home() {
     <div className="pb-6">
       {/* Hero */}
       <section className="mb-7 animate-in">
-        <div className="relative rounded-3xl overflow-hidden p-6 sm:p-8 border border-white/[0.04]" style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)' }}>
+        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-rose-600/15 via-[#0e0e0e] to-purple-900/10 p-6 sm:p-8 border border-white/[0.04]">
           <div className="relative z-10">
-            <span className="text-[11px] text-cyan-300/80 font-medium uppercase tracking-wider">For You</span>
-            <h1 className="text-[22px] sm:text-[28px] font-bold text-white mb-1 tracking-tight mt-1">{getGreeting()}</h1>
-            <p className="text-[13px] text-white/50">
-              {prefs ? `${prefs.totalPlays} songs played • Top: ${prefs.topArtists.slice(0,2).join(', ')}` : 'Start listening to get personalized music'}
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles size={14} className="text-rose-400" />
+              <span className="text-[11px] text-rose-400 font-medium uppercase tracking-wider">For You</span>
+            </div>
+            <h1 className="text-[22px] sm:text-[28px] font-bold text-white mb-1 tracking-tight">{getGreeting()}</h1>
+            <p className="text-[13px] text-[#999]">
+              {prefs ? `${prefs.totalPlays} songs played • Top: ${prefs.topArtists.slice(0,2).join(', ')}` : 'Start listening to get personalized recommendations'}
             </p>
           </div>
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-cyan-400/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-16 -left-10 w-48 h-48 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-rose-500/[0.08] rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-16 -left-10 w-48 h-48 bg-purple-500/[0.06] rounded-full blur-3xl pointer-events-none" />
         </div>
       </section>
 
