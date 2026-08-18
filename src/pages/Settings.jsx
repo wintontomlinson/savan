@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Timer, Trash2, Info, Wifi, Volume2, Shield, Music2, Headphones, Zap, Bell, Globe } from 'lucide-react';
+import { Timer, Trash2, Info, Wifi, Volume2, Shield, Headphones, Zap, Bell } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { clearCache, getCacheSize, getQuality, setQuality } from '../data/api';
 
@@ -117,9 +117,6 @@ export default function Settings() {
       <Section title="About">
         <SettingRow icon={Info} label="Music Area" desc="Free, ad-free music streaming">
           <span className="text-[11px] text-[#555] bg-white/[0.04] px-2 py-1 rounded-lg">v2.0.0</span>
-        </SettingRow>
-        <SettingRow icon={Globe} label="API" desc="Powered by JioSaavn">
-          <span className="text-[10px] text-emerald-400">Connected</span>
         </SettingRow>
       </Section>
     </div>
