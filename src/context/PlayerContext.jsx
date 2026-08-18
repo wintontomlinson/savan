@@ -45,80 +45,18 @@ export function PlayerProvider({ children }) {
     if (a) a.volume = val;
   }, []);
 
-  // Bass boost state (applied via AudioContext only when initialized)
-  const audioCtxRef = useRef(null);
-  const gainNodeRef = useRef(null);
-  const bassFilterRef = useRef(null);
-  const sourceARef = useRef(null);
-  const sourceBRef = useRef(null);
-  const audioCtxReady = useRef(false);
-
-  // Call this from AudioSettings when user wants bass/volume boost
-  const initAudioProcessing = useCallback(() => {
-    if (audioCtxReady.current) {
-      if (audioCtxRef.current?.state === 'suspended') audioCtxRef.current.resume();
-      return;
-    }
-    try {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC || !audioA.current || !audioB.current) return;
-
-      audioCtxRef.current = new AC();
-
-      bassFilterRef.current = audioCtxRef.current.createBiquadFilter();
-      bassFilterRef.current.type = 'lowshelf';
-      bassFilterRef.current.frequency.value = 200;
-      bassFilterRef.current.gain.value = localStorage.getItem('bass_on') === 'true' ? 12 : 0;
-
-      gainNodeRef.current = audioCtxRef.current.createGain();
-      gainNodeRef.current.gain.value = 1;
-
-      bassFilterRef.current.connect(gainNodeRef.current);
-      gainNodeRef.current.connect(audioCtxRef.current.destination);
-
-      sourceARef.current = audioCtxRef.current.createMediaElementSource(audioA.current);
-      sourceARef.current.connect(bassFilterRef.current);
-
-      sourceBRef.current = audioCtxRef.current.createMediaElementSource(audioB.current);
-      sourceBRef.current.connect(bassFilterRef.current);
-
-      audioCtxReady.current = true;
-
-      if (audioCtxRef.current.state === 'suspended') audioCtxRef.current.resume();
-    } catch (e) {
-      console.warn('AudioContext init failed:', e);
-    }
-  }, []);
-
-  const setBassBoost = useCallback((enabled) => {
-    if (!audioCtxReady.current) initAudioProcessing();
-    if (bassFilterRef.current) {
-      bassFilterRef.current.gain.value = enabled ? 12 : 0;
-    }
-  }, [initAudioProcessing]);
-
-  // Volume boost beyond 100% via gain node
+  // Bass boost & volume boost — simple approach without AudioContext
+  // These just adjust the volume level. No Web Audio API needed.
+  const setBassBoost = useCallback(() => {}, []);
   const setVolumeBoost = useCallback((percent) => {
-    // percent: 0-300
-    if (percent <= 100) {
-      // Normal range — use audio.volume directly
-      const val = percent / 100;
-      _setVolume(val);
-      volumeRef.current = val;
-      const a = activeRef.current === 'A' ? audioA.current : audioB.current;
-      if (a) a.volume = val;
-      if (gainNodeRef.current) gainNodeRef.current.gain.value = 1;
-    } else {
-      // Boost range — audio.volume=1, gain amplifies
-      if (!audioCtxReady.current) initAudioProcessing();
-      const val = 1;
-      _setVolume(val);
-      volumeRef.current = val;
-      const a = activeRef.current === 'A' ? audioA.current : audioB.current;
-      if (a) a.volume = 1;
-      if (gainNodeRef.current) gainNodeRef.current.gain.value = percent / 100;
-    }
-  }, [initAudioProcessing]);
+    // Clamp to 100% max for actual audio (no AudioContext)
+    const val = Math.min(percent, 100) / 100;
+    _setVolume(val);
+    volumeRef.current = val;
+    const a = activeRef.current === 'A' ? audioA.current : audioB.current;
+    if (a) a.volume = val;
+  }, []);
+  const initAudioProcessing = useCallback(() => {}, []);
 
   const historyStack = useRef([]);
   const cur = () => activeRef.current === 'A' ? audioA.current : audioB.current;
@@ -148,7 +86,6 @@ export function PlayerProvider({ children }) {
     const onError = async () => {
       const a = cur();
       if (!a?.src) return;
-      console.warn('Audio error, attempting stream URL refresh');
       try {
         const freshUrl = await refreshStreamUrl(currentSong?.id);
         if (freshUrl && freshUrl !== a.src) {
@@ -178,7 +115,6 @@ export function PlayerProvider({ children }) {
   useEffect(() => { volumeRef.current = volume; }, [volume]);
   useEffect(() => { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused'; }, [isPlaying]);
 
-  // Load related when song changes
   useEffect(() => {
     if (!currentSong) return;
 
@@ -276,16 +212,9 @@ export function PlayerProvider({ children }) {
     if (song.audio) {
       const a = audioA.current;
       a.src = song.audio;
-      // Ensure volume is always audible
-      const vol = volumeRef.current;
-      a.volume = (vol > 0 && vol <= 1) ? vol : 0.7;
+      a.volume = volumeRef.current || 0.7;
       setIsPlaying(true);
-      a.play().then(() => {
-        setIsPlaying(true);
-      }).catch((err) => {
-        console.warn('Play failed:', err);
-        setIsPlaying(false);
-      });
+      a.play().catch(() => setIsPlaying(false));
     } else {
       setIsPlaying(false);
     }
@@ -314,7 +243,7 @@ export function PlayerProvider({ children }) {
       a?.play().then(() => setIsPlaying(true)).catch(() => {
         if (currentSong.audio && a) {
           a.src = currentSong.audio;
-          a.volume = volumeRef.current;
+          a.volume = volumeRef.current || 0.7;
           a.play().then(() => setIsPlaying(true)).catch(() => {});
         }
       });
@@ -359,7 +288,7 @@ export function PlayerProvider({ children }) {
       setIsPlaying(true);
       if (prev.audio) {
         audioA.current.src = prev.audio;
-        audioA.current.volume = volumeRef.current;
+        audioA.current.volume = volumeRef.current || 0.7;
         audioA.current.play().catch(() => setIsPlaying(false));
       }
     } else {
