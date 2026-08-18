@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
-import { SlidersHorizontal, X, Timer, Waves, Radio } from 'lucide-react';
+import { SlidersHorizontal, X, Timer, Waves } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
-import { getQuality, setQuality as setApiQuality } from '../data/api';
 
 export default function AudioSettings() {
   const { showToast } = usePlayer();
   const [open, setOpen] = useState(false);
   const [crossfade, setCrossfade] = useState(() => parseInt(localStorage.getItem('crossfade_dur') || '5'));
-  const [streamQuality, setStreamQuality] = useState(() => getQuality());
 
   useEffect(() => { localStorage.setItem('crossfade_dur', crossfade.toString()); }, [crossfade]);
 
@@ -38,39 +36,6 @@ export default function AudioSettings() {
             <button onClick={() => setOpen(false)} className="w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center btn-press">
               <X size={16} className="text-white" />
             </button>
-          </div>
-
-          {/* Streaming Quality */}
-          <div className="p-4 bg-[#111] rounded-2xl mb-3 border border-white/[0.04]">
-            <div className="flex items-center gap-3 mb-4">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${streamQuality === '320kbps' ? 'bg-emerald-500/15' : 'bg-white/[0.04]'}`}>
-                <Radio size={18} className={streamQuality === '320kbps' ? 'text-emerald-400' : 'text-[#666]'} />
-              </div>
-              <div>
-                <p className="text-[14px] text-white font-semibold">Streaming Quality</p>
-                <p className="text-[11px] text-[#666]">Current: {streamQuality}</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { q: 'auto', label: 'Auto', badge: '✦', desc: 'Based on network' },
-                { q: '320kbps', label: '320 kbps', badge: 'HD', desc: 'Best quality' },
-                { q: '160kbps', label: '160 kbps', badge: 'HQ', desc: 'High quality' },
-                { q: '96kbps', label: '96 kbps', badge: '', desc: 'Normal' },
-                { q: '48kbps', label: '48 kbps', badge: 'SAVE', desc: 'Data saver' },
-              ].map(item => (
-                <button key={item.q} onClick={() => { setApiQuality(item.q); setStreamQuality(item.q); showToast(`Quality: ${item.label}`); }}
-                  className={`flex flex-col items-start p-3 rounded-xl transition-all btn-press border ${
-                    streamQuality === item.q ? 'bg-rose-500/10 border-rose-500/30' : 'bg-[#1a1a1a] border-transparent hover:bg-[#222]'
-                  }`}>
-                  <div className="flex items-center gap-1.5">
-                    <span className={`text-[13px] font-bold ${streamQuality === item.q ? 'text-rose-300' : 'text-white'}`}>{item.label}</span>
-                    {item.badge && <span className="text-[8px] font-bold px-1 py-0.5 rounded bg-white/10 text-[#aaa]">{item.badge}</span>}
-                  </div>
-                  <span className="text-[10px] text-[#555] mt-0.5">{item.desc}</span>
-                </button>
-              ))}
-            </div>
           </div>
 
           {/* Crossfade */}
