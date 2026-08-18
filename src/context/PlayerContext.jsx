@@ -57,8 +57,8 @@ export function PlayerProvider({ children }) {
   useEffect(() => {
     audioA.current = new Audio();
     audioB.current = new Audio();
-    audioA.current.crossOrigin = 'anonymous';
-    audioB.current.crossOrigin = 'anonymous';
+    
+    
     audioA.current.volume = volumeRef.current;
     audioB.current.volume = 0;
 
@@ -201,18 +201,8 @@ export function PlayerProvider({ children }) {
       const a = audioA.current;
       a.src = song.audio;
       a.volume = volumeRef.current;
-      a.load();
-      const onCanPlay = () => {
-        a.removeEventListener('canplaythrough', onCanPlay);
-        a.play().then(() => {
-          setIsPlaying(true);
-          setDuration(a.duration || 0);
-        }).catch(() => {
-          // Autoplay blocked — user needs to tap play
-          setIsPlaying(false);
-        });
-      };
-      a.addEventListener('canplaythrough', onCanPlay);
+      setIsPlaying(true);
+      a.play().catch(() => setIsPlaying(false));
     } else {
       setIsPlaying(false);
     }
@@ -282,19 +272,18 @@ export function PlayerProvider({ children }) {
       const prev = historyStack.current.pop();
       // Put current song back at front of queue
       if (currentSong) setQueue(p => [currentSong, ...p]);
-      // Play previous
+      // Play previous directly
       cancelFade();
       audioA.current.pause(); audioA.current.src = '';
       audioB.current.pause(); audioB.current.src = '';
       activeRef.current = 'A';
       setCurrentSong(prev);
       setCurrentTime(0);
+      setIsPlaying(true);
       if (prev.audio) {
         audioA.current.src = prev.audio;
         audioA.current.volume = volumeRef.current;
-        const onReady = () => { audioA.current.removeEventListener('canplaythrough', onReady); audioA.current.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false)); };
-        audioA.current.addEventListener('canplaythrough', onReady);
-        audioA.current.load();
+        audioA.current.play().catch(() => setIsPlaying(false));
       }
     } else {
       // No history — just restart
