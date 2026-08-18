@@ -2,13 +2,14 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Play, Loader2, SearchX, RefreshCw } from 'lucide-react';
 import { searchSongs } from '../data/api';
+import { ytmSearchSongs, getYtAudioStream } from '../data/ytmusic';
 import { usePlayer } from '../context/PlayerContext';
 import SongRow from '../components/SongRow';
 
 export default function SearchResults() {
   const [params] = useSearchParams();
   const q = params.get('q') || '';
-  const { playSong } = usePlayer();
+  const { playSong, showToast } = usePlayer();
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -19,11 +20,40 @@ export default function SearchResults() {
     setLoading(true);
     setError(false);
     const id = ++requestId.current;
-    const s = await searchSongs(q, 30);
+    
+    // Search both JioSaavn and YouTube Music in parallel
+    const [saavnResults, ytResults] = await Promise.all([
+      searchSongs(q, 20),
+      ytmSearchSongs(q, 10),
+    ]);
+    
     if (id !== requestId.current) return;
-    if (s === null) { setError(true); setLoading(false); return; }
-    setSongs(s);
+    if (saavnResults === null && ytResults.length === 0) { setError(true); setLoading(false); return; }
+    
+    // Combine: JioSaavn first (directly playable), then YT results
+    const combined = [
+      ...(saavnResults || []),
+      ...ytResults.map(r => ({ ...r, ytOnly: true })),
+    ];
+    
+    setSongs(combined);
     setLoading(false);
+  };
+
+  // Play a song — handles both JioSaavn (direct) and YT (needs stream fetch)
+  const handlePlay = async (song, songList) => {
+    if (song.ytOnly && song.videoId) {
+      showToast('Loading from YouTube...');
+      const audioUrl = await getYtAudioStream(song.videoId);
+      if (audioUrl) {
+        const playableSong = { ...song, audio: audioUrl, ytOnly: undefined };
+        playSong(playableSong, songList?.filter(s => !s.ytOnly));
+      } else {
+        showToast('Failed to load stream', 'error');
+      }
+    } else {
+      playSong(song, songList);
+    }
   };
 
   useEffect(() => { doSearch(); }, [q]);
@@ -58,19 +88,24 @@ export default function SearchResults() {
 
       {!loading && !error && songs.length > 0 && (
         <>
-          <button onClick={() => playSong(songs[0], songs)}
+          <button onClick={() => handlePlay(songs[0], songs)}
             className="flex items-center gap-3 p-3 bg-[#111] rounded-2xl border border-[#1a1a1a] w-full sm:w-[340px] mb-5 active:scale-[0.98] transition-transform text-left">
             <img src={songs[0].thumbnail} alt="" className="w-14 h-14 rounded-xl object-cover" loading="lazy" />
             <div className="flex-1 min-w-0">
               <p className="text-[15px] font-bold text-white truncate">{songs[0].title}</p>
-              <p className="text-[12px] text-[#888]">{songs[0].artist}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-[12px] text-[#888] truncate">{songs[0].artist}</p>
+                {songs[0].ytOnly && <span className="text-[8px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full shrink-0">YT</span>}
+              </div>
             </div>
             <div className="w-9 h-9 bg-[#FF0000] rounded-full flex items-center justify-center shrink-0">
               <Play size={14} className="text-white ml-0.5" fill="white" />
             </div>
           </button>
           <div className="bg-[#111] rounded-2xl overflow-hidden border border-[#1a1a1a]">
-            {songs.map((s, i) => <SongRow key={`${s.id}-${i}`} song={s} index={i} songList={songs} />)}
+            {songs.map((s, i) => (
+              <SongRow key={`${s.id}-${i}`} song={s} index={i} songList={songs} onPlay={s.ytOnly ? () => handlePlay(s, songs) : undefined} />
+            ))}
           </div>
         </>
       )}

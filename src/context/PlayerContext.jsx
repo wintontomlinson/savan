@@ -20,7 +20,7 @@ export function PlayerProvider({ children }) {
   const [queue, _setQueue] = useState([]);
   const [upNext, setUpNext] = useState([]);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, _setVolume] = useState(() => { try { const v = parseFloat(localStorage.getItem('vol')); return (v >= 0 && v <= 2) ? v : 0.7; } catch { return 0.7; } });
+  const [volume, _setVolume] = useState(() => { try { const v = parseFloat(localStorage.getItem('vol')); return (v >= 0 && v <= 3) ? v : 0.7; } catch { return 0.7; } });
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [shuffleMode, setShuffle] = useState(false);
@@ -42,10 +42,12 @@ export function PlayerProvider({ children }) {
   const audioCtxRef = useRef(null);
   const sourceARef = useRef(null);
   const sourceBRef = useRef(null);
+  const bassFilterRef = useRef(null);
+  const bassBoostRef = useRef(() => { try { return localStorage.getItem('bass_on') === 'true'; } catch { return false; } });
 
   const setVolume = useCallback(v => {
-    // Allow up to 2.0 (200%) via gain node, HTML audio stays at max 1.0
-    const val = Math.max(0, Math.min(2, v));
+    // Allow up to 3.0 (300%) via gain node, HTML audio stays at max 1.0
+    const val = Math.max(0, Math.min(3, v));
     _setVolume(val);
     volumeRef.current = val;
     const a = activeRef.current === 'A' ? audioA.current : audioB.current;
@@ -63,6 +65,14 @@ export function PlayerProvider({ children }) {
     }
   }, []);
 
+  // Bass Boost control - real audio processing via BiquadFilter
+  const setBassBoost = useCallback((enabled) => {
+    bassBoostRef.current = enabled;
+    if (bassFilterRef.current) {
+      bassFilterRef.current.gain.value = enabled ? 12 : 0; // +12dB bass boost
+    }
+  }, []);
+
   const historyStack = useRef([]); // Stack of previously played songs
 
   const cur = () => activeRef.current === 'A' ? audioA.current : audioB.current;
@@ -74,18 +84,29 @@ export function PlayerProvider({ children }) {
     audioA.current = new Audio();
     audioB.current = new Audio();
 
-    // Create AudioContext with GainNode for volume > 100%
+    // Create AudioContext with GainNode for volume > 100% and BiquadFilter for bass boost
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       audioCtxRef.current = new AudioContext();
+      
+      // Create bass boost filter (lowshelf at 200Hz)
+      bassFilterRef.current = audioCtxRef.current.createBiquadFilter();
+      bassFilterRef.current.type = 'lowshelf';
+      bassFilterRef.current.frequency.value = 200;
+      bassFilterRef.current.gain.value = localStorage.getItem('bass_on') === 'true' ? 12 : 0;
+
+      // Create gain node for volume amplification
       gainNodeRef.current = audioCtxRef.current.createGain();
+
+      // Audio chain: source → bassFilter → gainNode → destination
+      bassFilterRef.current.connect(gainNodeRef.current);
       gainNodeRef.current.connect(audioCtxRef.current.destination);
 
       sourceARef.current = audioCtxRef.current.createMediaElementSource(audioA.current);
-      sourceARef.current.connect(gainNodeRef.current);
+      sourceARef.current.connect(bassFilterRef.current);
 
       sourceBRef.current = audioCtxRef.current.createMediaElementSource(audioB.current);
-      sourceBRef.current.connect(gainNodeRef.current);
+      sourceBRef.current.connect(bassFilterRef.current);
 
       // Set initial gain based on saved volume
       const savedVol = volumeRef.current;
@@ -388,5 +409,5 @@ export function PlayerProvider({ children }) {
     setLikedSongs(p => { if (p.includes(songId)) { showToast('Removed'); return p.filter(id => id !== songId); } showToast('Liked ❤️', 'success'); return [...p, songId]; });
   }, [showToast]);
 
-  return <Ctx.Provider value={{ currentSong, queue, upNext, isPlaying, volume, currentTime, duration, shuffleMode, repeatMode, isExpanded, likedSongs, toasts, playSong, togglePlay, playNext, playPrev, seekTo, setVolume, toggleShuffle, cycleRepeat, addToQueue, removeFromQueue, clearQueue, toggleLike, setExpanded, showToast, dismissToast }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ currentSong, queue, upNext, isPlaying, volume, currentTime, duration, shuffleMode, repeatMode, isExpanded, likedSongs, toasts, playSong, togglePlay, playNext, playPrev, seekTo, setVolume, setBassBoost, toggleShuffle, cycleRepeat, addToQueue, removeFromQueue, clearQueue, toggleLike, setExpanded, showToast, dismissToast }}>{children}</Ctx.Provider>;
 }

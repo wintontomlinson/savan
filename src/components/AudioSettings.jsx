@@ -22,10 +22,10 @@ const BANDS_10 = ['32', '64', '125', '250', '500', '1K', '2K', '4K', '8K', '16K'
 const BAND_UNITS = ['Hz', 'Hz', 'Hz', 'Hz', 'Hz', '', '', '', '', ''];
 
 export default function AudioSettings() {
-  const { volume, setVolume, showToast } = usePlayer();
+  const { volume, setVolume, setBassBoost: setContextBassBoost, showToast } = usePlayer();
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState('eq'); // 'eq' | 'mixer'
-  const [bassBoost, setBassBoost] = useState(() => localStorage.getItem('bass_on') === 'true');
+  const [bassBoost, setBassBoostState] = useState(() => localStorage.getItem('bass_on') === 'true');
   const [boostLevel, setBoostLevel] = useState(() => parseFloat(localStorage.getItem('boost_level') || '100'));
   const [crossfade, setCrossfade] = useState(() => parseInt(localStorage.getItem('crossfade_dur') || '5'));
   const [streamQuality, setStreamQuality] = useState(() => getQuality());
@@ -36,7 +36,6 @@ export default function AudioSettings() {
   });
   const [showPresets, setShowPresets] = useState(false);
 
-  useEffect(() => { localStorage.setItem('bass_on', bassBoost.toString()); }, [bassBoost]);
   useEffect(() => { localStorage.setItem('boost_level', boostLevel.toString()); }, [boostLevel]);
   useEffect(() => { localStorage.setItem('crossfade_dur', crossfade.toString()); }, [crossfade]);
   useEffect(() => { localStorage.setItem('eq_preset', activePreset); }, [activePreset]);
@@ -62,8 +61,8 @@ export default function AudioSettings() {
 
   const handleVolumeBoost = (val) => {
     setBoostLevel(val);
-    // Map 0-200 to actual volume (0-1 range used internally, but we allow boost via gain)
-    setVolume(Math.min(1, val / 100));
+    // Map 0-300 to actual volume (gain value 0-3.0)
+    setVolume(val / 100);
     localStorage.setItem('boost_level', val.toString());
   };
 
@@ -208,23 +207,23 @@ export default function AudioSettings() {
 
           {tab === 'mixer' && (
             <>
-              {/* Volume Boost - now up to 200% */}
+              {/* Volume Boost - now up to 300% */}
               <div className="p-5 bg-[#0f0f11] rounded-2xl mb-4 border border-white/[0.04]">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-300 ${
                       boostLevel > 100 ? 'bg-gradient-to-br from-orange-500/20 to-red-500/20 border border-orange-500/20' : 'bg-white/[0.04] border border-white/[0.04]'
                     }`}>
-                      <Volume2 size={20} className={`transition-colors ${boostLevel > 100 ? 'text-orange-400' : 'text-rose-400'}`} />
+                      <Volume2 size={20} className={`transition-colors ${boostLevel > 150 ? 'text-red-400' : boostLevel > 100 ? 'text-orange-400' : 'text-rose-400'}`} />
                     </div>
                     <div>
                       <p className="text-[14px] text-white font-semibold">Volume Amplifier</p>
-                      <p className="text-[11px] text-[#555]">Boost output up to 200%</p>
+                      <p className="text-[11px] text-[#555]">Boost output up to 300%</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <span className={`text-[20px] font-bold tabular-nums ${
-                      boostLevel > 150 ? 'text-red-400' : boostLevel > 100 ? 'text-orange-400' : 'text-rose-400'
+                      boostLevel > 200 ? 'text-red-500' : boostLevel > 150 ? 'text-red-400' : boostLevel > 100 ? 'text-orange-400' : 'text-rose-400'
                     }`}>{Math.round(boostLevel)}%</span>
                   </div>
                 </div>
@@ -233,30 +232,38 @@ export default function AudioSettings() {
                 <div className="relative mt-2">
                   <div className="relative h-3 rounded-full bg-[#1a1a1e] overflow-hidden">
                     <div className={`absolute left-0 top-0 h-full rounded-full transition-all duration-150 ${
+                      boostLevel > 200 ? 'bg-gradient-to-r from-rose-500 via-red-500 to-red-600' :
                       boostLevel > 150 ? 'bg-gradient-to-r from-rose-500 via-orange-500 to-red-500' :
                       boostLevel > 100 ? 'bg-gradient-to-r from-rose-500 to-orange-500' :
                       'bg-gradient-to-r from-rose-600 to-rose-400'
-                    }`} style={{ width: `${(boostLevel / 200) * 100}%` }} />
+                    }`} style={{ width: `${(boostLevel / 300) * 100}%` }} />
                     {/* 100% marker */}
-                    <div className="absolute top-0 bottom-0 left-1/2 w-px bg-white/20" />
+                    <div className="absolute top-0 bottom-0 left-[33.3%] w-px bg-white/20" />
+                    {/* 200% marker */}
+                    <div className="absolute top-0 bottom-0 left-[66.6%] w-px bg-white/10" />
                   </div>
-                  <input type="range" min="0" max="200" step="1" value={boostLevel}
+                  <input type="range" min="0" max="300" step="1" value={boostLevel}
                     onChange={e => handleVolumeBoost(parseInt(e.target.value))}
                     className="absolute inset-0 w-full h-3 opacity-0 cursor-pointer" />
                 </div>
 
                 <div className="flex justify-between text-[9px] mt-2 px-0.5">
                   <span className="text-[#444]">0%</span>
-                  <span className="text-[#444]">50%</span>
                   <span className="text-[#555] font-medium">100%</span>
-                  <span className="text-orange-400/60">150%</span>
-                  <span className="text-red-400/60">200%</span>
+                  <span className="text-orange-400/60">200%</span>
+                  <span className="text-red-400/60">300%</span>
                 </div>
 
-                {boostLevel > 150 && (
+                {boostLevel > 200 && (
                   <div className="mt-3 flex items-center gap-2 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-xl">
                     <span className="text-[10px]">⚠️</span>
-                    <span className="text-[10px] text-red-300">High volume may cause distortion</span>
+                    <span className="text-[10px] text-red-300">Extreme volume — may cause distortion & hearing damage</span>
+                  </div>
+                )}
+                {boostLevel > 100 && boostLevel <= 200 && (
+                  <div className="mt-3 flex items-center gap-2 px-3 py-2 bg-orange-500/10 border border-orange-500/20 rounded-xl">
+                    <span className="text-[10px]">🔊</span>
+                    <span className="text-[10px] text-orange-300">Amplified — use caution with earphones</span>
                   </div>
                 )}
               </div>
@@ -275,7 +282,7 @@ export default function AudioSettings() {
                       <p className="text-[11px] text-[#555]">Low frequency enhancement</p>
                     </div>
                   </div>
-                  <button onClick={() => { setBassBoost(!bassBoost); showToast(bassBoost ? 'Bass Boost OFF' : 'Bass Boost ON 🔊'); }}
+                  <button onClick={() => { const newState = !bassBoost; setBassBoostState(newState); setContextBassBoost(newState); localStorage.setItem('bass_on', newState.toString()); showToast(bassBoost ? 'Bass Boost OFF' : 'Bass Boost ON 🔊'); }}
                     className={`w-[54px] h-[30px] rounded-full relative transition-all duration-300 ${
                       bassBoost ? 'bg-gradient-to-r from-amber-500 to-orange-500 shadow-lg shadow-amber-500/30' : 'bg-[#222]'
                     }`}>
