@@ -202,11 +202,19 @@ export function PlayerProvider({ children }) {
     setBassBoostOn(false);
     _setVolume(1.0);
     volumeRef.current = 1.0;
-    const a = activeRef.current === 'A' ? audioA.current : audioB.current;
-    if (a) a.volume = 1.0;
-    if (gainRef.current) gainRef.current.gain.value = 1;
+    // Set volume on BOTH audio elements
+    if (audioA.current) audioA.current.volume = 1.0;
+    if (audioB.current) audioB.current.volume = 1.0;
+    // Reset gain to 1 (no amplification, no reduction)
+    if (gainRef.current) gainRef.current.gain.value = 1.0;
+    // Reset all EQ bands to 0
     if (eqFiltersRef.current.length > 0) {
       eqFiltersRef.current.forEach(f => { f.gain.value = 0; });
+    }
+    // Reset bass boost filters specifically
+    if (enhancedRef.current && eqFiltersRef.current.length >= 2) {
+      eqFiltersRef.current[0].gain.value = 0;
+      eqFiltersRef.current[1].gain.value = 0;
     }
   }, []);
 
