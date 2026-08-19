@@ -424,13 +424,7 @@ function SyncedLyrics({ lrcData, currentTime }) {
       {lines.map((line, i) => (
         <p key={i}
           data-active={i === activeIndex ? 'true' : undefined}
-          className={`text-[14px] sm:text-[16px] font-semibold leading-relaxed transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-            i === activeIndex
-              ? 'text-white scale-[1.03] opacity-100'
-              : i < activeIndex
-                ? 'text-white/15 scale-100'
-                : 'text-white/35 scale-100'
-          }`}>
+          className="text-[14px] sm:text-[16px] font-medium leading-relaxed text-white/80">
           {line.text}
         </p>
       ))}
@@ -468,13 +462,7 @@ function PlainLyrics({ text, currentTime, duration }) {
       {lines.map((line, i) => (
         <p key={i}
           data-active={i === activeIndex ? 'true' : undefined}
-          className={`text-[14px] sm:text-[16px] font-semibold leading-relaxed transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-            i === activeIndex
-              ? 'text-white scale-[1.03] opacity-100'
-              : i < activeIndex
-                ? 'text-white/15 scale-100'
-                : 'text-white/35 scale-100'
-          }`}>
+          className="text-[14px] sm:text-[16px] font-medium leading-relaxed text-white/80">
           {line}
         </p>
       ))}
