@@ -200,17 +200,46 @@ export async function getSongDetails(songId) {
   return result;
 }
 
-export async function getLyrics(songId) {
+export async function getLyrics(songId, title, artist) {
   if (!songId) return null;
   const cacheKey = `lyrics:${songId}`;
   const cached = getCached(cacheKey, CACHE_TTL.lyrics);
   if (cached) return cached;
 
+  // Try LRCLIB first (has real synced timestamps)
+  if (title && artist) {
+    try {
+      const cleanArtist = artist.split(',')[0].trim();
+      const url = `https://lrclib.net/api/search?track_name=${encodeURIComponent(title)}&artist_name=${encodeURIComponent(cleanArtist)}`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+      if (res.ok) {
+        const results = await res.json();
+        const synced = results.find(r => r.syncedLyrics);
+        if (synced?.syncedLyrics) {
+          const result = { synced: true, data: synced.syncedLyrics };
+          setCache(cacheKey, result);
+          return result;
+        }
+        const plain = results.find(r => r.plainLyrics);
+        if (plain?.plainLyrics) {
+          const result = { synced: false, data: plain.plainLyrics };
+          setCache(cacheKey, result);
+          return result;
+        }
+      }
+    } catch {}
+  }
+
+  // Fallback to JioSaavn lyrics (plain text only)
   const data = await fetchApi(`/songs/${songId}/lyrics`, { retries: 1, timeout: 5000 });
   if (!data?.lyrics) return null;
-  const result = data.lyrics.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim();
-  if (result) setCache(cacheKey, result);
-  return result;
+  const text = data.lyrics.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim();
+  if (text) {
+    const result = { synced: false, data: text };
+    setCache(cacheKey, result);
+    return result;
+  }
+  return null;
 }
 
 // ─── Stream URL Refresh ───

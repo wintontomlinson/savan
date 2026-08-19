@@ -3,7 +3,7 @@ import { usePlayer } from '../context/PlayerContext';
 import { formatDuration } from '../data/mockData';
 import { downloadSong, getLyrics } from '../data/api';
 import SleepTimer from './SleepTimer';
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 
 export default function ExpandedPlayer() {
   const { currentSong, isPlaying, togglePlay, playNext, playPrev, currentTime, duration, seekTo, shuffleMode, toggleShuffle, repeatMode, cycleRepeat, toggleLike, likedSongs, isExpanded, setExpanded, showToast, queue, volume, setVolume, playSong } = usePlayer();
@@ -29,12 +29,14 @@ export default function ExpandedPlayer() {
     setActivePanel(null);
   }, []);
 
-  // Fetch lyrics when lyrics panel is opened
+  // Fetch lyrics — try LRCLIB synced first, then JioSaavn plain
   useEffect(() => {
     if (!currentSong || activePanel !== 'lyrics') return;
     setLyricsLoading(true);
     setLyrics(null);
-    getLyrics(currentSong.id).then(l => { setLyrics(l || null); setLyricsLoading(false); }).catch(() => setLyricsLoading(false));
+    getLyrics(currentSong.id, currentSong.title, currentSong.artist)
+      .then(l => { setLyrics(l || null); setLyricsLoading(false); })
+      .catch(() => setLyricsLoading(false));
   }, [currentSong?.id, activePanel]);
 
   // Close panels when song changes
@@ -207,8 +209,11 @@ export default function ExpandedPlayer() {
                   <p className="text-[13px] text-white/25">Lyrics not available</p>
                 </div>
               )}
-              {!lyricsLoading && lyrics && (
-                <SyncedLyrics lyrics={lyrics} currentTime={currentTime} duration={duration} />
+              {!lyricsLoading && lyrics && lyrics.synced && (
+                <SyncedLyrics lrcData={lyrics.data} currentTime={currentTime} />
+              )}
+              {!lyricsLoading && lyrics && !lyrics.synced && (
+                <PlainLyrics text={lyrics.data} currentTime={currentTime} duration={duration} />
               )}
             </div>
           )}
@@ -378,57 +383,79 @@ function ActionPill({ icon: Icon, label, active, onClick, badge }) {
   );
 }
 
-// Synced lyrics — best-effort timing without real timestamps
-// JioSaavn only provides plain text, so we estimate timing based on song structure
-function SyncedLyrics({ lyrics, currentTime, duration }) {
+// PERFECT SYNCED LYRICS — uses real timestamps from LRCLIB
+// Format: "[MM:SS.ms] text" per line
+function SyncedLyrics({ lrcData, currentTime }) {
   const containerRef = useRef(null);
-  const lines = lyrics.split('\n').filter(l => l.trim());
+
+  // Parse LRC format into [{time: seconds, text: string}]
+  const lines = useMemo(() => {
+    return lrcData.split('\n')
+      .map(line => {
+        const match = line.match(/^\[(\d{2}):(\d{2})\.(\d{2,3})\]\s?(.*)$/);
+        if (!match) return null;
+        const mins = parseInt(match[1]);
+        const secs = parseInt(match[2]);
+        const ms = parseInt(match[3].padEnd(3, '0'));
+        const time = mins * 60 + secs + ms / 1000;
+        const text = match[4].trim();
+        return text ? { time, text } : null;
+      })
+      .filter(Boolean);
+  }, [lrcData]);
+
+  // Find active line — the last line whose timestamp <= currentTime
+  let activeIndex = -1;
+  for (let i = lines.length - 1; i >= 0; i--) {
+    if (currentTime >= lines[i].time) {
+      activeIndex = i;
+      break;
+    }
+  }
+
+  useEffect(() => {
+    if (!containerRef.current || activeIndex < 0) return;
+    const el = containerRef.current.querySelector('[data-active="true"]');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [activeIndex]);
+
+  return (
+    <div ref={containerRef} className="space-y-3 text-center py-2">
+      {lines.map((line, i) => (
+        <p key={i}
+          data-active={i === activeIndex ? 'true' : undefined}
+          className={`text-[14px] sm:text-[16px] font-semibold leading-relaxed transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            i === activeIndex
+              ? 'text-white scale-[1.03] opacity-100'
+              : i < activeIndex
+                ? 'text-white/15 scale-100'
+                : 'text-white/35 scale-100'
+          }`}>
+          {line.text}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+// PLAIN LYRICS fallback — no timestamps, best-effort estimation
+function PlainLyrics({ text, currentTime, duration }) {
+  const containerRef = useRef(null);
+  const lines = text.split('\n').filter(l => l.trim());
   const totalLines = lines.length;
 
-  // Estimate when vocals actually start and end (in seconds, not percentage)
-  // Most Indian songs: 5-15s intro, 5-15s outro
-  // The key insight: intros are relatively SHORT in absolute time regardless of song length
-  
-  // Intro: typically 8-15 seconds for most songs
-  // Shorter songs tend to have shorter intros
-  let introSec = duration < 150 ? 5 : duration < 240 ? 8 : 12;
-  
-  // Outro: typically 8-20 seconds (longer songs have longer outros)
-  let outroSec = duration < 150 ? 5 : duration < 240 ? 10 : 15;
-
-  // For songs with very few lyrics lines, the singing is spread out more
-  // (likely has instrumental breaks between verses)
-  const avgSecPerLine = (duration - introSec - outroSec) / totalLines;
-  
-  // If average time per line > 8 seconds, there are likely instrumental gaps
-  // Reduce the singing window slightly to account for instrumental breaks
-  if (avgSecPerLine > 8 && totalLines < 20) {
-    // Very few lines spread across a long song — likely long instrumentals
-    introSec += 5;
-    outroSec += 5;
-  }
-
+  // Simple estimation with absolute seconds
+  const introSec = duration < 150 ? 5 : duration < 240 ? 8 : 12;
+  const outroSec = duration < 150 ? 5 : duration < 240 ? 10 : 15;
   const vocalStart = introSec;
   const vocalEnd = duration - outroSec;
-  const vocalDuration = vocalEnd - vocalStart;
+  const timePerLine = (vocalEnd - vocalStart) / totalLines;
 
-  // Distribute lines evenly across the vocal section
-  // Simple even distribution is actually more accurate than trying to be clever
-  // since we have no real timing data
-  const timePerLine = vocalDuration / totalLines;
-
-  // Find which line should be active at the current time
   let activeIndex = -1;
-  
   if (currentTime >= vocalStart) {
-    const elapsed = currentTime - vocalStart;
-    activeIndex = Math.min(totalLines - 1, Math.floor(elapsed / timePerLine));
+    activeIndex = Math.min(totalLines - 1, Math.floor((currentTime - vocalStart) / timePerLine));
   }
-
-  // If we've passed all lines (in outro), keep last line active
-  if (currentTime >= vocalEnd && totalLines > 0) {
-    activeIndex = totalLines - 1;
-  }
+  if (currentTime >= vocalEnd && totalLines > 0) activeIndex = totalLines - 1;
 
   useEffect(() => {
     if (!containerRef.current || activeIndex < 0) return;
