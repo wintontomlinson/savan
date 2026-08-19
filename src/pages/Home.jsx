@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Play, Loader2, RefreshCw, Headphones, Sparkles, Music } from 'lucide-react';
+import { Play, Loader2, RefreshCw, Headphones, Sparkles } from 'lucide-react';
 import { getGreeting } from '../data/mockData';
 import { searchSongs } from '../data/api';
 import { getHomeQueries, getHistory, analyzePreferences } from '../data/algorithm';
@@ -56,8 +56,39 @@ export default function Home() {
 
   return (
     <div className="pb-6">
+      {/* Moods — Top suggestion chips */}
+      <section className="mb-5 animate-in">
+        <div className="flex gap-2 scroll-x pb-2">
+          {MOODS.map(m => (
+            <button key={m.label} onClick={() => loadMood(m)}
+              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full shrink-0 transition-all btn-press ${
+                activeMood === m.label ? 'bg-white text-black font-semibold' : 'bg-[#1a1a1a] text-white'
+              }`}>
+              <span className="text-[14px]">{m.icon}</span>
+              <span className="text-[13px] font-medium">{m.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Mood Results */}
+        {moodLoading && <div className="flex justify-center py-6"><Loader2 size={18} className="text-white animate-spin" /></div>}
+        {!moodLoading && moodSongs && moodSongs.length > 0 && (
+          <div className="mt-3 animate-in">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[13px] text-white font-medium">{activeMood} vibes</p>
+              <button onClick={() => playSong(moodSongs[0], moodSongs)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full text-[11px] text-black font-semibold btn-press">
+                <Play size={10} fill="black" /> Play All
+              </button>
+            </div>
+            <div className="flex gap-3 scroll-x pb-1 stagger">
+              {moodSongs.slice(0, 10).map(s => <SongCard key={s.id} song={s} />)}
+            </div>
+          </div>
+        )}
+      </section>
+
       {/* Hero */}
-      <section className="mb-7 animate-in">
+      <section className="mb-7 animate-in" style={{ animationDelay: '0.03s' }}>
         <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-rose-600/15 via-[#0e0e0e] to-purple-900/10 p-6 sm:p-8 border border-white/[0.04]">
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-2">
@@ -97,41 +128,6 @@ export default function Home() {
           </div>
         </section>
       )}
-
-      {/* Moods & Genres */}
-      <section className="mb-7 animate-in" style={{ animationDelay: '0.1s' }}>
-        <h2 className="text-[15px] font-bold text-white mb-3">Browse by Mood</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          {MOODS.map(m => (
-            <button key={m.label} onClick={() => loadMood(m)}
-              className={`relative overflow-hidden rounded-2xl p-4 h-[72px] sm:h-[80px] flex items-end text-left btn-press transition-all ${
-                activeMood === m.label ? 'ring-2 ring-white/40 scale-[0.98]' : ''
-              }`}>
-              <div className={`absolute inset-0 bg-gradient-to-br ${m.color}`} />
-              <div className="relative flex items-center gap-2">
-                <span className="text-[18px]">{m.icon}</span>
-                <span className="text-[13px] font-semibold text-white">{m.label}</span>
-              </div>
-            </button>
-          ))}
-        </div>
-
-        {/* Mood Results */}
-        {moodLoading && <div className="flex justify-center py-8"><Loader2 size={20} className="text-rose-500 animate-spin" /></div>}
-        {!moodLoading && moodSongs && moodSongs.length > 0 && (
-          <div className="mt-4 animate-in">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-[14px] text-white font-medium">{activeMood} vibes</p>
-              <button onClick={() => playSong(moodSongs[0], moodSongs)} className="flex items-center gap-1.5 px-3.5 py-2 bg-white rounded-full text-[11px] text-black font-semibold btn-press">
-                <Play size={10} fill="black" /> Play All
-              </button>
-            </div>
-            <div className="flex gap-3 scroll-x pb-1 stagger">
-              {moodSongs.slice(0, 10).map(s => <SongCard key={s.id} song={s} />)}
-            </div>
-          </div>
-        )}
-      </section>
 
       {/* Loading skeletons */}
       {loading && (
