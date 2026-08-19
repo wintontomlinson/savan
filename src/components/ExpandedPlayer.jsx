@@ -1,4 +1,4 @@
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Download, Share2, Mic2, Volume2, VolumeX, ListMusic } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Download, Mic2, Volume2, VolumeX, ListMusic } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { formatDuration } from '../data/mockData';
 import { downloadSong, getLyrics } from '../data/api';
@@ -128,16 +128,6 @@ export default function ExpandedPlayer() {
     playPrev();
   }, [playPrev, closePanels]);
 
-  const shareSong = async () => {
-    const text = `🎵 ${currentSong.title} - ${currentSong.artist}`;
-    if (navigator.share) {
-      try { await navigator.share({ title: currentSong.title, text }); } catch {}
-    } else {
-      await navigator.clipboard?.writeText(text);
-      showToast('Copied to clipboard!');
-    }
-  };
-
   if (!isExpanded || !currentSong) return null;
   const liked = likedSongs.includes(currentSong.id);
   const displayProgress = isDragging ? dragProgress : (duration > 0 ? currentTime / duration : 0);
@@ -156,14 +146,11 @@ export default function ExpandedPlayer() {
 
       <div className="relative flex-1 flex flex-col min-h-0">
         
-        {/* Top Bar — sleep left, volume right */}
+        {/* Top Bar — close left, volume right */}
         <div className="flex items-center justify-between px-5 pt-4 pb-2 shrink-0">
-          <div className="flex items-center gap-2">
-            <button onClick={handleClose} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center active:scale-90 transition-all duration-200 backdrop-blur-sm border border-white/[0.04]">
-              <ChevronDown size={20} className="text-white/80" />
-            </button>
-            <SleepTimer />
-          </div>
+          <button onClick={handleClose} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center active:scale-90 transition-all duration-200 backdrop-blur-sm border border-white/[0.04]">
+            <ChevronDown size={20} className="text-white/80" />
+          </button>
           <div className="text-center flex-1 mx-4">
             <p className="text-[9px] text-white/30 uppercase tracking-[0.25em] font-medium">Now Playing</p>
             <p className="text-[11px] text-white/60 font-medium mt-0.5 max-w-[200px] mx-auto truncate">{currentSong.album || 'Library'}</p>
@@ -216,10 +203,10 @@ export default function ExpandedPlayer() {
                 </div>
               )}
               {!lyricsLoading && lyrics && lyrics.synced && (
-                <SyncedLyrics lrcData={lyrics.data} />
+                <SyncedLyrics lrcData={lyrics.data} currentTime={currentTime} />
               )}
               {!lyricsLoading && lyrics && !lyrics.synced && (
-                <PlainLyrics text={lyrics.data} />
+                <PlainLyrics text={lyrics.data} currentTime={currentTime} duration={duration} />
               )}
             </div>
           )}
@@ -358,12 +345,12 @@ export default function ExpandedPlayer() {
             </div>
           )}
 
-          {/* Action Bar — premium pill buttons */}
+          {/* Action Bar */}
           <div className="flex items-center justify-center gap-2 max-w-sm mx-auto">
             <ActionPill icon={Mic2} label="Lyrics" active={activePanel === 'lyrics'} onClick={() => togglePanel('lyrics')} />
             <ActionPill icon={ListMusic} label="Queue" active={activePanel === 'queue'} onClick={() => togglePanel('queue')} badge={queue.length > 0 ? queue.length : null} />
-            <ActionPill icon={Share2} label="Share" onClick={shareSong} />
-            <ActionPill icon={Download} label="Save" onClick={async () => { closePanels(); showToast('Downloading...'); const ok = await downloadSong(currentSong); showToast(ok ? 'Downloaded ✓' : 'Download failed', ok ? 'success' : 'error'); }} />
+            <ActionPill icon={Download} label="Offline" onClick={async () => { closePanels(); showToast('Saving offline...'); const ok = await downloadSong(currentSong); showToast(ok ? 'Saved ✓' : 'Failed', ok ? 'success' : 'error'); }} />
+            <SleepTimer />
           </div>
         </div>
       </div>
@@ -388,41 +375,95 @@ function ActionPill({ icon: Icon, label, active, onClick, badge }) {
   );
 }
 
-// SYNCED LYRICS — just displays text, scrolls with song
+// SYNCED LYRICS — highlights active line based on real timestamps
 function SyncedLyrics({ lrcData, currentTime }) {
   const containerRef = useRef(null);
 
-  // Parse LRC format into [{time: seconds, text: string}]
   const lines = useMemo(() => {
     return lrcData.split('\n')
       .map(line => {
         const match = line.match(/^\[(\d{2}):(\d{2})\.(\d{2,3})\]\s?(.*)$/);
         if (!match) return null;
+        const mins = parseInt(match[1]);
+        const secs = parseInt(match[2]);
+        const ms = parseInt(match[3].padEnd(3, '0'));
+        const time = mins * 60 + secs + ms / 1000;
         const text = match[4].trim();
-        return text || null;
+        return text ? { time, text } : null;
       })
       .filter(Boolean);
   }, [lrcData]);
 
+  // Find active line
+  let activeIndex = -1;
+  for (let i = lines.length - 1; i >= 0; i--) {
+    if (currentTime >= lines[i].time) {
+      activeIndex = i;
+      break;
+    }
+  }
+
+  useEffect(() => {
+    if (!containerRef.current || activeIndex < 0) return;
+    const el = containerRef.current.querySelector('[data-active="true"]');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [activeIndex]);
+
   return (
     <div ref={containerRef} className="space-y-3 text-center py-2">
       {lines.map((line, i) => (
-        <p key={i} className="text-[14px] sm:text-[16px] font-medium leading-relaxed text-white/80">
-          {line}
+        <p key={i}
+          data-active={i === activeIndex ? 'true' : undefined}
+          className={`text-[14px] sm:text-[16px] font-semibold leading-relaxed transition-all duration-400 ${
+            i === activeIndex
+              ? 'text-white scale-[1.02]'
+              : i < activeIndex
+                ? 'text-white/20'
+                : 'text-white/40'
+          }`}>
+          {line.text}
         </p>
       ))}
     </div>
   );
 }
 
-// PLAIN LYRICS fallback
-function PlainLyrics({ text }) {
+// PLAIN LYRICS fallback — highlights with estimation
+function PlainLyrics({ text, currentTime, duration }) {
+  const containerRef = useRef(null);
   const lines = text.split('\n').filter(l => l.trim());
+  const totalLines = lines.length;
+
+  const introSec = duration < 150 ? 5 : duration < 240 ? 8 : 12;
+  const outroSec = duration < 150 ? 5 : duration < 240 ? 10 : 15;
+  const vocalStart = introSec;
+  const vocalEnd = duration - outroSec;
+  const timePerLine = (vocalEnd - vocalStart) / totalLines;
+
+  let activeIndex = -1;
+  if (currentTime >= vocalStart) {
+    activeIndex = Math.min(totalLines - 1, Math.floor((currentTime - vocalStart) / timePerLine));
+  }
+  if (currentTime >= vocalEnd && totalLines > 0) activeIndex = totalLines - 1;
+
+  useEffect(() => {
+    if (!containerRef.current || activeIndex < 0) return;
+    const el = containerRef.current.querySelector('[data-active="true"]');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [activeIndex]);
 
   return (
-    <div className="space-y-3 text-center py-2">
+    <div ref={containerRef} className="space-y-3 text-center py-2">
       {lines.map((line, i) => (
-        <p key={i} className="text-[14px] sm:text-[16px] font-medium leading-relaxed text-white/80">
+        <p key={i}
+          data-active={i === activeIndex ? 'true' : undefined}
+          className={`text-[14px] sm:text-[16px] font-semibold leading-relaxed transition-all duration-400 ${
+            i === activeIndex
+              ? 'text-white scale-[1.02]'
+              : i < activeIndex
+                ? 'text-white/20'
+                : 'text-white/40'
+          }`}>
           {line}
         </p>
       ))}
