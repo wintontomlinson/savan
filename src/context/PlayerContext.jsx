@@ -257,14 +257,26 @@ export function PlayerProvider({ children }) {
 
   useEffect(() => { try { localStorage.setItem('liked', JSON.stringify(likedSongs)); } catch {} }, [likedSongs]);
   useEffect(() => { volumeRef.current = volume; }, [volume]);
-  // Update media session playback state
   useEffect(() => { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused'; }, [isPlaying]);
+  
+  // Update notification seekbar position
+  useEffect(() => {
+    if ('mediaSession' in navigator && duration > 0) {
+      try {
+        navigator.mediaSession.setPositionState({
+          duration: duration,
+          playbackRate: 1,
+          position: Math.min(currentTime, duration),
+        });
+      } catch {}
+    }
+  }, [currentTime, duration]);
 
   // Load related when song changes
   useEffect(() => {
     if (!currentSong) return;
 
-    // ─── Media Session API (Android notification controls) ───
+    // ─── Media Session API (notification controls) ───
     if ('mediaSession' in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: currentSong.title || 'Unknown',
@@ -274,11 +286,23 @@ export function PlayerProvider({ children }) {
           { src: currentSong.thumbnail, sizes: '512x512', type: 'image/jpeg' }
         ]
       });
-      navigator.mediaSession.setActionHandler('play', () => togglePlay());
-      navigator.mediaSession.setActionHandler('pause', () => togglePlay());
-      navigator.mediaSession.setActionHandler('previoustrack', () => { if (playNextRef.current) playPrev(); });
-      navigator.mediaSession.setActionHandler('nexttrack', () => { if (playNextRef.current) playNext(); });
-      navigator.mediaSession.setActionHandler('seekto', (details) => { if (details.seekTime != null) seekTo(details.seekTime); });
+      // Use refs for handlers to avoid stale closures
+      navigator.mediaSession.setActionHandler('play', () => {
+        const a = activeRef.current === 'A' ? audioA.current : audioB.current;
+        if (a?.src) { a.play().then(() => setIsPlaying(true)).catch(() => {}); }
+      });
+      navigator.mediaSession.setActionHandler('pause', () => {
+        const a = activeRef.current === 'A' ? audioA.current : audioB.current;
+        if (a) { a.pause(); setIsPlaying(false); }
+      });
+      navigator.mediaSession.setActionHandler('previoustrack', () => { if (playNextRef.current) playNextRef.current('prev'); });
+      navigator.mediaSession.setActionHandler('nexttrack', () => { if (playNextRef.current) playNextRef.current(); });
+      navigator.mediaSession.setActionHandler('seekto', (details) => {
+        if (details.seekTime != null) {
+          const a = activeRef.current === 'A' ? audioA.current : audioB.current;
+          if (a) { a.currentTime = details.seekTime; setCurrentTime(details.seekTime); }
+        }
+      });
     }
 
     // Update browser tab title
@@ -359,6 +383,10 @@ export function PlayerProvider({ children }) {
   function playDirect(song) {
     if (!song) return;
     cancelFade();
+    // Resume AudioContext if enhanced mode active
+    if (enhancedRef.current && audioCtxRef.current?.state === 'suspended') {
+      audioCtxRef.current.resume();
+    }
     // Push current song to history stack (for prev)
     if (currentSong) historyStack.current.push(currentSong);
     audioA.current.pause(); audioA.current.src = '';
@@ -370,7 +398,12 @@ export function PlayerProvider({ children }) {
     if (song.audio) {
       const a = audioA.current;
       a.src = song.audio;
-      a.volume = volumeRef.current;
+      // If boost is active (>100%), volume stays at 1, gain does the rest
+      if (enhancedRef.current && gainRef.current && gainRef.current.gain.value > 1) {
+        a.volume = 1;
+      } else {
+        a.volume = volumeRef.current;
+      }
       setIsPlaying(true);
       a.play().catch(() => setIsPlaying(false));
     } else {
@@ -395,14 +428,17 @@ export function PlayerProvider({ children }) {
 
   const togglePlay = useCallback(() => {
     if (!currentSong) return;
+    // Resume AudioContext if needed
+    if (enhancedRef.current && audioCtxRef.current?.state === 'suspended') {
+      audioCtxRef.current.resume();
+    }
     const a = cur();
     if (isPlaying) { a?.pause(); setIsPlaying(false); }
     else {
       a?.play().then(() => setIsPlaying(true)).catch(() => {
-        // If src not set, re-set it
         if (currentSong.audio && a) {
           a.src = currentSong.audio;
-          a.volume = volumeRef.current;
+          a.volume = enhancedRef.current ? 1 : volumeRef.current;
           a.play().then(() => setIsPlaying(true)).catch(() => {});
         }
       });
@@ -440,10 +476,9 @@ export function PlayerProvider({ children }) {
     // Otherwise go to previous song from history
     if (historyStack.current.length > 0) {
       const prev = historyStack.current.pop();
-      // Put current song back at front of queue
       if (currentSong) setQueue(p => [currentSong, ...p]);
-      // Play previous directly
       cancelFade();
+      if (enhancedRef.current && audioCtxRef.current?.state === 'suspended') audioCtxRef.current.resume();
       audioA.current.pause(); audioA.current.src = '';
       audioB.current.pause(); audioB.current.src = '';
       activeRef.current = 'A';
@@ -452,7 +487,7 @@ export function PlayerProvider({ children }) {
       setIsPlaying(true);
       if (prev.audio) {
         audioA.current.src = prev.audio;
-        audioA.current.volume = volumeRef.current;
+        audioA.current.volume = enhancedRef.current ? 1 : volumeRef.current;
         audioA.current.play().catch(() => setIsPlaying(false));
       }
     } else {
