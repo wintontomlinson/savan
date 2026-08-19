@@ -1,11 +1,10 @@
-import { Play, Heart, Download } from 'lucide-react';
+import { Play, Heart } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { formatDuration } from '../data/mockData';
-import { downloadSong } from '../data/api';
 import Equalizer from './Equalizer';
 
 export default function SongRow({ song, index, songList = [] }) {
-  const { playSong, currentSong, isPlaying, toggleLike, likedSongs, showToast } = usePlayer();
+  const { playSong, currentSong, isPlaying, toggleLike, likedSongs } = usePlayer();
   const isActive = currentSong?.id === song.id;
   const liked = likedSongs.includes(song.id);
 
@@ -42,12 +41,6 @@ export default function SongRow({ song, index, songList = [] }) {
 
       {/* Duration */}
       <span className="text-[11px] text-white/20 tabular-nums shrink-0 hidden sm:block">{formatDuration(song.duration)}</span>
-
-      {/* Download */}
-      <button onClick={async e => { e.stopPropagation(); showToast('Downloading...'); const ok = await downloadSong(song); showToast(ok ? 'Downloaded ✓' : 'Failed', ok ? 'success' : 'error'); }}
-        className="p-1.5 shrink-0 text-white/20 hover:text-white opacity-0 group-hover:opacity-100 transition-all duration-200 active:scale-90 rounded-full hover:bg-white/[0.06]">
-        <Download size={13} />
-      </button>
 
       {/* Like */}
       <button onClick={e => { e.stopPropagation(); toggleLike(song.id); }}

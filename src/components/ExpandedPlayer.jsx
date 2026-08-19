@@ -1,7 +1,7 @@
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Download, Mic2, Volume2, VolumeX, ListMusic } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Mic2, Volume2, VolumeX, ListMusic } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { formatDuration } from '../data/mockData';
-import { downloadSong, getLyrics } from '../data/api';
+import { getLyrics } from '../data/api';
 import SleepTimer from './SleepTimer';
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 
@@ -349,7 +349,6 @@ export default function ExpandedPlayer() {
           <div className="flex items-center justify-center gap-2 max-w-sm mx-auto">
             <ActionPill icon={Mic2} label="Lyrics" active={activePanel === 'lyrics'} onClick={() => togglePanel('lyrics')} />
             <ActionPill icon={ListMusic} label="Queue" active={activePanel === 'queue'} onClick={() => togglePanel('queue')} badge={queue.length > 0 ? queue.length : null} />
-            <ActionPill icon={Download} label="Offline" onClick={async () => { closePanels(); showToast('Saving offline...'); const ok = await downloadSong(currentSong); showToast(ok ? 'Saved ✓' : 'Failed', ok ? 'success' : 'error'); }} />
             <SleepTimer />
           </div>
         </div>
