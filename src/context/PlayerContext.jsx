@@ -230,6 +230,7 @@ export function PlayerProvider({ children }) {
   const playNextRef = useRef(null);
   const playPrevRef = useRef(null);
   const currentSongRef = useRef(null);
+  const errorHandlingRef = useRef(false); // Prevent multiple error handlers running
 
   // Keep currentSongRef always fresh
   useEffect(() => { currentSongRef.current = currentSong; }, [currentSong]);
@@ -257,22 +258,26 @@ export function PlayerProvider({ children }) {
     const onMeta = () => setDuration(cur()?.duration || 0);
     const onEnd = () => { if (!fadingRef.current && playNextRef.current) playNextRef.current(); };
     const onError = async (e) => {
-      // Small delay to avoid reacting to transient errors during song switch
       await new Promise(r => setTimeout(r, 500));
       const a = cur();
       const song = currentSongRef.current;
-      // Don't trigger on intentional aborts (when we clear src or switch songs)
       if (!a?.src || !song || a.src === '') return;
-      // Ignore MEDIA_ERR_ABORTED (code 1) — this happens when we switch songs
+      if (!a.src.includes('saavncdn.com') && !a.src.includes('.mp4') && !a.src.includes('.m4a')) return;
       if (a.error && a.error.code === 1) return;
+      if (errorHandlingRef.current) return; // Already handling an error
+      errorHandlingRef.current = true;
       console.warn('Audio error, attempting stream URL refresh');
-      const freshUrl = await refreshStreamUrl(song.id);
-      if (freshUrl && freshUrl !== a.src) {
-        a.src = freshUrl;
-        a.load();
-        a.play().catch(() => {});
-      } else {
-        if (playNextRef.current) playNextRef.current();
+      try {
+        const freshUrl = await refreshStreamUrl(song.id);
+        if (freshUrl && freshUrl !== a.src) {
+          a.src = freshUrl;
+          a.load();
+          a.play().catch(() => {});
+        } else {
+          if (playNextRef.current) playNextRef.current();
+        }
+      } finally {
+        setTimeout(() => { errorHandlingRef.current = false; }, 2000);
       }
     };
 
