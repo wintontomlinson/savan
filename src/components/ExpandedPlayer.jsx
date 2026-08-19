@@ -87,15 +87,17 @@ export default function ExpandedPlayer() {
     document.addEventListener('touchend', onEnd);
   }, [duration, seekTo]);
 
-  // Volume drag
+  // Volume drag — improved with larger touch area
   const handleVolumeStart = useCallback((e) => {
     e.preventDefault();
+    e.stopPropagation();
     const rect = volumeRef.current.getBoundingClientRect();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     setVolume(pct);
 
     const onMove = (ev) => {
+      ev.preventDefault();
       const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
       const p = Math.max(0, Math.min(1, (cx - rect.left) / rect.width));
       setVolume(p);
@@ -301,22 +303,47 @@ export default function ExpandedPlayer() {
             </button>
           </div>
 
-          {/* Volume Slider — inline, always visible when active */}
+          {/* Volume Slider — full-width, easy to use */}
           {activePanel === 'volume' && (
-            <div className="max-w-[260px] mx-auto mb-4 flex items-center gap-3 animate-scale">
-              <button onClick={() => setVolume(0)} className="shrink-0 active:scale-90 transition-transform">
-                <VolumeX size={14} className="text-white/30" />
-              </button>
-              <div ref={volumeRef} className="flex-1 h-[4px] bg-white/[0.08] rounded-full cursor-pointer relative group"
-                onMouseDown={handleVolumeStart} onTouchStart={handleVolumeStart}>
-                <div className="h-full bg-white/50 rounded-full transition-[width] duration-75" style={{ width: `${(volume || 1) * 100}%` }} />
-                <div className="absolute top-1/2 -translate-y-1/2 w-[12px] h-[12px] bg-white rounded-full shadow-md transition-all duration-75" 
-                  style={{ left: `calc(${(volume || 1) * 100}% - 6px)` }} />
+            <div className="max-w-[300px] mx-auto mb-4 animate-scale">
+              {/* Volume level display */}
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[11px] text-white/40 font-medium">Volume</span>
+                <span className="text-[14px] text-white font-bold tabular-nums">{Math.round(volume * 100)}%</span>
               </div>
-              <button onClick={() => setVolume(1)} className="shrink-0 active:scale-90 transition-transform">
-                <Volume2 size={14} className="text-white/30" />
-              </button>
-              <span className="text-[10px] text-white/30 tabular-nums w-7 text-right">{Math.round((volume || 1) * 100)}%</span>
+              {/* Slider track — large touch area */}
+              <div className="flex items-center gap-3">
+                <button onClick={() => setVolume(0)} className="shrink-0 w-8 h-8 rounded-full bg-white/[0.05] flex items-center justify-center active:scale-90 transition-all hover:bg-white/[0.1]">
+                  <VolumeX size={14} className={volume === 0 ? 'text-white' : 'text-white/30'} />
+                </button>
+                <div ref={volumeRef} className="flex-1 h-[40px] flex items-center cursor-pointer relative touch-none"
+                  onMouseDown={handleVolumeStart} onTouchStart={handleVolumeStart}>
+                  {/* Background track */}
+                  <div className="absolute inset-x-0 h-[6px] bg-white/[0.08] rounded-full top-1/2 -translate-y-1/2" />
+                  {/* Filled track */}
+                  <div className="absolute left-0 h-[6px] bg-gradient-to-r from-white/60 to-white/80 rounded-full top-1/2 -translate-y-1/2 transition-[width] duration-75" 
+                    style={{ width: `${volume * 100}%` }} />
+                  {/* Thumb — big and easy to grab */}
+                  <div className="absolute top-1/2 -translate-y-1/2 w-[20px] h-[20px] bg-white rounded-full shadow-lg shadow-black/30 transition-all duration-75 active:scale-110" 
+                    style={{ left: `calc(${volume * 100}% - 10px)` }} />
+                </div>
+                <button onClick={() => setVolume(1)} className="shrink-0 w-8 h-8 rounded-full bg-white/[0.05] flex items-center justify-center active:scale-90 transition-all hover:bg-white/[0.1]">
+                  <Volume2 size={14} className={volume >= 0.95 ? 'text-white' : 'text-white/30'} />
+                </button>
+              </div>
+              {/* Quick volume presets */}
+              <div className="flex items-center justify-between mt-3 gap-2">
+                {[25, 50, 75, 100].map(pct => (
+                  <button key={pct} onClick={() => setVolume(pct / 100)}
+                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-semibold transition-all duration-150 active:scale-95 ${
+                      Math.round(volume * 100) === pct 
+                        ? 'bg-white/[0.12] text-white border border-white/[0.1]' 
+                        : 'bg-white/[0.04] text-white/30 hover:bg-white/[0.07] hover:text-white/50'
+                    }`}>
+                    {pct}%
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
@@ -324,7 +351,7 @@ export default function ExpandedPlayer() {
           <div className="flex items-center justify-center gap-2 max-w-sm mx-auto">
             <ActionPill icon={Mic2} label="Lyrics" active={activePanel === 'lyrics'} onClick={() => togglePanel('lyrics')} />
             <ActionPill icon={ListMusic} label="Queue" active={activePanel === 'queue'} onClick={() => togglePanel('queue')} badge={queue.length > 0 ? queue.length : null} />
-            <ActionPill icon={Volume2} label={`${Math.round((volume || 1) * 100)}%`} active={activePanel === 'volume'} onClick={() => togglePanel('volume')} />
+            <ActionPill icon={Volume2} label={`${Math.round(volume * 100)}%`} active={activePanel === 'volume'} onClick={() => togglePanel('volume')} />
             <ActionPill icon={Share2} label="Share" onClick={shareSong} />
             <ActionPill icon={Download} label="Save" onClick={async () => { closePanels(); showToast('Downloading...'); const ok = await downloadSong(currentSong); showToast(ok ? 'Downloaded ✓' : 'Download failed', ok ? 'success' : 'error'); }} />
           </div>
