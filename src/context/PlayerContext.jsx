@@ -568,5 +568,12 @@ export function PlayerProvider({ children }) {
     setLikedSongs(p => { if (p.includes(songId)) { showToast('Removed'); return p.filter(id => id !== songId); } showToast('Liked ❤️', 'success'); return [...p, songId]; });
   }, [showToast]);
 
-  return <Ctx.Provider value={{ currentSong, queue, upNext, isPlaying, volume, boostLevel, bassBoostOn, currentTime, duration, shuffleMode, repeatMode, isExpanded, likedSongs, toasts, playSong, togglePlay, playNext, playPrev, seekTo, setVolume, setVolumeBoost, setBassBoost, resetAudio, setEqBand, applyEqPreset, toggleShuffle, cycleRepeat, addToQueue, removeFromQueue, clearQueue, toggleLike, setExpanded, showToast, dismissToast }}>{children}</Ctx.Provider>;
+  // Downloads — separate from Likes (online saved list)
+  const [downloadedSongs, setDownloadedSongs] = useState(() => { try { return JSON.parse(localStorage.getItem('downloads')) || []; } catch { return []; } });
+  useEffect(() => { try { localStorage.setItem('downloads', JSON.stringify(downloadedSongs)); } catch {} }, [downloadedSongs]);
+  const toggleDownload = useCallback(songId => {
+    setDownloadedSongs(p => { if (p.includes(songId)) return p.filter(id => id !== songId); return [...p, songId]; });
+  }, []);
+
+  return <Ctx.Provider value={{ currentSong, queue, upNext, isPlaying, volume, boostLevel, bassBoostOn, currentTime, duration, shuffleMode, repeatMode, isExpanded, likedSongs, downloadedSongs, toasts, playSong, togglePlay, playNext, playPrev, seekTo, setVolume, setVolumeBoost, setBassBoost, resetAudio, setEqBand, applyEqPreset, toggleShuffle, cycleRepeat, addToQueue, removeFromQueue, clearQueue, toggleLike, toggleDownload, setExpanded, showToast, dismissToast }}>{children}</Ctx.Provider>;
 }

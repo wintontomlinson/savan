@@ -1,4 +1,4 @@
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Mic2, Volume2, VolumeX, ListMusic, Plus, Check } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Mic2, Volume2, VolumeX, ListMusic, Plus, Check, Download } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { formatDuration } from '../data/mockData';
 import { getLyrics } from '../data/api';
@@ -6,7 +6,7 @@ import SleepTimer from './SleepTimer';
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 
 export default function ExpandedPlayer() {
-  const { currentSong, isPlaying, togglePlay, playNext, playPrev, currentTime, duration, seekTo, shuffleMode, toggleShuffle, repeatMode, cycleRepeat, toggleLike, likedSongs, isExpanded, setExpanded, showToast, queue, volume, setVolume, playSong } = usePlayer();
+  const { currentSong, isPlaying, togglePlay, playNext, playPrev, currentTime, duration, seekTo, shuffleMode, toggleShuffle, repeatMode, cycleRepeat, toggleLike, likedSongs, downloadedSongs, toggleDownload, isExpanded, setExpanded, showToast, queue, volume, setVolume, playSong } = usePlayer();
   
   // Panel state — only one panel can be open at a time
   const [activePanel, setActivePanel] = useState(null); // 'lyrics' | 'queue' | 'volume' | null
@@ -130,6 +130,7 @@ export default function ExpandedPlayer() {
 
   if (!isExpanded || !currentSong) return null;
   const liked = likedSongs.includes(currentSong.id);
+  const downloaded = downloadedSongs.includes(currentSong.id);
   const displayProgress = isDragging ? dragProgress : (duration > 0 ? currentTime / duration : 0);
   const displayTime = isDragging ? dragProgress * duration : currentTime;
   const hasPanel = activePanel !== null;
@@ -349,7 +350,7 @@ export default function ExpandedPlayer() {
           <div className="flex items-center justify-center gap-2.5 max-w-sm mx-auto">
             <ActionPill icon={Mic2} label="Lyrics" active={activePanel === 'lyrics'} onClick={() => togglePanel('lyrics')} />
             <ActionPill icon={ListMusic} label="Queue" active={activePanel === 'queue'} onClick={() => togglePanel('queue')} badge={queue.length > 0 ? queue.length : null} />
-            <ActionPill icon={liked ? Check : Plus} label={liked ? 'Downloaded' : 'Download'} active={liked} onClick={() => toggleLike(currentSong.id)} />
+            <ActionPill icon={downloaded ? Check : Download} label={downloaded ? 'Saved' : 'Download'} active={downloaded} onClick={() => toggleDownload(currentSong.id)} />
             <SleepTimer />
           </div>
         </div>
