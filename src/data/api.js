@@ -237,7 +237,7 @@ export async function downloadSong(song) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${song.title} - ${song.artist}.mp4`;
+    a.download = `${song.title} - ${song.artist}.m4a`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
