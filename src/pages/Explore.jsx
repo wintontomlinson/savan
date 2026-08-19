@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { Loader2, Play } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Loader2, Play, X } from 'lucide-react';
 import { searchSongs } from '../data/api';
 import { usePlayer } from '../context/PlayerContext';
+import SongRow from '../components/SongRow';
 
 const ARTISTS = [
   { name: 'AP Dhillon', img: 'https://c.saavncdn.com/artists/AP_Dhillon_004_20251023102150_500x500.jpg', cat: 'Punjabi' },
@@ -57,30 +58,36 @@ const CATEGORIES = ['All', 'Punjabi', 'Bollywood', 'English', 'Hip-Hop', 'Legend
 
 export default function Explore() {
   const [category, setCategory] = useState('All');
-  const [loadingArtist, setLoadingArtist] = useState(null);
-  const { playSong, showToast } = usePlayer();
+  const [activeArtist, setActiveArtist] = useState(null);
+  const [songs, setSongs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const { playSong } = usePlayer();
+  const songsRef = useRef(null);
 
   const filtered = category === 'All' ? ARTISTS : ARTISTS.filter(a => a.cat === category);
 
-  // One tap = instant play artist's songs
-  const playArtist = async (artist) => {
-    setLoadingArtist(artist.name);
-    showToast(`Playing ${artist.name}...`);
-    const songs = await searchSongs(artist.name, 20) || [];
-    setLoadingArtist(null);
-    if (songs.length > 0) {
-      playSong(songs[0], songs);
-    } else {
-      showToast('No songs found');
-    }
+  const loadArtist = async (artist) => {
+    if (activeArtist === artist.name) { setActiveArtist(null); setSongs([]); return; }
+    setActiveArtist(artist.name);
+    setLoading(true);
+    const s = await searchSongs(artist.name, 20) || [];
+    setSongs(s);
+    setLoading(false);
   };
+
+  // Auto scroll to songs when loaded
+  useEffect(() => {
+    if (songs.length > 0 && songsRef.current) {
+      songsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [songs]);
 
   return (
     <div className="pb-6 pt-2">
       {/* Category Filter */}
       <div className="flex gap-2 mb-4 scroll-x pb-1">
         {CATEGORIES.map(c => (
-          <button key={c} onClick={() => setCategory(c)}
+          <button key={c} onClick={() => { setCategory(c); setActiveArtist(null); setSongs([]); }}
             className={`px-4 py-2 rounded-full text-[13px] font-semibold whitespace-nowrap shrink-0 transition-all ${
               category === c ? 'bg-white text-black' : 'bg-[#1a1a1a] text-[#aaa]'
             }`}
@@ -88,27 +95,60 @@ export default function Explore() {
         ))}
       </div>
 
-      <p className="text-[11px] text-[#666] mb-3 px-1">Tap any artist to play their music instantly</p>
-
-      {/* Artists Grid - big, easy to tap */}
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+      {/* Artists Grid */}
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 mb-5">
         {filtered.map(a => (
-          <button key={a.name} onClick={() => playArtist(a)}
-            className="flex flex-col items-center gap-2 p-2 rounded-2xl btn-press relative">
-            <div className="relative w-full aspect-square">
-              <img src={a.img} alt={a.name} className="w-full h-full rounded-full object-cover ring-1 ring-white/[0.06]" loading="lazy" />
-              {/* Play overlay */}
-              <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black/0 hover:bg-black/30 transition-colors">
-                {loadingArtist === a.name ? (
-                  <Loader2 size={20} className="text-white animate-spin" />
-                ) : (
-                  <Play size={20} className="text-white opacity-0 hover:opacity-100 transition-opacity ml-0.5" fill="white" />
-                )}
-              </div>
-            </div>
-            <p className="text-[11px] font-medium text-[#ccc] text-center truncate w-full">{a.name}</p>
+          <button key={a.name} onClick={() => loadArtist(a)}
+            className={`flex flex-col items-center gap-2 p-2 rounded-2xl btn-press transition-all ${
+              activeArtist === a.name ? 'bg-white/[0.08] ring-1 ring-white/20' : ''
+            }`}>
+            <img src={a.img} alt={a.name}
+              className={`w-full aspect-square rounded-full object-cover transition-all ${
+                activeArtist === a.name ? 'ring-[3px] ring-white' : 'ring-1 ring-white/[0.06]'
+              }`}
+              loading="lazy" />
+            <p className={`text-[11px] font-medium text-center truncate w-full ${
+              activeArtist === a.name ? 'text-white' : 'text-[#aaa]'
+            }`}>{a.name}</p>
           </button>
         ))}
+      </div>
+
+      {/* Songs Section */}
+      <div ref={songsRef}>
+        {loading && (
+          <div className="flex justify-center py-10">
+            <Loader2 size={20} className="text-white animate-spin" />
+          </div>
+        )}
+
+        {!loading && activeArtist && songs.length > 0 && (
+          <div className="animate-in">
+            {/* Artist Header */}
+            <div className="flex items-center justify-between mb-3 px-1">
+              <div className="flex items-center gap-3">
+                <img src={ARTISTS.find(a => a.name === activeArtist)?.img} alt="" className="w-10 h-10 rounded-full object-cover" />
+                <div>
+                  <p className="text-[15px] text-white font-bold">{activeArtist}</p>
+                  <p className="text-[11px] text-[#666]">{songs.length} songs</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => playSong(songs[0], songs)} className="flex items-center gap-1.5 px-4 py-2 bg-white rounded-full text-[12px] text-black font-semibold btn-press">
+                  <Play size={12} fill="black" /> Play All
+                </button>
+                <button onClick={() => { setActiveArtist(null); setSongs([]); }} className="w-8 h-8 rounded-full bg-white/[0.08] flex items-center justify-center btn-press">
+                  <X size={14} className="text-[#aaa]" />
+                </button>
+              </div>
+            </div>
+
+            {/* Song List */}
+            <div className="bg-[#0e0e0e] rounded-2xl overflow-hidden border border-white/[0.04]">
+              {songs.map((s, i) => <SongRow key={s.id} song={s} index={i} songList={songs} />)}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
