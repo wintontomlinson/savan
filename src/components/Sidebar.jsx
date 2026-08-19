@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Compass, Search, Library, Settings, Music, Disc3 } from 'lucide-react';
+import { Home, Compass, Search, Library, Settings, Disc3 } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 
 const nav = [
@@ -17,27 +17,27 @@ export default function Sidebar() {
     <aside className="hidden md:flex flex-col w-[72px] lg:w-[240px] h-full bg-[#040404] border-r border-white/[0.04] fixed left-0 top-0 z-20">
       {/* Brand */}
       <div className="px-4 lg:px-5 py-5 flex items-center gap-2.5">
-        <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-rose-500 to-rose-600 flex items-center justify-center shadow-lg shadow-rose-500/25">
-          <Music size={16} className="text-white" />
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 via-pink-500 to-purple-600 flex items-center justify-center shadow-lg shadow-rose-500/25">
+          <span className="text-[14px] font-black text-white">M</span>
         </div>
-        <span className="hidden lg:block text-[16px] font-bold text-white tracking-tight">Music Area</span>
+        <span className="hidden lg:block text-[17px] font-bold text-white tracking-tight">Musica</span>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-2 lg:px-3 mt-4 space-y-1">
+      <nav className="flex-1 px-2 lg:px-3 mt-2 space-y-0.5">
         {nav.map(item => (
           <NavLink key={item.to} to={item.to} className={({ isActive }) =>
             `flex items-center gap-3 px-3 py-3 rounded-xl text-[13px] font-medium transition-all duration-200 group ${
               isActive
                 ? 'bg-white/[0.08] text-white'
-                : 'text-[#777] hover:text-white hover:bg-white/[0.04]'
+                : 'text-[#666] hover:text-white hover:bg-white/[0.04]'
             }`
           }>
             {({ isActive }) => (
               <>
-                <item.icon size={20} strokeWidth={isActive ? 2 : 1.5} className={isActive ? 'text-rose-400' : ''} />
+                <item.icon size={20} strokeWidth={isActive ? 2.2 : 1.5} className={isActive ? 'text-rose-400' : 'group-hover:text-white/80'} />
                 <span className="hidden lg:block">{item.label}</span>
-                {isActive && <div className="hidden lg:block ml-auto w-1.5 h-1.5 rounded-full bg-rose-400" />}
+                {isActive && <div className="hidden lg:block ml-auto w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />}
               </>
             )}
           </NavLink>
@@ -47,20 +47,20 @@ export default function Sidebar() {
       {/* Now Playing */}
       {currentSong && (
         <div className="px-2 lg:px-3 pb-4 mt-auto">
-          <div className="p-2.5 lg:p-3 bg-white/[0.04] rounded-2xl border border-white/[0.06]">
+          <div className="p-2.5 lg:p-3 bg-gradient-to-br from-white/[0.04] to-white/[0.02] rounded-2xl border border-white/[0.06]">
             <div className="flex items-center gap-2.5">
-              <div className={`w-10 h-10 rounded-xl overflow-hidden shrink-0 ring-1 ring-white/[0.08] ${isPlaying ? 'shadow-lg shadow-rose-500/20' : ''}`}>
+              <div className={`w-10 h-10 rounded-xl overflow-hidden shrink-0 ring-1 ring-white/[0.08] transition-shadow ${isPlaying ? 'shadow-lg shadow-rose-500/20' : ''}`}>
                 <img src={currentSong.thumbnail} alt="" className="w-full h-full object-cover" />
               </div>
               <div className="hidden lg:block min-w-0 flex-1">
-                <p className="text-[11px] font-medium text-white truncate">{currentSong.title}</p>
-                <p className="text-[10px] text-[#666] truncate">{currentSong.artist}</p>
+                <p className="text-[11px] font-semibold text-white truncate">{currentSong.title}</p>
+                <p className="text-[10px] text-white/30 truncate">{currentSong.artist}</p>
               </div>
             </div>
             {isPlaying && (
               <div className="hidden lg:flex items-center gap-1.5 mt-2.5 px-0.5">
-                <Disc3 size={12} className="text-rose-400 animate-[spin_3s_linear_infinite]" />
-                <span className="text-[9px] text-rose-400 font-medium">Now Playing</span>
+                <Disc3 size={11} className="text-rose-400 animate-[spin_3s_linear_infinite]" />
+                <span className="text-[9px] text-rose-400/80 font-medium">Playing</span>
               </div>
             )}
           </div>

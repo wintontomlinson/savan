@@ -197,7 +197,7 @@ export default function Settings() {
 
       {/* About */}
       <Section title="About">
-        <SettingRow icon={Info} label="Music Area" desc="Free, ad-free music streaming">
+        <SettingRow icon={Info} label="Musica" desc="Free, ad-free music streaming">
           <span className="text-[11px] text-[#555] bg-white/[0.04] px-2 py-1 rounded-lg">v2.0.0</span>
         </SettingRow>
       </Section>
