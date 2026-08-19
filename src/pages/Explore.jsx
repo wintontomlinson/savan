@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Loader2, Play, X, Shuffle } from 'lucide-react';
+import { Loader2, Play, X, Shuffle, ChevronRight } from 'lucide-react';
 import { searchSongs } from '../data/api';
 import { usePlayer } from '../context/PlayerContext';
 import SongRow from '../components/SongRow';
@@ -54,17 +54,15 @@ const ARTISTS = [
   { name: 'Mukesh', img: 'https://c.saavncdn.com/artists/Mukesh_500x500.jpg', cat: 'Legends' },
 ];
 
-const CATEGORIES = ['All', 'Punjabi', 'Bollywood', 'English', 'Hip-Hop', 'Legends'];
+const CATEGORIES = ['Punjabi', 'Bollywood', 'English', 'Hip-Hop', 'Legends'];
 
 export default function Explore() {
-  const [category, setCategory] = useState('All');
   const [activeArtist, setActiveArtist] = useState(null);
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [expanded, setExpandedCats] = useState({});
   const { playSong } = usePlayer();
   const songsRef = useRef(null);
-
-  const filtered = category === 'All' ? ARTISTS : ARTISTS.filter(a => a.cat === category);
 
   const loadArtist = async (artist) => {
     if (activeArtist === artist.name) { setActiveArtist(null); setSongs([]); return; }
@@ -86,78 +84,126 @@ export default function Explore() {
     playSong(shuffled[0], shuffled);
   };
 
+  const toggleExpand = (cat) => {
+    setExpandedCats(prev => ({ ...prev, [cat]: !prev[cat] }));
+  };
+
   return (
-    <div className="pb-6 pt-1">
-      {/* Category chips */}
-      <div className="flex gap-2 mb-5 scroll-x pb-1">
-        {CATEGORIES.map(c => (
-          <button key={c} onClick={() => { setCategory(c); setActiveArtist(null); setSongs([]); }}
-            className={`px-4 py-2.5 rounded-full text-[13px] font-semibold whitespace-nowrap shrink-0 transition-all duration-200 ${
-              category === c ? 'bg-white text-black shadow-lg shadow-white/10' : 'bg-[#161616] text-[#bbb] hover:bg-[#1e1e1e]'
-            }`}>{c}</button>
-        ))}
+    <div className="pb-6 pt-2 page-wrapper">
+      {/* Page Title */}
+      <div className="mb-6">
+        <h1 className="text-[22px] sm:text-[26px] font-bold text-white">Explore</h1>
+        <p className="text-[13px] text-white/40 mt-1">Discover artists you love</p>
       </div>
 
-      {/* Artist cards - horizontal per row, bigger, cleaner */}
-      <div className="space-y-2">
-        {filtered.map(a => (
-          <button key={a.name} onClick={() => loadArtist(a)}
-            className={`flex items-center gap-4 w-full p-3 rounded-2xl transition-all duration-200 text-left ${
-              activeArtist === a.name ? 'bg-white/[0.07]' : 'hover:bg-white/[0.03] active:bg-white/[0.05]'
-            }`}>
-            <img src={a.img} alt={a.name} className={`w-14 h-14 rounded-full object-cover shrink-0 transition-all duration-200 ${
-              activeArtist === a.name ? 'ring-[3px] ring-white shadow-lg shadow-white/20' : 'ring-1 ring-white/[0.08]'
-            }`} loading="lazy" />
-            <div className="flex-1 min-w-0">
-              <p className={`text-[15px] font-semibold truncate transition-colors ${activeArtist === a.name ? 'text-white' : 'text-[#eee]'}`}>{a.name}</p>
-              <p className="text-[11px] text-[#666] mt-0.5">{a.cat}</p>
+      {/* Songs Panel — shows when artist selected */}
+      {activeArtist && (
+        <div ref={songsRef} className="mb-8 animate-scale">
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 size={22} className="text-white/60 animate-spin" />
             </div>
-            {activeArtist === a.name ? (
-              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shrink-0">
-                <Play size={14} className="text-black ml-0.5" fill="black" />
-              </div>
-            ) : (
-              <Play size={16} className="text-[#555] shrink-0" />
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Songs Panel */}
-      <div ref={songsRef}>
-        {loading && <div className="flex justify-center py-12 mt-4"><Loader2 size={20} className="text-white animate-spin" /></div>}
-
-        {!loading && activeArtist && songs.length > 0 && (
-          <div className="mt-5 animate-in">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4 px-1">
-              <div className="flex items-center gap-3 min-w-0">
-                <img src={ARTISTS.find(a => a.name === activeArtist)?.img} alt="" className="w-11 h-11 rounded-full object-cover ring-2 ring-white/10 shrink-0" />
-                <div className="min-w-0">
-                  <h2 className="text-[16px] font-bold text-white truncate">{activeArtist}</h2>
-                  <p className="text-[11px] text-[#777]">{songs.length} songs</p>
+          ) : songs.length > 0 && (
+            <div>
+              {/* Header */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <img src={ARTISTS.find(a => a.name === activeArtist)?.img} alt="" className="w-12 h-12 rounded-full object-cover ring-2 ring-white/10 shrink-0" />
+                  <div className="min-w-0">
+                    <h2 className="text-[17px] font-bold text-white truncate">{activeArtist}</h2>
+                    <p className="text-[11px] text-white/40">{songs.length} songs</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button onClick={() => shufflePlay(songs)} className="w-9 h-9 rounded-full bg-white/[0.08] flex items-center justify-center btn-press hover:bg-white/[0.12] transition-colors">
+                    <Shuffle size={14} className="text-white" />
+                  </button>
+                  <button onClick={() => playSong(songs[0], songs)} className="flex items-center gap-1.5 px-4 py-2.5 bg-white rounded-full text-[12px] text-black font-bold btn-press shadow-md hover:shadow-lg transition-shadow">
+                    <Play size={12} fill="black" /> Play All
+                  </button>
+                  <button onClick={() => { setActiveArtist(null); setSongs([]); }} className="w-9 h-9 rounded-full bg-white/[0.08] flex items-center justify-center btn-press hover:bg-white/[0.12] transition-colors">
+                    <X size={14} className="text-white/60" />
+                  </button>
                 </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button onClick={() => shufflePlay(songs)} className="w-9 h-9 rounded-full bg-white/[0.08] flex items-center justify-center btn-press">
-                  <Shuffle size={14} className="text-white" />
-                </button>
-                <button onClick={() => playSong(songs[0], songs)} className="flex items-center gap-1.5 px-4 py-2.5 bg-white rounded-full text-[12px] text-black font-bold btn-press shadow-md">
-                  <Play size={12} fill="black" /> Play
-                </button>
-                <button onClick={() => { setActiveArtist(null); setSongs([]); }} className="w-9 h-9 rounded-full bg-white/[0.08] flex items-center justify-center btn-press">
-                  <X size={14} className="text-[#aaa]" />
-                </button>
+
+              {/* Song list */}
+              <div className="bg-[#0c0c0c] rounded-2xl overflow-hidden border border-white/[0.04]">
+                {songs.map((s, i) => <SongRow key={s.id} song={s} index={i} songList={songs} />)}
               </div>
             </div>
+          )}
+        </div>
+      )}
 
-            {/* Song list */}
-            <div className="bg-[#0c0c0c] rounded-2xl overflow-hidden border border-white/[0.04]">
-              {songs.map((s, i) => <SongRow key={s.id} song={s} index={i} songList={songs} />)}
-            </div>
-          </div>
-        )}
+      {/* Categorized Artist Grid Sections */}
+      <div className="space-y-8">
+        {CATEGORIES.map(cat => {
+          const artists = ARTISTS.filter(a => a.cat === cat);
+          const isExpanded = expanded[cat];
+          const visible = isExpanded ? artists : artists.slice(0, 8);
+
+          return (
+            <section key={cat} className="animate-in">
+              {/* Section Header */}
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-[16px] sm:text-[18px] font-bold text-white">{cat}</h2>
+                {artists.length > 8 && (
+                  <button onClick={() => toggleExpand(cat)} className="flex items-center gap-1 text-[12px] text-white/40 hover:text-white/70 transition-colors duration-200 btn-press">
+                    <span>{isExpanded ? 'Show less' : 'See all'}</span>
+                    <ChevronRight size={14} className={`transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} />
+                  </button>
+                )}
+              </div>
+
+              {/* Artist Grid */}
+              <div className="artist-grid">
+                {visible.map(a => (
+                  <ArtistCard 
+                    key={a.name} 
+                    artist={a} 
+                    isActive={activeArtist === a.name}
+                    onClick={() => loadArtist(a)} 
+                  />
+                ))}
+              </div>
+            </section>
+          );
+        })}
       </div>
     </div>
+  );
+}
+
+// Clean artist card for the grid
+function ArtistCard({ artist, isActive, onClick }) {
+  return (
+    <button onClick={onClick} className="flex flex-col items-center gap-2.5 group transition-all duration-200 active:scale-95">
+      <div className="relative w-full aspect-square">
+        <img 
+          src={artist.img} 
+          alt={artist.name} 
+          className={`w-full h-full rounded-full object-cover transition-all duration-300 ${
+            isActive 
+              ? 'ring-[3px] ring-rose-400 shadow-lg shadow-rose-500/20 scale-[0.95]' 
+              : 'ring-1 ring-white/[0.06] group-hover:ring-white/[0.15] group-hover:scale-[1.03]'
+          }`} 
+          loading="lazy" 
+        />
+        {/* Play overlay on hover */}
+        <div className={`absolute inset-0 rounded-full flex items-center justify-center transition-all duration-200 ${
+          isActive ? 'bg-black/30 opacity-100' : 'bg-black/0 opacity-0 group-hover:bg-black/30 group-hover:opacity-100'
+        }`}>
+          <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-200 ${
+            isActive ? 'bg-rose-500 scale-100' : 'bg-white scale-75 group-hover:scale-100'
+          }`}>
+            <Play size={13} className={isActive ? 'text-white ml-0.5' : 'text-black ml-0.5'} fill={isActive ? 'white' : 'black'} />
+          </div>
+        </div>
+      </div>
+      <p className={`text-[11px] sm:text-[12px] font-medium text-center leading-tight truncate w-full px-1 transition-colors duration-200 ${
+        isActive ? 'text-rose-400' : 'text-white/80 group-hover:text-white'
+      }`}>{artist.name}</p>
+    </button>
   );
 }

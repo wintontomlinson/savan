@@ -10,31 +10,50 @@ export default function SongRow({ song, index, songList = [] }) {
   const liked = likedSongs.includes(song.id);
 
   return (
-    <div className={`group flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-3 rounded-xl transition-all duration-150 cursor-pointer animate-in ${isActive ? 'bg-rose-500/[0.06] ring-1 ring-rose-500/10' : 'hover:bg-white/[0.03]'}`}
-      onClick={() => playSong(song, songList)} style={{ animationDelay: `${index * 30}ms` }}>
+    <div className={`group flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-3 transition-all duration-200 cursor-pointer ripple-effect ${
+      isActive ? 'bg-rose-500/[0.06]' : 'hover:bg-white/[0.04] active:bg-white/[0.06]'
+    }`}
+      onClick={() => playSong(song, songList)} 
+      style={{ animationDelay: `${Math.min(index * 25, 300)}ms` }}>
+      
       {/* # or EQ */}
       <div className="w-6 shrink-0 flex justify-center">
-        {isActive && isPlaying ? <Equalizer /> :
-          <span className={`text-[12px] tabular-nums group-hover:hidden ${isActive ? 'text-rose-400 font-semibold' : 'text-[#555]'}`}>{index + 1}</span>}
-        {!(isActive && isPlaying) && <Play size={12} className="hidden group-hover:block text-white" fill="white" />}
+        {isActive && isPlaying ? <Equalizer /> : (
+          <>
+            <span className={`text-[12px] tabular-nums group-hover:hidden ${isActive ? 'text-rose-400 font-semibold' : 'text-white/25'}`}>{index + 1}</span>
+            {!(isActive && isPlaying) && <Play size={12} className="hidden group-hover:block text-white" fill="white" />}
+          </>
+        )}
       </div>
+
       {/* Art */}
-      <img src={song.thumbnail} alt="" className="w-11 h-11 rounded-lg object-cover shrink-0 shadow-sm ring-1 ring-white/[0.05] transition-transform duration-200 group-hover:scale-105" loading="lazy" />
+      <div className="relative shrink-0">
+        <img src={song.thumbnail} alt="" className={`w-11 h-11 rounded-lg object-cover shadow-sm ring-1 transition-all duration-300 group-hover:scale-[1.04] ${
+          isActive ? 'ring-rose-500/20 shadow-rose-500/10' : 'ring-white/[0.05]'
+        }`} loading="lazy" />
+        {isActive && isPlaying && <div className="absolute -inset-0.5 rounded-lg bg-rose-500/10 blur-sm -z-10 playing-pulse" />}
+      </div>
+
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className={`text-[13px] font-medium truncate leading-tight ${isActive ? 'text-rose-400' : 'text-white'}`}>{song.title}</p>
-        <p className="text-[11px] text-[#777] truncate mt-0.5">{song.artist}</p>
+        <p className={`text-[13px] font-medium truncate leading-tight transition-colors duration-200 ${isActive ? 'text-rose-400' : 'text-white group-hover:text-white'}`}>{song.title}</p>
+        <p className="text-[11px] text-white/35 truncate mt-0.5">{song.artist}</p>
       </div>
+
       {/* Duration */}
-      <span className="text-[11px] text-[#555] tabular-nums shrink-0 hidden sm:block">{formatDuration(song.duration)}</span>
+      <span className="text-[11px] text-white/20 tabular-nums shrink-0 hidden sm:block">{formatDuration(song.duration)}</span>
+
       {/* Download */}
       <button onClick={async e => { e.stopPropagation(); showToast('Downloading...'); const ok = await downloadSong(song); showToast(ok ? 'Downloaded ✓' : 'Failed', ok ? 'success' : 'error'); }}
-        className="p-1.5 shrink-0 text-[#444] hover:text-white opacity-0 group-hover:opacity-100 transition-all duration-150 btn-press">
+        className="p-1.5 shrink-0 text-white/20 hover:text-white opacity-0 group-hover:opacity-100 transition-all duration-200 active:scale-90 rounded-full hover:bg-white/[0.06]">
         <Download size={13} />
       </button>
+
       {/* Like */}
       <button onClick={e => { e.stopPropagation(); toggleLike(song.id); }}
-        className={`p-1.5 shrink-0 transition-all duration-150 btn-press ${liked ? 'text-rose-400' : 'text-[#444] sm:opacity-0 sm:group-hover:opacity-100 hover:text-white'}`}>
+        className={`p-1.5 shrink-0 transition-all duration-200 active:scale-90 rounded-full ${
+          liked ? 'text-rose-400 hover:bg-rose-500/10' : 'text-white/20 sm:opacity-0 sm:group-hover:opacity-100 hover:text-white hover:bg-white/[0.06]'
+        }`}>
         <Heart size={13} fill={liked ? 'currentColor' : 'none'} strokeWidth={liked ? 0 : 1.5} />
       </button>
     </div>

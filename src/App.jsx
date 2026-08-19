@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { PlayerProvider } from './context/PlayerContext';
 import { AuthProvider } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
@@ -13,6 +13,21 @@ import Library from './pages/Library';
 import SearchResults from './pages/SearchResults';
 import Settings from './pages/Settings';
 
+function AnimatedRoutes() {
+  const location = useLocation();
+  return (
+    <div key={location.pathname} className="page-wrapper">
+      <Routes location={location}>
+        <Route path="/" element={<Home />} />
+        <Route path="/explore" element={<Explore />} />
+        <Route path="/library" element={<Library />} />
+        <Route path="/search" element={<SearchResults />} />
+        <Route path="/settings" element={<Settings />} />
+      </Routes>
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <AuthProvider><PlayerProvider><BrowserRouter>
@@ -22,13 +37,7 @@ export default function App() {
           <Header />
           <main className="flex-1 min-h-0 scroll-y pb-32 md:pb-24 px-4 sm:px-6 lg:px-8 xl:px-10">
             <div className="max-w-[1400px] mx-auto">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/explore" element={<Explore />} />
-                <Route path="/library" element={<Library />} />
-                <Route path="/search" element={<SearchResults />} />
-                <Route path="/settings" element={<Settings />} />
-              </Routes>
+              <AnimatedRoutes />
             </div>
           </main>
         </div>
