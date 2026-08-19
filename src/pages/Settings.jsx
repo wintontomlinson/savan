@@ -136,6 +136,11 @@ export default function Settings() {
               </div>
             ))}
           </div>
+          {/* Reset */}
+          <button onClick={() => { handlePreset(EQ_PRESETS[0]); showToast('EQ Reset'); }}
+            className="mt-4 w-full py-2.5 bg-white/[0.04] hover:bg-white/[0.08] rounded-xl text-[12px] text-[#aaa] font-medium transition-colors btn-press">
+            Reset EQ
+          </button>
         </div>
       </Section>
 

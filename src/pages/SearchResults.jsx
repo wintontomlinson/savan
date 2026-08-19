@@ -131,9 +131,15 @@ export default function SearchResults() {
           {/* Recent */}
           {recentArtists.length > 0 && (
             <div className="mb-7">
-              <div className="flex items-center gap-2 mb-3">
-                <Clock size={14} className="text-[#666]" />
-                <p className="text-[13px] text-white font-semibold">Recent</p>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Clock size={14} className="text-[#666]" />
+                  <p className="text-[13px] text-white font-semibold">Recent</p>
+                </div>
+                <button onClick={() => { localStorage.removeItem('ma_history'); showToast('History cleared'); window.location.reload(); }}
+                  className="text-[11px] text-[#666] hover:text-white transition-colors btn-press">
+                  Clear all
+                </button>
               </div>
               <div className="flex flex-wrap gap-2">
                 {recentArtists.map(a => (
@@ -175,10 +181,16 @@ export default function SearchResults() {
               <p className="text-[11px] text-[#666] mt-0.5">{loading ? 'Searching...' : songs.length > 0 ? `${songs.length} songs` : ''}</p>
             </div>
             {songs.length > 0 && (
-              <button onClick={() => playSong(songs[0], songs)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-white text-black text-[12px] font-semibold rounded-full btn-press shadow-lg shadow-white/10 hover:shadow-white/20 transition-shadow">
-                <Play size={12} fill="black" /> Play All
-              </button>
+              <div className="flex items-center gap-2">
+                <button onClick={() => { setQuery(''); setParams({}); setSongs([]); setError(false); }}
+                  className="px-3 py-2 bg-white/[0.06] hover:bg-white/[0.1] text-[11px] text-[#aaa] font-medium rounded-full btn-press transition-colors">
+                  Clear
+                </button>
+                <button onClick={() => playSong(songs[0], songs)}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-white text-black text-[12px] font-semibold rounded-full btn-press shadow-lg shadow-white/10 hover:shadow-white/20 transition-shadow">
+                  <Play size={12} fill="black" /> Play All
+                </button>
+              </div>
             )}
           </div>
 
