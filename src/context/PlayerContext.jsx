@@ -517,8 +517,14 @@ export function PlayerProvider({ children }) {
 
     if (currentSong) {
       const fresh = await getNextSongs(currentSong);
-      if (fresh.length > 0) { setQueue(fresh.slice(1)); setUpNext(fresh); playDirect(fresh[0]); return; }
+      // Filter out the current song from fresh results
+      const filtered = fresh.filter(s => s.id !== currentSong.id);
+      if (filtered.length > 0) { setQueue(filtered.slice(1)); setUpNext(filtered); playDirect(filtered[0]); return; }
       resetPlayed();
+      // Try again after reset
+      const retry = await getNextSongs(currentSong);
+      const retryFiltered = retry.filter(s => s.id !== currentSong.id);
+      if (retryFiltered.length > 0) { setQueue(retryFiltered.slice(1)); setUpNext(retryFiltered); playDirect(retryFiltered[0]); return; }
     }
     setIsPlaying(false);
   }, [shuffleMode, repeatMode, currentSong]);

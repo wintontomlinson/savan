@@ -75,7 +75,7 @@ export default function Explore() {
   const [expanded, setExpandedCats] = useState({});
   const [browseData, setBrowseData] = useState({});
   const [browseLoading, setBrowseLoading] = useState({});
-  const { playSong } = usePlayer();
+  const { playSong, currentSong } = usePlayer();
   const songsRef = useRef(null);
 
   const loadArtist = async (artist) => {
@@ -89,10 +89,12 @@ export default function Explore() {
 
   const loadBrowse = async (section) => {
     if (browseData[section.id]) {
-      // Already loaded — shuffle play
+      // Already loaded — shuffle play (exclude currently playing song)
       const data = browseData[section.id];
       if (data.length > 0) {
-        const shuffled = [...data].sort(() => Math.random() - 0.5);
+        const filtered = data.filter(s => s.id !== (currentSong?.id || ''));
+        const toPlay = filtered.length > 0 ? filtered : data;
+        const shuffled = [...toPlay].sort(() => Math.random() - 0.5);
         playSong(shuffled[0], shuffled);
       }
       return;
@@ -106,7 +108,7 @@ export default function Explore() {
     }
     setBrowseData(p => ({ ...p, [section.id]: results }));
     setBrowseLoading(p => ({ ...p, [section.id]: false }));
-    // Auto shuffle play on first load too
+    // Auto shuffle play on first load
     if (results.length > 0) {
       const shuffled = [...results].sort(() => Math.random() - 0.5);
       playSong(shuffled[0], shuffled);
