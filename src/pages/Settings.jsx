@@ -15,7 +15,7 @@ const EQ_PRESETS = [
 const EQ_BANDS = ['60Hz', '250Hz', '1kHz', '4kHz', '12kHz'];
 
 export default function Settings() {
-  const { volume, setVolume, boostLevel, setVolumeBoost, bassBoostOn, setBassBoost, applyEqPreset, setEqBand, showToast } = usePlayer();
+  const { volume, setVolume, boostLevel, setVolumeBoost, bassBoostOn, setBassBoost, resetAudio, applyEqPreset, setEqBand, showToast } = usePlayer();
   const [crossfade, setCrossfade] = useState(() => parseInt(localStorage.getItem('crossfade_dur') || '5'));
   const [streamQuality, setStreamQuality] = useState(() => getQuality());
   const [notifications, setNotifications] = useState(true);
@@ -87,6 +87,10 @@ export default function Settings() {
           {boostLevel > 100 && (
             <p className="text-[10px] text-orange-400/80 mt-2">Volume above 100% may distort audio</p>
           )}
+          <button onClick={() => { resetAudio(); showToast('Audio reset'); }}
+            className="mt-3 w-full py-2.5 bg-white/[0.04] hover:bg-white/[0.08] rounded-xl text-[12px] text-[#aaa] font-medium transition-colors btn-press">
+            Reset Audio
+          </button>
         </div>
       </Section>
 

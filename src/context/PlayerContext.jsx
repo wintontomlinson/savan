@@ -20,7 +20,7 @@ export function PlayerProvider({ children }) {
   const [queue, _setQueue] = useState([]);
   const [upNext, setUpNext] = useState([]);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, _setVolume] = useState(() => { try { return parseFloat(localStorage.getItem('vol')) || 0.7; } catch { return 0.7; } });
+  const [volume, _setVolume] = useState(0.7);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [shuffleMode, setShuffle] = useState(false);
@@ -55,7 +55,7 @@ export function PlayerProvider({ children }) {
   const gainRef = useRef(null);
   const eqFiltersRef = useRef([]);
   const enhancedRef = useRef(false);
-  const [boostLevel, setBoostLevel] = useState(() => { try { return parseFloat(localStorage.getItem('boost_pct') || '100'); } catch { return 100; } });
+  const [boostLevel, setBoostLevel] = useState(100);
 
   // Initialize audio processing chain (called on user action only)
   const initEnhancement = useCallback(() => {
@@ -124,7 +124,6 @@ export function PlayerProvider({ children }) {
   // Set volume boost (0-200%)
   const setVolumeBoost = useCallback((pct) => {
     setBoostLevel(pct);
-    try { localStorage.setItem('boost_pct', pct.toString()); } catch {}
     
     if (pct > 100) {
       // Need AudioContext for boost beyond 100%
@@ -173,10 +172,9 @@ export function PlayerProvider({ children }) {
   }, [initEnhancement]);
 
   // Bass Boost — pumps 60Hz and 250Hz
-  const [bassBoostOn, setBassBoostOn] = useState(() => localStorage.getItem('bass_boost') === 'true');
+  const [bassBoostOn, setBassBoostOn] = useState(false);
   const setBassBoost = useCallback((on) => {
     setBassBoostOn(on);
-    localStorage.setItem('bass_boost', on.toString());
     if (!enhancedRef.current) {
       const ok = initEnhancement();
       if (!ok) return;
@@ -190,6 +188,20 @@ export function PlayerProvider({ children }) {
   const historyStack = useRef([]);
 
   const cur = () => activeRef.current === 'A' ? audioA.current : audioB.current;
+
+  // Reset audio settings to defaults
+  const resetAudio = useCallback(() => {
+    setBoostLevel(100);
+    setBassBoostOn(false);
+    _setVolume(0.7);
+    volumeRef.current = 0.7;
+    const a = activeRef.current === 'A' ? audioA.current : audioB.current;
+    if (a) a.volume = 0.7;
+    if (gainRef.current) gainRef.current.gain.value = 1;
+    if (eqFiltersRef.current.length > 0) {
+      eqFiltersRef.current.forEach(f => { f.gain.value = 0; });
+    }
+  }, []);
 
   const playNextRef = useRef(null);
 
@@ -244,7 +256,6 @@ export function PlayerProvider({ children }) {
   }, []);
 
   useEffect(() => { try { localStorage.setItem('liked', JSON.stringify(likedSongs)); } catch {} }, [likedSongs]);
-  useEffect(() => { try { localStorage.setItem('vol', volume.toString()); } catch {} }, [volume]);
   useEffect(() => { volumeRef.current = volume; }, [volume]);
   // Update media session playback state
   useEffect(() => { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused'; }, [isPlaying]);
@@ -459,5 +470,5 @@ export function PlayerProvider({ children }) {
     setLikedSongs(p => { if (p.includes(songId)) { showToast('Removed'); return p.filter(id => id !== songId); } showToast('Liked ❤️', 'success'); return [...p, songId]; });
   }, [showToast]);
 
-  return <Ctx.Provider value={{ currentSong, queue, upNext, isPlaying, volume, boostLevel, bassBoostOn, currentTime, duration, shuffleMode, repeatMode, isExpanded, likedSongs, toasts, playSong, togglePlay, playNext, playPrev, seekTo, setVolume, setVolumeBoost, setBassBoost, setEqBand, applyEqPreset, toggleShuffle, cycleRepeat, addToQueue, removeFromQueue, clearQueue, toggleLike, setExpanded, showToast, dismissToast }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ currentSong, queue, upNext, isPlaying, volume, boostLevel, bassBoostOn, currentTime, duration, shuffleMode, repeatMode, isExpanded, likedSongs, toasts, playSong, togglePlay, playNext, playPrev, seekTo, setVolume, setVolumeBoost, setBassBoost, resetAudio, setEqBand, applyEqPreset, toggleShuffle, cycleRepeat, addToQueue, removeFromQueue, clearQueue, toggleLike, setExpanded, showToast, dismissToast }}>{children}</Ctx.Provider>;
 }
