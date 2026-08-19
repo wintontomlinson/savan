@@ -15,7 +15,7 @@ const MOODS = [
   { label: 'Workout', query: 'workout gym motivation hindi', icon: '🔥' },
   { label: 'Romance', query: 'romantic hindi love songs', icon: '💕' },
   { label: 'Drive', query: 'road trip hindi songs', icon: '🛣️' },
-  { label: 'Sleep', query: 'sleep calm peaceful hindi', icon: '🌙' },
+  { label: 'Sleep', query: 'lori neend raat hindi songs', icon: '🌙' },
   { label: 'Focus', query: 'study focus instrumental', icon: '🎯' },
   { label: 'Devotional', query: 'bhajan aarti devotional hindi', icon: '🙏' },
   { label: 'Retro', query: '90s bollywood old songs classic', icon: '📻' },
