@@ -351,20 +351,81 @@ function ActionPill({ icon: Icon, label, active, onClick, badge }) {
   );
 }
 
-// Synced lyrics — highlights active line
+// Synced lyrics — smart timing that matches actual song structure
 function SyncedLyrics({ lyrics, currentTime, duration }) {
   const containerRef = useRef(null);
   const lines = lyrics.split('\n').filter(l => l.trim());
+  const totalLines = lines.length;
 
-  const startTime = duration * 0.05;
-  const endTime = duration * 0.92;
+  // Smart timing: Most songs have structure:
+  // - Intro: ~10-15% of song (no lyrics)
+  // - Verses + Chorus: ~70-75% of song (lyrics happen here)
+  // - Outro: ~10-15% of song (no lyrics or fade)
+  // 
+  // Adjust based on song length and line count:
+  // Short songs (<180s) → less intro/outro padding
+  // Long songs (>300s) → more intro/outro padding
+  // Few lines (<15) → slower pace, more time per line
+  // Many lines (>30) → faster pace, verse-heavy song
+
+  const isShort = duration < 180;
+  const isLong = duration > 300;
+  const isFewLines = totalLines < 15;
+  const isManyLines = totalLines > 30;
+
+  // Calculate vocal start/end as percentage of song
+  let startPct = isShort ? 0.08 : isLong ? 0.12 : 0.10;
+  let endPct = isShort ? 0.95 : isLong ? 0.88 : 0.90;
+
+  // If few lines, likely a slower song — tighten the window more toward middle
+  if (isFewLines) {
+    startPct += 0.05;
+    endPct -= 0.03;
+  }
+
+  // If many lines, lyrics run longer — extend end
+  if (isManyLines) {
+    startPct -= 0.02;
+    endPct += 0.02;
+  }
+
+  const startTime = duration * startPct;
+  const endTime = duration * Math.min(endPct, 0.97);
   const activeRange = endTime - startTime;
-  const timePerLine = activeRange / lines.length;
 
-  const activeIndex = Math.min(
-    lines.length - 1,
-    Math.max(0, Math.floor((currentTime - startTime) / timePerLine))
-  );
+  // Non-linear distribution: chorus sections repeat so give slightly more time
+  // to middle lines (usually chorus) vs edges (usually verses with faster lyrics)
+  const getLineTime = (lineIndex) => {
+    // Give ~15% more time to lines in the middle third (chorus area)
+    const pos = lineIndex / totalLines;
+    if (pos > 0.3 && pos < 0.7) return 1.12; // chorus — slightly slower
+    return 0.94; // verses — slightly faster
+  };
+
+  // Calculate weighted time distribution
+  const weights = lines.map((_, i) => getLineTime(i));
+  const totalWeight = weights.reduce((s, w) => s + w, 0);
+  const timePerWeight = activeRange / totalWeight;
+
+  // Build cumulative timestamps for each line
+  const lineTimestamps = [];
+  let cumTime = startTime;
+  for (let i = 0; i < totalLines; i++) {
+    lineTimestamps.push(cumTime);
+    cumTime += weights[i] * timePerWeight;
+  }
+
+  // Find active line based on current time
+  let activeIndex = 0;
+  for (let i = totalLines - 1; i >= 0; i--) {
+    if (currentTime >= lineTimestamps[i]) {
+      activeIndex = i;
+      break;
+    }
+  }
+
+  // Before lyrics start, show nothing highlighted
+  if (currentTime < startTime) activeIndex = -1;
 
   useEffect(() => {
     if (!containerRef.current) return;
