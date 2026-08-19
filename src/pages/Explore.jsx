@@ -6,14 +6,18 @@ import SongRow from '../components/SongRow';
 import SongCard from '../components/SongCard';
 import HorizontalScroll from '../components/HorizontalScroll';
 
-// Browse sections — all using real JioSaavn playlist IDs
+// Browse sections — diverse genres, no overlap
 const BROWSE_SECTIONS = [
-  { id: 'new', label: 'New Releases', icon: Disc3, playlistId: '1300709425', color: 'from-rose-500/20 to-pink-600/10', iconColor: 'text-rose-400' },
-  { id: 'charts', label: 'Top Charts', icon: TrendingUp, playlistId: '110858205', color: 'from-amber-500/20 to-orange-600/10', iconColor: 'text-amber-400' },
-  { id: 'playlists', label: 'Romantic', icon: ListMusic, playlistId: '1302033575', color: 'from-emerald-500/20 to-green-600/10', iconColor: 'text-emerald-400' },
-  { id: 'dance', label: 'Dance', icon: Mic, playlistId: '932189657', color: 'from-purple-500/20 to-violet-600/10', iconColor: 'text-purple-400' },
-  { id: 'chill', label: 'Chill', icon: Users, playlistId: '1079336813', color: 'from-blue-500/20 to-cyan-600/10', iconColor: 'text-blue-400' },
-  { id: 'punjabi', label: 'Punjabi Hits', icon: Radio, playlistId: '4144832', color: 'from-indigo-500/20 to-purple-600/10', iconColor: 'text-indigo-400' },
+  { id: 'trending', label: 'Trending Now', icon: TrendingUp, playlistId: '1219706044', color: 'from-rose-500/20 to-pink-600/10', iconColor: 'text-rose-400' },
+  { id: 'dance', label: 'Dance Hits', icon: Disc3, playlistId: '1219706999', color: 'from-amber-500/20 to-orange-600/10', iconColor: 'text-amber-400' },
+  { id: 'retro', label: '90s Bollywood', icon: Radio, playlistId: '1167751266', color: 'from-emerald-500/20 to-green-600/10', iconColor: 'text-emerald-400' },
+  { id: 'english', label: 'English Pop', icon: Users, playlistId: '303128179', color: 'from-blue-500/20 to-cyan-600/10', iconColor: 'text-blue-400' },
+  { id: 'lofi', label: 'Lo-Fi Chill', icon: ListMusic, playlistId: '1079336813', color: 'from-purple-500/20 to-violet-600/10', iconColor: 'text-purple-400' },
+  { id: 'hiphop', label: 'Hip-Hop', icon: Mic, playlistId: '1265128247', color: 'from-indigo-500/20 to-purple-600/10', iconColor: 'text-indigo-400' },
+  { id: 'sad', label: 'Sad Songs', icon: ListMusic, playlistId: '802336660', color: 'from-sky-500/20 to-blue-600/10', iconColor: 'text-sky-400' },
+  { id: 'workout', label: 'Workout', icon: TrendingUp, playlistId: '156710699', color: 'from-orange-500/20 to-red-600/10', iconColor: 'text-orange-400' },
+  { id: 'sufi', label: 'Sufi', icon: Radio, playlistId: '1262711873', color: 'from-teal-500/20 to-emerald-600/10', iconColor: 'text-teal-400' },
+  { id: 'punjabi', label: 'Punjabi Hits', icon: Disc3, playlistId: '4144832', color: 'from-pink-500/20 to-rose-600/10', iconColor: 'text-pink-400' },
 ];
 
 const ARTISTS = [
@@ -145,7 +149,7 @@ export default function Explore() {
 
       {/* Browse Categories Grid */}
       <section className="mb-8">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
           {BROWSE_SECTIONS.map(sec => (
             <button key={sec.id} onClick={() => loadBrowse(sec, true)}
               className={`relative overflow-hidden rounded-2xl p-4 text-left transition-all duration-200 active:scale-[0.97] border border-white/[0.04] hover:border-white/[0.08] bg-gradient-to-br ${sec.color}`}>
