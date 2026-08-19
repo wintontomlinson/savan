@@ -15,7 +15,7 @@ const EQ_PRESETS = [
 const EQ_BANDS = ['60Hz', '250Hz', '1kHz', '4kHz', '12kHz'];
 
 export default function Settings() {
-  const { volume, setVolume, boostLevel, setVolumeBoost, applyEqPreset, setEqBand, showToast } = usePlayer();
+  const { volume, setVolume, boostLevel, setVolumeBoost, bassBoostOn, setBassBoost, applyEqPreset, setEqBand, showToast } = usePlayer();
   const [crossfade, setCrossfade] = useState(() => parseInt(localStorage.getItem('crossfade_dur') || '5'));
   const [streamQuality, setStreamQuality] = useState(() => getQuality());
   const [notifications, setNotifications] = useState(true);
@@ -87,6 +87,22 @@ export default function Settings() {
           {boostLevel > 100 && (
             <p className="text-[10px] text-orange-400/80 mt-2">Volume above 100% may distort audio</p>
           )}
+        </div>
+      </Section>
+
+      {/* Bass Boost */}
+      <Section title="Bass Boost">
+        <div className="flex items-center justify-between px-4 py-4">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${bassBoostOn ? 'bg-rose-500/20' : 'bg-white/[0.05]'}`}>
+              <span className="text-[18px]">🔊</span>
+            </div>
+            <div>
+              <p className="text-[13px] text-white font-medium">Bass Boost</p>
+              <p className="text-[11px] text-[#555]">Extra low-end punch</p>
+            </div>
+          </div>
+          <Toggle on={bassBoostOn} onChange={(v) => { setBassBoost(v); showToast(v ? 'Bass Boost ON' : 'Bass Boost OFF'); }} />
         </div>
       </Section>
 

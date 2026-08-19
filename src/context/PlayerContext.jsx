@@ -172,6 +172,21 @@ export function PlayerProvider({ children }) {
     });
   }, [initEnhancement]);
 
+  // Bass Boost — pumps 60Hz and 250Hz
+  const [bassBoostOn, setBassBoostOn] = useState(() => localStorage.getItem('bass_boost') === 'true');
+  const setBassBoost = useCallback((on) => {
+    setBassBoostOn(on);
+    localStorage.setItem('bass_boost', on.toString());
+    if (!enhancedRef.current) {
+      const ok = initEnhancement();
+      if (!ok) return;
+    }
+    if (eqFiltersRef.current.length >= 2) {
+      eqFiltersRef.current[0].gain.value = on ? 8 : 0;  // 60Hz +8dB
+      eqFiltersRef.current[1].gain.value = on ? 5 : 0;  // 250Hz +5dB
+    }
+  }, [initEnhancement]);
+
   const historyStack = useRef([]);
 
   const cur = () => activeRef.current === 'A' ? audioA.current : audioB.current;
@@ -444,5 +459,5 @@ export function PlayerProvider({ children }) {
     setLikedSongs(p => { if (p.includes(songId)) { showToast('Removed'); return p.filter(id => id !== songId); } showToast('Liked ❤️', 'success'); return [...p, songId]; });
   }, [showToast]);
 
-  return <Ctx.Provider value={{ currentSong, queue, upNext, isPlaying, volume, boostLevel, currentTime, duration, shuffleMode, repeatMode, isExpanded, likedSongs, toasts, playSong, togglePlay, playNext, playPrev, seekTo, setVolume, setVolumeBoost, setEqBand, applyEqPreset, toggleShuffle, cycleRepeat, addToQueue, removeFromQueue, clearQueue, toggleLike, setExpanded, showToast, dismissToast }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ currentSong, queue, upNext, isPlaying, volume, boostLevel, bassBoostOn, currentTime, duration, shuffleMode, repeatMode, isExpanded, likedSongs, toasts, playSong, togglePlay, playNext, playPrev, seekTo, setVolume, setVolumeBoost, setBassBoost, setEqBand, applyEqPreset, toggleShuffle, cycleRepeat, addToQueue, removeFromQueue, clearQueue, toggleLike, setExpanded, showToast, dismissToast }}>{children}</Ctx.Provider>;
 }
