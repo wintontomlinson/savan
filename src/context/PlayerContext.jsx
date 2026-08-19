@@ -74,6 +74,10 @@ export function PlayerProvider({ children }) {
       
       audioCtxRef.current = new AC();
       
+      // Set crossOrigin now that we need Web Audio API access
+      audioA.current.crossOrigin = 'anonymous';
+      audioB.current.crossOrigin = 'anonymous';
+      
       // Create gain node (for volume boost up to 200%)
       gainRef.current = audioCtxRef.current.createGain();
       gainRef.current.gain.value = boostLevel / 100;
@@ -234,8 +238,6 @@ export function PlayerProvider({ children }) {
   useEffect(() => {
     audioA.current = new Audio();
     audioB.current = new Audio();
-    audioA.current.crossOrigin = 'anonymous';
-    audioB.current.crossOrigin = 'anonymous';
     audioA.current.volume = volumeRef.current;
     audioB.current.volume = 0;
 
