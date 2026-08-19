@@ -173,9 +173,6 @@ export default function Settings() {
             onChange={e => handleCrossfade(parseInt(e.target.value))}
             className="w-full h-[6px] rounded-full appearance-none bg-white/[0.08] cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-[18px] [&::-webkit-slider-thumb]:h-[18px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md" />
         </div>
-        <SettingRow icon={Zap} label="Gapless Playback" desc="No silence between tracks">
-          <Toggle on={true} disabled />
-        </SettingRow>
       </Section>
 
       {/* Data */}
