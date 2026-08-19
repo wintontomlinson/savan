@@ -495,7 +495,6 @@ export function PlayerProvider({ children }) {
 
   // Keep ref updated for audio event handler
   useEffect(() => { playNextRef.current = playNext; }, [playNext]);
-  useEffect(() => { playPrevRef.current = playPrev; }, [playPrev]);
 
   const playPrev = useCallback(() => {
     // If more than 3 seconds in, restart current song
@@ -522,6 +521,7 @@ export function PlayerProvider({ children }) {
       cur().currentTime = 0; setCurrentTime(0);
     }
   }, [currentTime, currentSong]);
+  useEffect(() => { playPrevRef.current = playPrev; }, [playPrev]);
   const seekTo = useCallback(t => { const a = cur(); if (a) { a.currentTime = t; setCurrentTime(t); } }, []);
   const toggleShuffle = useCallback(() => setShuffle(p => !p), []);
   const cycleRepeat = useCallback(() => setRepeat(p => p === 'none' ? 'all' : p === 'all' ? 'one' : 'none'), []);
