@@ -72,11 +72,20 @@ export function PlayerProvider({ children }) {
       const savedTime = a.currentTime;
       const savedSrc = a.src;
       
-      audioCtxRef.current = new AC();
+      // crossOrigin must be set BEFORE src is loaded
+      // If audio is already playing, we need to reload it
+      const needsReload = !!a.src;
       
-      // Set crossOrigin now that we need Web Audio API access
       audioA.current.crossOrigin = 'anonymous';
       audioB.current.crossOrigin = 'anonymous';
+      
+      // If audio was playing, we need to reload with CORS
+      if (needsReload && savedSrc) {
+        a.src = savedSrc;
+        a.load();
+      }
+      
+      audioCtxRef.current = new AC();
       
       // Create gain node (for volume boost up to 200%)
       gainRef.current = audioCtxRef.current.createGain();
@@ -86,7 +95,6 @@ export function PlayerProvider({ children }) {
       const freqs = [31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
       eqFiltersRef.current = freqs.map((freq, i) => {
         const filter = audioCtxRef.current.createBiquadFilter();
-        // First band = lowshelf, last = highshelf, rest = peaking
         if (i === 0) filter.type = 'lowshelf';
         else if (i === freqs.length - 1) filter.type = 'highshelf';
         else filter.type = 'peaking';
@@ -96,11 +104,10 @@ export function PlayerProvider({ children }) {
         return filter;
       });
       
-      // Connect chain: source → eq1 → eq2 → eq3 → eq4 → eq5 → gain → destination
+      // Connect chain: source → eq filters → gain → destination
       const sourceA = audioCtxRef.current.createMediaElementSource(audioA.current);
       const sourceB = audioCtxRef.current.createMediaElementSource(audioB.current);
       
-      // Chain EQ filters
       let prevNode = eqFiltersRef.current[0];
       sourceA.connect(prevNode);
       sourceB.connect(prevNode);
@@ -114,10 +121,13 @@ export function PlayerProvider({ children }) {
       // Resume AudioContext
       if (audioCtxRef.current.state === 'suspended') audioCtxRef.current.resume();
       
-      // Restore playback (audio may have stopped during connection)
-      if (savedSrc && a.src === savedSrc) {
+      // Restore playback
+      if (needsReload && savedSrc) {
         a.currentTime = savedTime;
-        if (wasPlaying) a.play().catch(() => {});
+        if (wasPlaying) {
+          // Small delay to let CORS reload complete
+          setTimeout(() => { a.play().catch(() => {}); }, 200);
+        }
       }
       
       enhancedRef.current = true;
