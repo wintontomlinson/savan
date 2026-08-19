@@ -6,14 +6,14 @@ import SongRow from '../components/SongRow';
 import SongCard from '../components/SongCard';
 import HorizontalScroll from '../components/HorizontalScroll';
 
-// Browse sections — using real JioSaavn playlist IDs
+// Browse sections — all using real JioSaavn playlist IDs
 const BROWSE_SECTIONS = [
   { id: 'new', label: 'New Releases', icon: Disc3, playlistId: '1300709425', color: 'from-rose-500/20 to-pink-600/10', iconColor: 'text-rose-400' },
   { id: 'charts', label: 'Top Charts', icon: TrendingUp, playlistId: '110858205', color: 'from-amber-500/20 to-orange-600/10', iconColor: 'text-amber-400' },
-  { id: 'playlists', label: 'Top Playlists', icon: ListMusic, query: 'top bollywood hits playlist 2024', color: 'from-emerald-500/20 to-green-600/10', iconColor: 'text-emerald-400' },
-  { id: 'podcasts', label: 'Podcasts', icon: Mic, query: 'motivational podcast hindi stories', color: 'from-purple-500/20 to-violet-600/10', iconColor: 'text-purple-400' },
-  { id: 'artists', label: 'Top Artists', icon: Users, query: 'arijit singh pritam vishal mishra latest', color: 'from-blue-500/20 to-cyan-600/10', iconColor: 'text-blue-400' },
-  { id: 'radio', label: 'Radio', icon: Radio, query: 'nonstop bollywood party mix 2024', color: 'from-indigo-500/20 to-purple-600/10', iconColor: 'text-indigo-400' },
+  { id: 'playlists', label: 'Romantic', icon: ListMusic, playlistId: '1302033575', color: 'from-emerald-500/20 to-green-600/10', iconColor: 'text-emerald-400' },
+  { id: 'dance', label: 'Dance', icon: Mic, playlistId: '932189657', color: 'from-purple-500/20 to-violet-600/10', iconColor: 'text-purple-400' },
+  { id: 'chill', label: 'Chill', icon: Users, playlistId: '1079336813', color: 'from-blue-500/20 to-cyan-600/10', iconColor: 'text-blue-400' },
+  { id: 'punjabi', label: 'Punjabi Hits', icon: Radio, playlistId: '4144832', color: 'from-indigo-500/20 to-purple-600/10', iconColor: 'text-indigo-400' },
 ];
 
 const ARTISTS = [
@@ -104,10 +104,9 @@ export default function Explore() {
     setBrowseLoading(p => ({ ...p, [section.id]: false }));
   };
 
-  // Load first 2 browse sections on mount
+  // Load all browse sections on mount
   useEffect(() => {
-    loadBrowse(BROWSE_SECTIONS[0]);
-    loadBrowse(BROWSE_SECTIONS[1]);
+    BROWSE_SECTIONS.forEach(sec => loadBrowse(sec));
   }, []);
 
   useEffect(() => {
