@@ -145,13 +145,13 @@ export default function ExpandedPlayer() {
   const hasPanel = activePanel !== null;
 
   return (
-    <div className={`fixed inset-0 z-[70] flex flex-col ${closing ? 'animate-[slideDown_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards]' : 'player-expanded-enter'}`}
+    <div className={`fixed inset-0 z-[100] flex flex-col bg-[#080808] ${closing ? 'animate-[slideDown_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards]' : 'player-expanded-enter'}`}
       onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       
-      {/* Background — solid dark with blurred album art tint */}
+      {/* Background — subtle album art color tint */}
       <div className="absolute inset-0 bg-[#080808]">
-        <img src={currentSong.thumbnail} alt="" className="w-full h-full object-cover blur-[120px] scale-[1.5] opacity-15" />
-        <div className="absolute inset-0 bg-[#080808]/80" />
+        <img src={currentSong.thumbnail} alt="" className="w-full h-full object-cover blur-[120px] scale-[1.5] opacity-10" />
+        <div className="absolute inset-0 bg-[#080808]/90" />
       </div>
 
       <div className="relative flex-1 flex flex-col min-h-0">
