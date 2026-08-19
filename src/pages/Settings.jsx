@@ -230,7 +230,7 @@ export default function Settings() {
           </button>
 
           {/* APK Download */}
-          <a href="https://github.com/nicotinefull/nicotinefull/releases/download/APK/app-release.apk"
+          <a href="https://github.com/wintontomlinson/musicarea/raw/main/Music%20Area.apk"
             download
             className="flex items-center justify-center gap-2 w-full py-3 bg-white/[0.06] hover:bg-white/[0.1] rounded-xl text-[13px] text-white font-semibold btn-press transition-all active:scale-95 border border-white/[0.06]">
             <Download size={15} />
