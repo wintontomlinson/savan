@@ -1,8 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
-import { Loader2, Play, X, Shuffle, ChevronRight } from 'lucide-react';
+import { Loader2, Play, X, Shuffle, ChevronRight, Disc3, TrendingUp, ListMusic, Mic, Users, Radio } from 'lucide-react';
 import { searchSongs } from '../data/api';
 import { usePlayer } from '../context/PlayerContext';
 import SongRow from '../components/SongRow';
+import SongCard from '../components/SongCard';
+import HorizontalScroll from '../components/HorizontalScroll';
+
+// Quick browse sections
+const BROWSE_SECTIONS = [
+  { id: 'new', label: 'New Releases', icon: Disc3, query: 'new hindi songs 2024 latest', color: 'from-rose-500/20 to-pink-600/10', iconColor: 'text-rose-400' },
+  { id: 'charts', label: 'Charts', icon: TrendingUp, query: 'top hits india trending 2024', color: 'from-amber-500/20 to-orange-600/10', iconColor: 'text-amber-400' },
+  { id: 'playlists', label: 'Top Playlists', icon: ListMusic, query: 'best bollywood playlist hits', color: 'from-emerald-500/20 to-green-600/10', iconColor: 'text-emerald-400' },
+  { id: 'podcasts', label: 'Podcasts', icon: Mic, query: 'hindi podcast popular trending', color: 'from-purple-500/20 to-violet-600/10', iconColor: 'text-purple-400' },
+  { id: 'artists', label: 'Top Artists', icon: Users, query: 'top indian artists popular songs', color: 'from-blue-500/20 to-cyan-600/10', iconColor: 'text-blue-400' },
+  { id: 'radio', label: 'Radio', icon: Radio, query: 'radio hits mix nonstop bollywood', color: 'from-indigo-500/20 to-purple-600/10', iconColor: 'text-indigo-400' },
+];
 
 const ARTISTS = [
   { name: 'AP Dhillon', img: 'https://c.saavncdn.com/artists/AP_Dhillon_004_20251023102150_500x500.jpg', cat: 'Punjabi' },
@@ -61,6 +73,8 @@ export default function Explore() {
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpandedCats] = useState({});
+  const [browseData, setBrowseData] = useState({});
+  const [browseLoading, setBrowseLoading] = useState({});
   const { playSong } = usePlayer();
   const songsRef = useRef(null);
 
@@ -72,6 +86,20 @@ export default function Explore() {
     setSongs(s);
     setLoading(false);
   };
+
+  const loadBrowse = async (section) => {
+    if (browseData[section.id]) return; // already loaded
+    setBrowseLoading(p => ({ ...p, [section.id]: true }));
+    const results = await searchSongs(section.query, 12) || [];
+    setBrowseData(p => ({ ...p, [section.id]: results }));
+    setBrowseLoading(p => ({ ...p, [section.id]: false }));
+  };
+
+  // Load first 2 browse sections on mount
+  useEffect(() => {
+    loadBrowse(BROWSE_SECTIONS[0]);
+    loadBrowse(BROWSE_SECTIONS[1]);
+  }, []);
 
   useEffect(() => {
     if (songs.length > 0 && songsRef.current) {
@@ -91,10 +119,43 @@ export default function Explore() {
   return (
     <div className="pb-6 pt-2">
       {/* Page Title */}
-      <div className="mb-6">
+      <div className="mb-5">
         <h1 className="text-[22px] sm:text-[26px] font-bold text-white">Explore</h1>
-        <p className="text-[13px] text-white/40 mt-1">Discover artists you love</p>
+        <p className="text-[13px] text-white/40 mt-1">Discover music you love</p>
       </div>
+
+      {/* Browse Categories Grid */}
+      <section className="mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+          {BROWSE_SECTIONS.map(sec => (
+            <button key={sec.id} onClick={() => loadBrowse(sec)}
+              className={`relative overflow-hidden rounded-2xl p-4 text-left transition-all duration-200 active:scale-[0.97] border border-white/[0.04] hover:border-white/[0.08] bg-gradient-to-br ${sec.color}`}>
+              <sec.icon size={20} className={`${sec.iconColor} mb-2`} />
+              <p className="text-[13px] font-semibold text-white">{sec.label}</p>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* Browse Section Results — horizontal scroll cards */}
+      {BROWSE_SECTIONS.map(sec => {
+        const data = browseData[sec.id];
+        const isLoading = browseLoading[sec.id];
+        if (!data && !isLoading) return null;
+        return (
+          <section key={sec.id} className="mb-7 animate-in">
+            {isLoading ? (
+              <div className="flex justify-center py-6">
+                <Loader2 size={18} className="text-white/40 animate-spin" />
+              </div>
+            ) : data && data.length > 0 && (
+              <HorizontalScroll title={sec.label}>
+                {data.map(s => <SongCard key={s.id} song={s} />)}
+              </HorizontalScroll>
+            )}
+          </section>
+        );
+      })}
 
       {/* Songs Panel — shows when artist selected */}
       {activeArtist && (
@@ -105,7 +166,6 @@ export default function Explore() {
             </div>
           ) : songs.length > 0 && (
             <div>
-              {/* Header */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3 min-w-0">
                   <img src={ARTISTS.find(a => a.name === activeArtist)?.img} alt="" className="w-12 h-12 rounded-full object-cover ring-2 ring-white/10 shrink-0" />
@@ -126,8 +186,6 @@ export default function Explore() {
                   </button>
                 </div>
               </div>
-
-              {/* Song list */}
               <div className="bg-[#0c0c0c] rounded-2xl overflow-hidden border border-white/[0.04]">
                 {songs.map((s, i) => <SongRow key={s.id} song={s} index={i} songList={songs} />)}
               </div>
@@ -136,7 +194,7 @@ export default function Explore() {
         </div>
       )}
 
-      {/* Categorized Artist Grid Sections */}
+      {/* Top Artists by Category */}
       <div className="space-y-8">
         {CATEGORIES.map(cat => {
           const artists = ARTISTS.filter(a => a.cat === cat);
@@ -145,7 +203,6 @@ export default function Explore() {
 
           return (
             <section key={cat} className="animate-in">
-              {/* Section Header */}
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-[16px] sm:text-[18px] font-bold text-white">{cat}</h2>
                 {artists.length > 8 && (
@@ -155,16 +212,9 @@ export default function Explore() {
                   </button>
                 )}
               </div>
-
-              {/* Artist Grid */}
               <div className="artist-grid">
                 {visible.map(a => (
-                  <ArtistCard 
-                    key={a.name} 
-                    artist={a} 
-                    isActive={activeArtist === a.name}
-                    onClick={() => loadArtist(a)} 
-                  />
+                  <ArtistCard key={a.name} artist={a} isActive={activeArtist === a.name} onClick={() => loadArtist(a)} />
                 ))}
               </div>
             </section>
@@ -175,22 +225,16 @@ export default function Explore() {
   );
 }
 
-// Clean artist card for the grid
 function ArtistCard({ artist, isActive, onClick }) {
   return (
     <button onClick={onClick} className="flex flex-col items-center gap-2.5 group transition-all duration-200 active:scale-95">
       <div className="relative w-full aspect-square">
-        <img 
-          src={artist.img} 
-          alt={artist.name} 
+        <img src={artist.img} alt={artist.name}
           className={`w-full h-full rounded-full object-cover transition-all duration-300 ${
-            isActive 
-              ? 'ring-[3px] ring-rose-400 shadow-lg shadow-rose-500/20 scale-[0.95]' 
+            isActive
+              ? 'ring-[3px] ring-rose-400 shadow-lg shadow-rose-500/20 scale-[0.95]'
               : 'ring-1 ring-white/[0.06] group-hover:ring-white/[0.15] group-hover:scale-[1.03]'
-          }`} 
-          loading="lazy" 
-        />
-        {/* Play overlay on hover */}
+          }`} loading="lazy" />
         <div className={`absolute inset-0 rounded-full flex items-center justify-center transition-all duration-200 ${
           isActive ? 'bg-black/30 opacity-100' : 'bg-black/0 opacity-0 group-hover:bg-black/30 group-hover:opacity-100'
         }`}>
