@@ -88,11 +88,7 @@ export default function Explore() {
   };
 
   const loadBrowse = async (section) => {
-    if (browseData[section.id]) {
-      const data = browseData[section.id];
-      if (data.length > 0) playSong(data[0], data);
-      return;
-    }
+    if (browseData[section.id]) return; // already loaded, do nothing
     setBrowseLoading(p => ({ ...p, [section.id]: true }));
     let results = [];
     if (section.playlistId) {
