@@ -148,12 +148,10 @@ export default function ExpandedPlayer() {
     <div className={`fixed inset-0 z-[70] flex flex-col ${closing ? 'animate-[slideDown_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards]' : 'player-expanded-enter'}`}
       onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       
-      {/* Background — cinematic multi-layer blur */}
-      <div className="absolute inset-0 overflow-hidden">
-        <img src={currentSong.thumbnail} alt="" className="w-full h-full object-cover blur-[120px] scale-[1.5] opacity-20" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-[#080808]/85 to-[#080808]" />
-        {/* Subtle animated gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-rose-950/[0.08] via-transparent to-purple-950/[0.06]" />
+      {/* Background — solid dark with blurred album art tint */}
+      <div className="absolute inset-0 bg-[#080808]">
+        <img src={currentSong.thumbnail} alt="" className="w-full h-full object-cover blur-[120px] scale-[1.5] opacity-15" />
+        <div className="absolute inset-0 bg-[#080808]/80" />
       </div>
 
       <div className="relative flex-1 flex flex-col min-h-0">
