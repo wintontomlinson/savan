@@ -259,16 +259,17 @@ export function PlayerProvider({ children }) {
     const onError = async (e) => {
       const a = cur();
       const song = currentSongRef.current;
-      if (!a?.src || !song) return;
+      // Don't trigger on intentional aborts (when we clear src or switch songs)
+      if (!a?.src || !song || a.src === '') return;
+      // Ignore MEDIA_ERR_ABORTED (code 1) — this happens when we switch songs
+      if (a.error && a.error.code === 1) return;
       console.warn('Audio error, attempting stream URL refresh');
-      // Try to get a fresh stream URL
       const freshUrl = await refreshStreamUrl(song.id);
       if (freshUrl && freshUrl !== a.src) {
         a.src = freshUrl;
         a.load();
         a.play().catch(() => {});
       } else {
-        // Can't recover — skip to next
         if (playNextRef.current) playNextRef.current();
       }
     };
