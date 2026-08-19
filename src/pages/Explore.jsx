@@ -87,15 +87,16 @@ export default function Explore() {
     setLoading(false);
   };
 
-  const loadBrowse = async (section) => {
+  const loadBrowse = async (section, shouldPlay = false) => {
     if (browseData[section.id]) {
-      // Already loaded — shuffle play (exclude currently playing song)
-      const data = browseData[section.id];
-      if (data.length > 0) {
-        const filtered = data.filter(s => s.id !== (currentSong?.id || ''));
-        const toPlay = filtered.length > 0 ? filtered : data;
-        const shuffled = [...toPlay].sort(() => Math.random() - 0.5);
-        playSong(shuffled[0], shuffled);
+      if (shouldPlay) {
+        const data = browseData[section.id];
+        if (data.length > 0) {
+          const filtered = data.filter(s => s.id !== (currentSong?.id || ''));
+          const toPlay = filtered.length > 0 ? filtered : data;
+          const shuffled = [...toPlay].sort(() => Math.random() - 0.5);
+          playSong(shuffled[0], shuffled);
+        }
       }
       return;
     }
@@ -108,16 +109,15 @@ export default function Explore() {
     }
     setBrowseData(p => ({ ...p, [section.id]: results }));
     setBrowseLoading(p => ({ ...p, [section.id]: false }));
-    // Auto shuffle play on first load
-    if (results.length > 0) {
+    if (shouldPlay && results.length > 0) {
       const shuffled = [...results].sort(() => Math.random() - 0.5);
       playSong(shuffled[0], shuffled);
     }
   };
 
-  // Load all browse sections on mount
+  // Load all browse sections on mount (NO auto-play)
   useEffect(() => {
-    BROWSE_SECTIONS.forEach(sec => loadBrowse(sec));
+    BROWSE_SECTIONS.forEach(sec => loadBrowse(sec, false));
   }, []);
 
   useEffect(() => {
@@ -147,7 +147,7 @@ export default function Explore() {
       <section className="mb-8">
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
           {BROWSE_SECTIONS.map(sec => (
-            <button key={sec.id} onClick={() => loadBrowse(sec)}
+            <button key={sec.id} onClick={() => loadBrowse(sec, true)}
               className={`relative overflow-hidden rounded-2xl p-4 text-left transition-all duration-200 active:scale-[0.97] border border-white/[0.04] hover:border-white/[0.08] bg-gradient-to-br ${sec.color}`}>
               <sec.icon size={20} className={`${sec.iconColor} mb-2`} />
               <p className="text-[13px] font-semibold text-white">{sec.label}</p>
