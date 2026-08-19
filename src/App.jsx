@@ -12,9 +12,18 @@ import Explore from './pages/Explore';
 import Library from './pages/Library';
 import SearchResults from './pages/SearchResults';
 import Settings from './pages/Settings';
+import { useEffect, useRef } from 'react';
 
 function AnimatedRoutes() {
   const location = useLocation();
+  const mainRef = useRef(null);
+
+  // Scroll to top on route change
+  useEffect(() => {
+    const main = document.querySelector('main');
+    if (main) main.scrollTop = 0;
+  }, [location.pathname]);
+
   return (
     <div key={location.pathname} className="page-wrapper">
       <Routes location={location}>
