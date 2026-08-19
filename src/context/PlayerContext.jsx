@@ -257,6 +257,8 @@ export function PlayerProvider({ children }) {
     const onMeta = () => setDuration(cur()?.duration || 0);
     const onEnd = () => { if (!fadingRef.current && playNextRef.current) playNextRef.current(); };
     const onError = async (e) => {
+      // Small delay to avoid reacting to transient errors during song switch
+      await new Promise(r => setTimeout(r, 500));
       const a = cur();
       const song = currentSongRef.current;
       // Don't trigger on intentional aborts (when we clear src or switch songs)
