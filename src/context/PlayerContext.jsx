@@ -44,9 +44,128 @@ export function PlayerProvider({ children }) {
     volumeRef.current = val;
     const a = activeRef.current === 'A' ? audioA.current : audioB.current;
     if (a) a.volume = val;
+    // If audio enhancement active, also update gain
+    if (gainRef.current && val === 1) {
+      // Volume at max, gain handles boost
+    }
   }, []);
 
-  const historyStack = useRef([]); // Stack of previously played songs
+  // ─── Audio Enhancement (EQ + Volume Boost) ───
+  const audioCtxRef = useRef(null);
+  const gainRef = useRef(null);
+  const eqFiltersRef = useRef([]);
+  const enhancedRef = useRef(false);
+  const [boostLevel, setBoostLevel] = useState(() => { try { return parseFloat(localStorage.getItem('boost_pct') || '100'); } catch { return 100; } });
+
+  // Initialize audio processing chain (called on user action only)
+  const initEnhancement = useCallback(() => {
+    if (enhancedRef.current) return true;
+    try {
+      const a = cur();
+      if (!a) return false;
+      
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return false;
+      
+      // Set crossOrigin BEFORE connecting (required for CORS audio + AudioContext)
+      audioA.current.crossOrigin = 'anonymous';
+      audioB.current.crossOrigin = 'anonymous';
+      
+      audioCtxRef.current = new AC();
+      
+      // Create gain node (for volume boost up to 200%)
+      gainRef.current = audioCtxRef.current.createGain();
+      gainRef.current.gain.value = boostLevel / 100;
+      
+      // Create 5-band EQ
+      const freqs = [60, 250, 1000, 4000, 12000];
+      eqFiltersRef.current = freqs.map(freq => {
+        const filter = audioCtxRef.current.createBiquadFilter();
+        filter.type = 'peaking';
+        filter.frequency.value = freq;
+        filter.Q.value = 1.4;
+        filter.gain.value = 0;
+        return filter;
+      });
+      
+      // Connect chain: source → eq1 → eq2 → eq3 → eq4 → eq5 → gain → destination
+      const sourceA = audioCtxRef.current.createMediaElementSource(audioA.current);
+      const sourceB = audioCtxRef.current.createMediaElementSource(audioB.current);
+      
+      // Chain EQ filters
+      let prevNode = eqFiltersRef.current[0];
+      sourceA.connect(prevNode);
+      sourceB.connect(prevNode);
+      for (let i = 1; i < eqFiltersRef.current.length; i++) {
+        prevNode.connect(eqFiltersRef.current[i]);
+        prevNode = eqFiltersRef.current[i];
+      }
+      prevNode.connect(gainRef.current);
+      gainRef.current.connect(audioCtxRef.current.destination);
+      
+      // Resume if suspended
+      if (audioCtxRef.current.state === 'suspended') audioCtxRef.current.resume();
+      
+      enhancedRef.current = true;
+      return true;
+    } catch (e) {
+      console.warn('Audio enhancement failed:', e);
+      return false;
+    }
+  }, [boostLevel]);
+
+  // Set volume boost (0-200%)
+  const setVolumeBoost = useCallback((pct) => {
+    setBoostLevel(pct);
+    try { localStorage.setItem('boost_pct', pct.toString()); } catch {}
+    
+    if (pct > 100) {
+      // Need AudioContext for boost beyond 100%
+      if (!enhancedRef.current) {
+        const ok = initEnhancement();
+        if (!ok) return; // Failed, can't boost
+      }
+      // Set audio.volume to 1, gain handles the rest
+      const a = activeRef.current === 'A' ? audioA.current : audioB.current;
+      if (a) a.volume = 1;
+      volumeRef.current = 1;
+      _setVolume(1);
+      if (gainRef.current) gainRef.current.gain.value = pct / 100;
+    } else {
+      // Normal range, just use audio.volume
+      const val = pct / 100;
+      _setVolume(val);
+      volumeRef.current = val;
+      const a = activeRef.current === 'A' ? audioA.current : audioB.current;
+      if (a) a.volume = val;
+      if (gainRef.current) gainRef.current.gain.value = 1;
+    }
+  }, [initEnhancement]);
+
+  // Set EQ band (0-4, gain in dB)
+  const setEqBand = useCallback((bandIndex, gainDb) => {
+    if (!enhancedRef.current) {
+      const ok = initEnhancement();
+      if (!ok) return;
+    }
+    if (eqFiltersRef.current[bandIndex]) {
+      eqFiltersRef.current[bandIndex].gain.value = gainDb;
+    }
+  }, [initEnhancement]);
+
+  // Apply EQ preset
+  const applyEqPreset = useCallback((gains) => {
+    // gains = [60Hz, 250Hz, 1kHz, 4kHz, 12kHz]
+    if (!enhancedRef.current) {
+      const ok = initEnhancement();
+      if (!ok) return;
+    }
+    gains.forEach((g, i) => {
+      if (eqFiltersRef.current[i]) eqFiltersRef.current[i].gain.value = g;
+    });
+  }, [initEnhancement]);
+
+  const historyStack = useRef([]);
 
   const cur = () => activeRef.current === 'A' ? audioA.current : audioB.current;
 
@@ -318,5 +437,5 @@ export function PlayerProvider({ children }) {
     setLikedSongs(p => { if (p.includes(songId)) { showToast('Removed'); return p.filter(id => id !== songId); } showToast('Liked ❤️', 'success'); return [...p, songId]; });
   }, [showToast]);
 
-  return <Ctx.Provider value={{ currentSong, queue, upNext, isPlaying, volume, currentTime, duration, shuffleMode, repeatMode, isExpanded, likedSongs, toasts, playSong, togglePlay, playNext, playPrev, seekTo, setVolume, toggleShuffle, cycleRepeat, addToQueue, removeFromQueue, clearQueue, toggleLike, setExpanded, showToast, dismissToast }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ currentSong, queue, upNext, isPlaying, volume, boostLevel, currentTime, duration, shuffleMode, repeatMode, isExpanded, likedSongs, toasts, playSong, togglePlay, playNext, playPrev, seekTo, setVolume, setVolumeBoost, setEqBand, applyEqPreset, toggleShuffle, cycleRepeat, addToQueue, removeFromQueue, clearQueue, toggleLike, setExpanded, showToast, dismissToast }}>{children}</Ctx.Provider>;
 }
