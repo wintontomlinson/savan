@@ -14,13 +14,13 @@ export function PlayerProvider({ children }) {
   const fadingRef = useRef(false);
   const fadeTimerRef = useRef(null);
   const queueRef = useRef([]); // Always fresh queue
-  const volumeRef = useRef(0.7);
+  const volumeRef = useRef(1.0);
 
   const [currentSong, setCurrentSong] = useState(null);
   const [queue, _setQueue] = useState([]);
   const [upNext, setUpNext] = useState([]);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, _setVolume] = useState(0.7);
+  const [volume, _setVolume] = useState(1.0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [shuffleMode, setShuffle] = useState(false);
@@ -129,16 +129,23 @@ export function PlayerProvider({ children }) {
       // Need AudioContext for boost beyond 100%
       if (!enhancedRef.current) {
         const ok = initEnhancement();
-        if (!ok) return; // Failed, can't boost
+        if (!ok) {
+          // Fallback — just max out audio.volume
+          const a = activeRef.current === 'A' ? audioA.current : audioB.current;
+          if (a) a.volume = 1;
+          volumeRef.current = 1;
+          _setVolume(1);
+          return;
+        }
       }
-      // Set audio.volume to 1, gain handles the rest
+      // audio.volume stays at 1, gain amplifies
       const a = activeRef.current === 'A' ? audioA.current : audioB.current;
       if (a) a.volume = 1;
       volumeRef.current = 1;
       _setVolume(1);
       if (gainRef.current) gainRef.current.gain.value = pct / 100;
     } else {
-      // Normal range, just use audio.volume
+      // 0-100% range
       const val = pct / 100;
       _setVolume(val);
       volumeRef.current = val;
@@ -193,10 +200,10 @@ export function PlayerProvider({ children }) {
   const resetAudio = useCallback(() => {
     setBoostLevel(100);
     setBassBoostOn(false);
-    _setVolume(0.7);
-    volumeRef.current = 0.7;
+    _setVolume(1.0);
+    volumeRef.current = 1.0;
     const a = activeRef.current === 'A' ? audioA.current : audioB.current;
-    if (a) a.volume = 0.7;
+    if (a) a.volume = 1.0;
     if (gainRef.current) gainRef.current.gain.value = 1;
     if (eqFiltersRef.current.length > 0) {
       eqFiltersRef.current.forEach(f => { f.gain.value = 0; });
