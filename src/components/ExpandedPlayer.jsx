@@ -147,7 +147,7 @@ export default function ExpandedPlayer() {
       <div className="relative flex-1 flex flex-col min-h-0">
         
         {/* Top Bar — close left, volume right */}
-        <div className="flex items-center justify-between px-5 pt-4 pb-2 shrink-0">
+        <div className="flex items-center justify-between px-4 sm:px-5 pt-3 sm:pt-4 pb-1 sm:pb-2 shrink-0">
           <button onClick={handleClose} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center active:scale-90 transition-all duration-200 backdrop-blur-sm border border-white/[0.04]">
             <ChevronDown size={20} className="text-white/80" />
           </button>
@@ -164,11 +164,11 @@ export default function ExpandedPlayer() {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col items-center justify-center px-6 sm:px-10 gap-3 min-h-0 scroll-y">
+        <div className="flex-1 flex flex-col items-center justify-center px-5 sm:px-10 gap-2 min-h-0 overflow-hidden">
           
-          {/* Album Art — premium with depth */}
-          <div className={`relative transition-all duration-600 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-            hasPanel ? 'w-[80px] h-[80px] sm:w-[100px] sm:h-[100px]' : 'w-[240px] h-[240px] sm:w-[270px] sm:h-[270px] md:w-[300px] md:h-[300px]'
+          {/* Album Art — responsive sizing */}
+          <div className={`relative transition-all duration-600 ease-[cubic-bezier(0.16,1,0.3,1)] shrink-0 ${
+            hasPanel ? 'w-[70px] h-[70px] sm:w-[90px] sm:h-[90px]' : 'w-[180px] h-[180px] sm:w-[240px] sm:h-[240px] md:w-[280px] md:h-[280px]'
           }`}>
             {/* Shadow layer */}
             {!hasPanel && (
@@ -190,7 +190,7 @@ export default function ExpandedPlayer() {
 
           {/* Active Panel Content */}
           {activePanel === 'lyrics' && (
-            <div className="w-full max-w-sm max-h-[35vh] scroll-y animate-scale" id="lyrics-container">
+            <div className="w-full max-w-sm max-h-[28vh] sm:max-h-[35vh] scroll-y animate-scale" id="lyrics-container">
               {lyricsLoading && (
                 <div className="flex justify-center py-10">
                   <div className="w-5 h-5 border-2 border-white/15 border-t-white/80 rounded-full animate-spin" />
@@ -212,7 +212,7 @@ export default function ExpandedPlayer() {
           )}
 
           {activePanel === 'queue' && (
-            <div className="w-full max-w-sm max-h-[35vh] scroll-y animate-scale">
+            <div className="w-full max-w-sm max-h-[28vh] sm:max-h-[35vh] scroll-y animate-scale">
               <div className="flex items-center justify-between mb-3 px-1">
                 <h3 className="text-[12px] font-semibold text-white/50 uppercase tracking-wider">Up Next</h3>
                 <span className="text-[10px] text-white/25 bg-white/[0.05] px-2 py-0.5 rounded-full">{queue.length} songs</span>
@@ -242,25 +242,25 @@ export default function ExpandedPlayer() {
           )}
         </div>
 
-        {/* Bottom Controls — premium glass section */}
-        <div className="shrink-0 px-5 sm:px-8 pb-5 pt-1">
+        {/* Bottom Controls */}
+        <div className="shrink-0 px-5 sm:px-8 pb-3 sm:pb-5 pt-0">
           
           {/* Song Info Row */}
-          <div className="flex items-center justify-between mb-4 max-w-sm mx-auto">
+          <div className="flex items-center justify-between mb-2 sm:mb-4 max-w-sm mx-auto">
             <div className="min-w-0 flex-1 mr-3">
-              <h1 className="text-[20px] sm:text-[22px] font-bold text-white truncate leading-tight tracking-tight">{currentSong.title}</h1>
-              <p className="text-[13px] text-white/40 truncate mt-1">{currentSong.artist}</p>
+              <h1 className="text-[17px] sm:text-[22px] font-bold text-white truncate leading-tight tracking-tight">{currentSong.title}</h1>
+              <p className="text-[12px] sm:text-[13px] text-white/40 truncate mt-0.5">{currentSong.artist}</p>
             </div>
             <button onClick={() => toggleLike(currentSong.id)} 
-              className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-250 active:scale-85 ${
+              className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all duration-250 active:scale-85 ${
                 liked ? 'text-rose-500 bg-rose-500/[0.12]' : 'text-white/20 bg-white/[0.04] hover:bg-white/[0.08] hover:text-white/40'
               }`}>
-              <Heart size={22} fill={liked ? 'currentColor' : 'none'} strokeWidth={liked ? 0 : 1.5} />
+              <Heart size={20} fill={liked ? 'currentColor' : 'none'} strokeWidth={liked ? 0 : 1.5} />
             </button>
           </div>
 
           {/* Progress Bar */}
-          <div className="max-w-sm mx-auto mb-5">
+          <div className="max-w-sm mx-auto mb-3 sm:mb-5">
             <div ref={progressRef}
               className="player-progress-track w-full h-[5px] bg-white/[0.08] rounded-full group"
               onMouseDown={handleSeekStart}
@@ -279,25 +279,25 @@ export default function ExpandedPlayer() {
           </div>
 
           {/* Main Playback Controls */}
-          <div className="flex items-center justify-between max-w-[280px] mx-auto mb-5">
-            <button onClick={toggleShuffle} className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 active:scale-85 ${
+          <div className="flex items-center justify-between max-w-[260px] sm:max-w-[280px] mx-auto mb-3 sm:mb-5">
+            <button onClick={toggleShuffle} className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-200 active:scale-85 ${
               shuffleMode ? 'text-rose-400 bg-rose-500/10' : 'text-white/25 hover:text-white/50'
             }`}>
-              <Shuffle size={18} />
+              <Shuffle size={16} />
             </button>
-            <button onClick={handlePrev} className="w-12 h-12 rounded-full flex items-center justify-center text-white active:scale-85 transition-all duration-150 hover:bg-white/[0.05]">
-              <SkipBack size={26} fill="white" />
+            <button onClick={handlePrev} className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white active:scale-85 transition-all duration-150 hover:bg-white/[0.05]">
+              <SkipBack size={24} fill="white" />
             </button>
-            <button onClick={togglePlay} className="w-[72px] h-[72px] bg-white rounded-full flex items-center justify-center active:scale-90 transition-all duration-200 shadow-[0_8px_30px_rgba(255,255,255,0.15)] hover:shadow-[0_8px_40px_rgba(255,255,255,0.25)] hover:scale-[1.03]">
-              {isPlaying ? <Pause size={30} className="text-black" fill="black" /> : <Play size={30} className="text-black ml-1" fill="black" />}
+            <button onClick={togglePlay} className="w-[62px] h-[62px] sm:w-[72px] sm:h-[72px] bg-white rounded-full flex items-center justify-center active:scale-90 transition-all duration-200 shadow-[0_8px_30px_rgba(255,255,255,0.15)] hover:shadow-[0_8px_40px_rgba(255,255,255,0.25)] hover:scale-[1.03]">
+              {isPlaying ? <Pause size={26} className="text-black" fill="black" /> : <Play size={26} className="text-black ml-1" fill="black" />}
             </button>
-            <button onClick={handleNext} className="w-12 h-12 rounded-full flex items-center justify-center text-white active:scale-85 transition-all duration-150 hover:bg-white/[0.05]">
-              <SkipForward size={26} fill="white" />
+            <button onClick={handleNext} className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white active:scale-85 transition-all duration-150 hover:bg-white/[0.05]">
+              <SkipForward size={24} fill="white" />
             </button>
-            <button onClick={cycleRepeat} className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 active:scale-85 ${
+            <button onClick={cycleRepeat} className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-200 active:scale-85 ${
               repeatMode !== 'none' ? 'text-rose-400 bg-rose-500/10' : 'text-white/25 hover:text-white/50'
             }`}>
-              {repeatMode === 'one' ? <Repeat1 size={18} /> : <Repeat size={18} />}
+              {repeatMode === 'one' ? <Repeat1 size={16} /> : <Repeat size={16} />}
             </button>
           </div>
 
