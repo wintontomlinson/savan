@@ -156,16 +156,24 @@ export default function ExpandedPlayer() {
 
       <div className="relative flex-1 flex flex-col min-h-0">
         
-        {/* Top Bar — premium minimal */}
+        {/* Top Bar — sleep left, volume right */}
         <div className="flex items-center justify-between px-5 pt-4 pb-2 shrink-0">
-          <button onClick={handleClose} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center active:scale-90 transition-all duration-200 backdrop-blur-sm border border-white/[0.04]">
-            <ChevronDown size={20} className="text-white/80" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={handleClose} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center active:scale-90 transition-all duration-200 backdrop-blur-sm border border-white/[0.04]">
+              <ChevronDown size={20} className="text-white/80" />
+            </button>
+            <SleepTimer />
+          </div>
           <div className="text-center flex-1 mx-4">
             <p className="text-[9px] text-white/30 uppercase tracking-[0.25em] font-medium">Now Playing</p>
             <p className="text-[11px] text-white/60 font-medium mt-0.5 max-w-[200px] mx-auto truncate">{currentSong.album || 'Library'}</p>
           </div>
-          <SleepTimer />
+          <button onClick={() => togglePanel('volume')}
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 ${
+              activePanel === 'volume' ? 'bg-white/10 text-white' : 'bg-white/[0.06] text-white/40 hover:text-white/60'
+            }`}>
+            <Volume2 size={16} />
+          </button>
         </div>
 
         {/* Main Content Area */}
@@ -354,7 +362,6 @@ export default function ExpandedPlayer() {
           <div className="flex items-center justify-center gap-2 max-w-sm mx-auto">
             <ActionPill icon={Mic2} label="Lyrics" active={activePanel === 'lyrics'} onClick={() => togglePanel('lyrics')} />
             <ActionPill icon={ListMusic} label="Queue" active={activePanel === 'queue'} onClick={() => togglePanel('queue')} badge={queue.length > 0 ? queue.length : null} />
-            <ActionPill icon={Volume2} label={`${Math.round(volume * 100)}%`} active={activePanel === 'volume'} onClick={() => togglePanel('volume')} />
             <ActionPill icon={Share2} label="Share" onClick={shareSong} />
             <ActionPill icon={Download} label="Save" onClick={async () => { closePanels(); showToast('Downloading...'); const ok = await downloadSong(currentSong); showToast(ok ? 'Downloaded ✓' : 'Download failed', ok ? 'success' : 'error'); }} />
           </div>

@@ -258,17 +258,22 @@ export function PlayerProvider({ children }) {
     const onMeta = () => setDuration(cur()?.duration || 0);
     const onEnd = () => { if (!fadingRef.current && playNextRef.current) playNextRef.current(); };
     const onError = async (e) => {
-      await new Promise(r => setTimeout(r, 500));
+      const songAtError = currentSongRef.current;
+      await new Promise(r => setTimeout(r, 1000));
+      // After delay, check if we're still on the same song (user might have switched)
+      if (currentSongRef.current !== songAtError) return;
       const a = cur();
       const song = currentSongRef.current;
       if (!a?.src || !song || a.src === '') return;
       if (!a.src.includes('saavncdn.com') && !a.src.includes('.mp4') && !a.src.includes('.m4a')) return;
       if (a.error && a.error.code === 1) return;
-      if (errorHandlingRef.current) return; // Already handling an error
+      if (errorHandlingRef.current) return;
       errorHandlingRef.current = true;
       console.warn('Audio error, attempting stream URL refresh');
       try {
         const freshUrl = await refreshStreamUrl(song.id);
+        // Re-check song hasn't changed during refresh
+        if (currentSongRef.current !== song) return;
         if (freshUrl && freshUrl !== a.src) {
           a.src = freshUrl;
           a.load();
@@ -419,6 +424,7 @@ export function PlayerProvider({ children }) {
   function playDirect(song) {
     if (!song) return;
     cancelFade();
+    errorHandlingRef.current = false; // Reset error handling on intentional play
     // Resume AudioContext if enhanced mode active
     if (enhancedRef.current && audioCtxRef.current?.state === 'suspended') {
       audioCtxRef.current.resume();
