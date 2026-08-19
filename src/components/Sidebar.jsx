@@ -18,9 +18,9 @@ export default function Sidebar() {
       {/* Brand */}
       <div className="px-4 lg:px-5 py-5 flex items-center gap-2.5">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 via-pink-500 to-purple-600 flex items-center justify-center shadow-lg shadow-rose-500/25">
-          <span className="text-[14px] font-black text-white">M</span>
+          <span className="text-[12px] font-black text-white tracking-tighter">MA</span>
         </div>
-        <span className="hidden lg:block text-[17px] font-bold text-white tracking-tight">Musica</span>
+        <span className="hidden lg:block text-[16px] font-bold text-white tracking-tight">Music Area</span>
       </div>
 
       {/* Nav */}

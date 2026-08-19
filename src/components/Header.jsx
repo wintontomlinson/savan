@@ -8,14 +8,14 @@ export default function Header() {
         {/* Logo — mobile only */}
         <div className="flex items-center gap-2 md:hidden">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-rose-500 via-pink-500 to-purple-600 flex items-center justify-center shadow-lg shadow-rose-500/20">
-            <span className="text-[13px] font-black text-white">M</span>
+            <span className="text-[11px] font-black text-white tracking-tighter">MA</span>
           </div>
-          <span className="text-[15px] font-bold text-white tracking-tight">Musica</span>
+          <span className="text-[15px] font-bold text-white tracking-tight">Music Area</span>
         </div>
 
         {/* Desktop — greeting + search shortcut */}
         <div className="hidden md:flex items-center gap-4">
-          <span className="text-[14px] font-semibold text-white/70">Musica</span>
+          <span className="text-[14px] font-semibold text-white/70">Music Area</span>
         </div>
 
         {/* Right actions */}

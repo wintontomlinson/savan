@@ -361,7 +361,7 @@ export function PlayerProvider({ children }) {
     }
 
     // Update browser tab title
-    document.title = `${currentSong.title} - ${currentSong.artist} | Musica`;
+    document.title = `${currentSong.title} - ${currentSong.artist} | Music Area`;
 
     getNextSongs(currentSong).then(songs => {
       // Deduplicate: remove current song and any already in queue
