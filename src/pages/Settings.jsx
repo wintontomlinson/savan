@@ -4,15 +4,21 @@ import { usePlayer } from '../context/PlayerContext';
 import { clearCache, getCacheSize, getQuality, setQuality } from '../data/api';
 
 const EQ_PRESETS = [
-  { name: 'Flat', gains: [0, 0, 0, 0, 0] },
-  { name: 'Bass', gains: [6, 4, 0, -1, -2] },
-  { name: 'Vocal', gains: [-1, 0, 4, 3, 1] },
-  { name: 'Rock', gains: [5, 3, -1, 2, 4] },
-  { name: 'EDM', gains: [4, 2, 0, 3, 5] },
-  { name: 'Treble', gains: [-2, -1, 0, 3, 5] },
+  { name: 'Flat', gains: [0,0,0,0,0,0,0,0,0,0] },
+  { name: 'Bass Boost', gains: [6,5,4,3,1,0,0,0,0,0] },
+  { name: 'Treble Boost', gains: [0,0,0,0,0,1,2,4,5,6] },
+  { name: 'Vocal', gains: [-2,-1,0,2,4,4,3,2,0,-1] },
+  { name: 'Rock', gains: [5,4,2,0,-1,-1,1,3,4,5] },
+  { name: 'Pop', gains: [-1,1,3,4,3,1,0,-1,-2,-2] },
+  { name: 'Hip-Hop', gains: [5,4,1,3,-1,-1,2,0,1,3] },
+  { name: 'EDM', gains: [4,3,1,0,-2,0,1,3,4,5] },
+  { name: 'Jazz', gains: [3,2,1,2,-1,-1,0,1,2,3] },
+  { name: 'Classical', gains: [4,3,2,1,0,0,0,2,3,4] },
+  { name: 'Acoustic', gains: [3,2,0,1,2,2,1,2,3,2] },
+  { name: 'R&B', gains: [3,5,4,1,-1,0,2,3,2,1] },
 ];
 
-const EQ_BANDS = ['60Hz', '250Hz', '1kHz', '4kHz', '12kHz'];
+const EQ_BANDS = ['31', '63', '125', '250', '500', '1K', '2K', '4K', '8K', '16K'];
 
 export default function Settings() {
   const { volume, setVolume, boostLevel, setVolumeBoost, bassBoostOn, setBassBoost, resetAudio, applyEqPreset, setEqBand, showToast } = usePlayer();
@@ -20,7 +26,7 @@ export default function Settings() {
   const [streamQuality, setStreamQuality] = useState(() => getQuality());
   const [notifications, setNotifications] = useState(true);
   const [activePreset, setActivePreset] = useState('Flat');
-  const [eqValues, setEqValues] = useState([0, 0, 0, 0, 0]);
+  const [eqValues, setEqValues] = useState([0,0,0,0,0,0,0,0,0,0]);
 
   const handleCrossfade = (val) => {
     setCrossfade(val);

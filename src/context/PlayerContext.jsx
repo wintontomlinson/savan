@@ -78,13 +78,16 @@ export function PlayerProvider({ children }) {
       gainRef.current = audioCtxRef.current.createGain();
       gainRef.current.gain.value = boostLevel / 100;
       
-      // Create 5-band EQ
-      const freqs = [60, 250, 1000, 4000, 12000];
-      eqFiltersRef.current = freqs.map(freq => {
+      // Create 10-band EQ (professional studio frequencies)
+      const freqs = [31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
+      eqFiltersRef.current = freqs.map((freq, i) => {
         const filter = audioCtxRef.current.createBiquadFilter();
-        filter.type = 'peaking';
+        // First band = lowshelf, last = highshelf, rest = peaking
+        if (i === 0) filter.type = 'lowshelf';
+        else if (i === freqs.length - 1) filter.type = 'highshelf';
+        else filter.type = 'peaking';
         filter.frequency.value = freq;
-        filter.Q.value = 1.4;
+        filter.Q.value = i === 0 || i === freqs.length - 1 ? 0.7 : 1.2;
         filter.gain.value = 0;
         return filter;
       });
@@ -186,9 +189,10 @@ export function PlayerProvider({ children }) {
       const ok = initEnhancement();
       if (!ok) return;
     }
-    if (eqFiltersRef.current.length >= 2) {
-      eqFiltersRef.current[0].gain.value = on ? 8 : 0;  // 60Hz +8dB
-      eqFiltersRef.current[1].gain.value = on ? 5 : 0;  // 250Hz +5dB
+    if (eqFiltersRef.current.length >= 3) {
+      eqFiltersRef.current[0].gain.value = on ? 8 : 0;  // 31Hz +8dB
+      eqFiltersRef.current[1].gain.value = on ? 6 : 0;  // 63Hz +6dB
+      eqFiltersRef.current[2].gain.value = on ? 3 : 0;  // 125Hz +3dB
     }
   }, [initEnhancement]);
 
@@ -212,9 +216,10 @@ export function PlayerProvider({ children }) {
       eqFiltersRef.current.forEach(f => { f.gain.value = 0; });
     }
     // Reset bass boost filters specifically
-    if (enhancedRef.current && eqFiltersRef.current.length >= 2) {
+    if (enhancedRef.current && eqFiltersRef.current.length >= 3) {
       eqFiltersRef.current[0].gain.value = 0;
       eqFiltersRef.current[1].gain.value = 0;
+      eqFiltersRef.current[2].gain.value = 0;
     }
   }, []);
 
