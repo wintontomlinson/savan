@@ -174,6 +174,19 @@ export async function getAlbumById(id) {
   return result;
 }
 
+export async function getPlaylistById(id) {
+  if (!id) return [];
+  const cacheKey = `playlist:${id}`;
+  const cached = getCached(cacheKey, CACHE_TTL.album);
+  if (cached) return cached;
+
+  const data = await fetchApi(`/playlists?id=${id}`);
+  if (!data?.songs) return [];
+  const results = data.songs.map(mapSong).filter(Boolean);
+  if (results.length > 0) setCache(cacheKey, results);
+  return results;
+}
+
 export async function getSongSuggestions(songId) {
   if (!songId) return [];
   const cacheKey = `suggest:${songId}`;

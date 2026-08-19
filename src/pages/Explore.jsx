@@ -1,19 +1,19 @@
 import { useState, useRef, useEffect } from 'react';
 import { Loader2, Play, X, Shuffle, ChevronRight, Disc3, TrendingUp, ListMusic, Mic, Users, Radio } from 'lucide-react';
-import { searchSongs } from '../data/api';
+import { searchSongs, getPlaylistById } from '../data/api';
 import { usePlayer } from '../context/PlayerContext';
 import SongRow from '../components/SongRow';
 import SongCard from '../components/SongCard';
 import HorizontalScroll from '../components/HorizontalScroll';
 
-// Quick browse sections
+// Browse sections — using real JioSaavn playlist IDs
 const BROWSE_SECTIONS = [
-  { id: 'new', label: 'New Releases', icon: Disc3, query: 'new hindi songs 2024 latest', color: 'from-rose-500/20 to-pink-600/10', iconColor: 'text-rose-400' },
-  { id: 'charts', label: 'Charts', icon: TrendingUp, query: 'top hits india trending 2024', color: 'from-amber-500/20 to-orange-600/10', iconColor: 'text-amber-400' },
-  { id: 'playlists', label: 'Top Playlists', icon: ListMusic, query: 'best bollywood playlist hits', color: 'from-emerald-500/20 to-green-600/10', iconColor: 'text-emerald-400' },
-  { id: 'podcasts', label: 'Podcasts', icon: Mic, query: 'hindi podcast popular trending', color: 'from-purple-500/20 to-violet-600/10', iconColor: 'text-purple-400' },
-  { id: 'artists', label: 'Top Artists', icon: Users, query: 'top indian artists popular songs', color: 'from-blue-500/20 to-cyan-600/10', iconColor: 'text-blue-400' },
-  { id: 'radio', label: 'Radio', icon: Radio, query: 'radio hits mix nonstop bollywood', color: 'from-indigo-500/20 to-purple-600/10', iconColor: 'text-indigo-400' },
+  { id: 'new', label: 'New Releases', icon: Disc3, playlistId: '1300709425', color: 'from-rose-500/20 to-pink-600/10', iconColor: 'text-rose-400' },
+  { id: 'charts', label: 'Top Charts', icon: TrendingUp, playlistId: '110858205', color: 'from-amber-500/20 to-orange-600/10', iconColor: 'text-amber-400' },
+  { id: 'playlists', label: 'Top Playlists', icon: ListMusic, query: 'top bollywood hits playlist 2024', color: 'from-emerald-500/20 to-green-600/10', iconColor: 'text-emerald-400' },
+  { id: 'podcasts', label: 'Podcasts', icon: Mic, query: 'motivational podcast hindi stories', color: 'from-purple-500/20 to-violet-600/10', iconColor: 'text-purple-400' },
+  { id: 'artists', label: 'Top Artists', icon: Users, query: 'arijit singh pritam vishal mishra latest', color: 'from-blue-500/20 to-cyan-600/10', iconColor: 'text-blue-400' },
+  { id: 'radio', label: 'Radio', icon: Radio, query: 'nonstop bollywood party mix 2024', color: 'from-indigo-500/20 to-purple-600/10', iconColor: 'text-indigo-400' },
 ];
 
 const ARTISTS = [
@@ -89,13 +89,17 @@ export default function Explore() {
 
   const loadBrowse = async (section) => {
     if (browseData[section.id]) {
-      // Already loaded — just play the section
       const data = browseData[section.id];
       if (data.length > 0) playSong(data[0], data);
       return;
     }
     setBrowseLoading(p => ({ ...p, [section.id]: true }));
-    const results = await searchSongs(section.query, 12) || [];
+    let results = [];
+    if (section.playlistId) {
+      results = await getPlaylistById(section.playlistId) || [];
+    } else {
+      results = await searchSongs(section.query, 15) || [];
+    }
     setBrowseData(p => ({ ...p, [section.id]: results }));
     setBrowseLoading(p => ({ ...p, [section.id]: false }));
   };
