@@ -210,10 +210,10 @@ export default function ExpandedPlayer() {
                 </div>
               )}
               {!lyricsLoading && lyrics && lyrics.synced && (
-                <SyncedLyrics lrcData={lyrics.data} currentTime={currentTime} />
+                <SyncedLyrics lrcData={lyrics.data} />
               )}
               {!lyricsLoading && lyrics && !lyrics.synced && (
-                <PlainLyrics text={lyrics.data} currentTime={currentTime} duration={duration} />
+                <PlainLyrics text={lyrics.data} />
               )}
             </div>
           )}
@@ -383,8 +383,7 @@ function ActionPill({ icon: Icon, label, active, onClick, badge }) {
   );
 }
 
-// PERFECT SYNCED LYRICS — uses real timestamps from LRCLIB
-// Format: "[MM:SS.ms] text" per line
+// SYNCED LYRICS — just displays text, scrolls with song
 function SyncedLyrics({ lrcData, currentTime }) {
   const containerRef = useRef(null);
 
@@ -394,75 +393,31 @@ function SyncedLyrics({ lrcData, currentTime }) {
       .map(line => {
         const match = line.match(/^\[(\d{2}):(\d{2})\.(\d{2,3})\]\s?(.*)$/);
         if (!match) return null;
-        const mins = parseInt(match[1]);
-        const secs = parseInt(match[2]);
-        const ms = parseInt(match[3].padEnd(3, '0'));
-        const time = mins * 60 + secs + ms / 1000;
         const text = match[4].trim();
-        return text ? { time, text } : null;
+        return text || null;
       })
       .filter(Boolean);
   }, [lrcData]);
 
-  // Find active line — the last line whose timestamp <= currentTime
-  let activeIndex = -1;
-  for (let i = lines.length - 1; i >= 0; i--) {
-    if (currentTime >= lines[i].time) {
-      activeIndex = i;
-      break;
-    }
-  }
-
-  useEffect(() => {
-    if (!containerRef.current || activeIndex < 0) return;
-    const el = containerRef.current.querySelector('[data-active="true"]');
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, [activeIndex]);
-
   return (
     <div ref={containerRef} className="space-y-3 text-center py-2">
       {lines.map((line, i) => (
-        <p key={i}
-          data-active={i === activeIndex ? 'true' : undefined}
-          className="text-[14px] sm:text-[16px] font-medium leading-relaxed text-white/80">
-          {line.text}
+        <p key={i} className="text-[14px] sm:text-[16px] font-medium leading-relaxed text-white/80">
+          {line}
         </p>
       ))}
     </div>
   );
 }
 
-// PLAIN LYRICS fallback — no timestamps, best-effort estimation
-function PlainLyrics({ text, currentTime, duration }) {
-  const containerRef = useRef(null);
+// PLAIN LYRICS fallback
+function PlainLyrics({ text }) {
   const lines = text.split('\n').filter(l => l.trim());
-  const totalLines = lines.length;
-
-  // Simple estimation with absolute seconds
-  const introSec = duration < 150 ? 5 : duration < 240 ? 8 : 12;
-  const outroSec = duration < 150 ? 5 : duration < 240 ? 10 : 15;
-  const vocalStart = introSec;
-  const vocalEnd = duration - outroSec;
-  const timePerLine = (vocalEnd - vocalStart) / totalLines;
-
-  let activeIndex = -1;
-  if (currentTime >= vocalStart) {
-    activeIndex = Math.min(totalLines - 1, Math.floor((currentTime - vocalStart) / timePerLine));
-  }
-  if (currentTime >= vocalEnd && totalLines > 0) activeIndex = totalLines - 1;
-
-  useEffect(() => {
-    if (!containerRef.current || activeIndex < 0) return;
-    const el = containerRef.current.querySelector('[data-active="true"]');
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, [activeIndex]);
 
   return (
-    <div ref={containerRef} className="space-y-3 text-center py-2">
+    <div className="space-y-3 text-center py-2">
       {lines.map((line, i) => (
-        <p key={i}
-          data-active={i === activeIndex ? 'true' : undefined}
-          className="text-[14px] sm:text-[16px] font-medium leading-relaxed text-white/80">
+        <p key={i} className="text-[14px] sm:text-[16px] font-medium leading-relaxed text-white/80">
           {line}
         </p>
       ))}
