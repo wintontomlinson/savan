@@ -349,7 +349,7 @@ export default function ExpandedPlayer() {
           <div className="flex items-center justify-center gap-2.5 max-w-sm mx-auto">
             <ActionPill icon={Mic2} label="Lyrics" active={activePanel === 'lyrics'} onClick={() => togglePanel('lyrics')} />
             <ActionPill icon={ListMusic} label="Queue" active={activePanel === 'queue'} onClick={() => togglePanel('queue')} badge={queue.length > 0 ? queue.length : null} />
-            <ActionPill icon={liked ? Check : Plus} label={liked ? 'Saved' : 'Save'} active={liked} onClick={() => toggleLike(currentSong.id)} />
+            <ActionPill icon={liked ? Check : Plus} label={liked ? 'Downloaded' : 'Download'} active={liked} onClick={() => toggleLike(currentSong.id)} />
             <SleepTimer />
           </div>
         </div>
