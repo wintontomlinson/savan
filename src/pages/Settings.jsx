@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Timer, Trash2, Info, Wifi, Volume2, Shield, Headphones, Zap, Bell, SlidersHorizontal } from 'lucide-react';
+import { Timer, Trash2, Info, Wifi, Volume2, Shield, Headphones, Zap, Bell, SlidersHorizontal, Download, Smartphone } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { clearCache, getCacheSize } from '../data/api';
 
@@ -200,6 +200,27 @@ export default function Settings() {
         <SettingRow icon={Info} label="Music Area" desc="Free, ad-free music streaming">
           <span className="text-[11px] text-[#555] bg-white/[0.04] px-2 py-1 rounded-lg">v2.0.0</span>
         </SettingRow>
+      </Section>
+
+      {/* Download App */}
+      <Section title="Get the App">
+        <div className="px-4 py-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-rose-500 to-purple-600 flex items-center justify-center shadow-lg shadow-rose-500/20">
+              <Smartphone size={18} className="text-white" />
+            </div>
+            <div>
+              <p className="text-[13px] text-white font-semibold">Music Area for Android</p>
+              <p className="text-[11px] text-white/40">Install the app on your phone</p>
+            </div>
+          </div>
+          <a href="https://musicarea.vercel.app" target="_blank" rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full py-3 bg-white rounded-xl text-[13px] text-black font-bold btn-press shadow-md hover:shadow-lg transition-all active:scale-95">
+            <Download size={15} />
+            Download APK
+          </a>
+          <p className="text-[10px] text-white/25 mt-2 text-center">Or add to Home Screen from browser menu</p>
+        </div>
       </Section>
     </div>
   );
