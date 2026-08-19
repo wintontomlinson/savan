@@ -136,7 +136,7 @@ export default function SearchResults() {
                   <Clock size={14} className="text-[#666]" />
                   <p className="text-[13px] text-white font-semibold">Recent</p>
                 </div>
-                <button onClick={() => { localStorage.removeItem('ma_history'); showToast('History cleared'); window.location.reload(); }}
+                <button onClick={() => { localStorage.removeItem('ma_history'); showToast('Recent cleared'); }}
                   className="text-[11px] text-[#666] hover:text-white transition-colors btn-press">
                   Clear all
                 </button>
