@@ -88,7 +88,15 @@ export default function Explore() {
   };
 
   const loadBrowse = async (section) => {
-    if (browseData[section.id]) return; // already loaded, do nothing
+    if (browseData[section.id]) {
+      // Already loaded — shuffle play
+      const data = browseData[section.id];
+      if (data.length > 0) {
+        const shuffled = [...data].sort(() => Math.random() - 0.5);
+        playSong(shuffled[0], shuffled);
+      }
+      return;
+    }
     setBrowseLoading(p => ({ ...p, [section.id]: true }));
     let results = [];
     if (section.playlistId) {
@@ -98,6 +106,11 @@ export default function Explore() {
     }
     setBrowseData(p => ({ ...p, [section.id]: results }));
     setBrowseLoading(p => ({ ...p, [section.id]: false }));
+    // Auto shuffle play on first load too
+    if (results.length > 0) {
+      const shuffled = [...results].sort(() => Math.random() - 0.5);
+      playSong(shuffled[0], shuffled);
+    }
   };
 
   // Load all browse sections on mount
