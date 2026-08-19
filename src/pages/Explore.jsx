@@ -6,18 +6,18 @@ import SongRow from '../components/SongRow';
 import SongCard from '../components/SongCard';
 import HorizontalScroll from '../components/HorizontalScroll';
 
-// Browse sections — diverse genres, no overlap
+// Browse sections — diverse genres with search queries for more variety
 const BROWSE_SECTIONS = [
-  { id: 'trending', label: 'Trending Now', icon: TrendingUp, playlistId: '1219706044', color: 'from-rose-500/20 to-pink-600/10', iconColor: 'text-rose-400' },
-  { id: 'dance', label: 'Dance Hits', icon: Disc3, playlistId: '1219706999', color: 'from-amber-500/20 to-orange-600/10', iconColor: 'text-amber-400' },
-  { id: 'retro', label: '90s Bollywood', icon: Radio, playlistId: '1167751266', color: 'from-emerald-500/20 to-green-600/10', iconColor: 'text-emerald-400' },
-  { id: 'english', label: 'English Pop', icon: Users, playlistId: '303128179', color: 'from-blue-500/20 to-cyan-600/10', iconColor: 'text-blue-400' },
-  { id: 'lofi', label: 'Lo-Fi Chill', icon: ListMusic, playlistId: '1079336813', color: 'from-purple-500/20 to-violet-600/10', iconColor: 'text-purple-400' },
-  { id: 'hiphop', label: 'Hip-Hop', icon: Mic, playlistId: '1265128247', color: 'from-indigo-500/20 to-purple-600/10', iconColor: 'text-indigo-400' },
-  { id: 'sad', label: 'Sad Songs', icon: ListMusic, playlistId: '802336660', color: 'from-sky-500/20 to-blue-600/10', iconColor: 'text-sky-400' },
-  { id: 'workout', label: 'Workout', icon: TrendingUp, playlistId: '156710699', color: 'from-orange-500/20 to-red-600/10', iconColor: 'text-orange-400' },
-  { id: 'sufi', label: 'Sufi', icon: Radio, playlistId: '1262711873', color: 'from-teal-500/20 to-emerald-600/10', iconColor: 'text-teal-400' },
-  { id: 'punjabi', label: 'Punjabi Hits', icon: Disc3, playlistId: '4144832', color: 'from-pink-500/20 to-rose-600/10', iconColor: 'text-pink-400' },
+  { id: 'trending', label: 'Trending Now', icon: TrendingUp, playlistId: '1219706044', searchQuery: 'latest hindi hits 2024 trending', color: 'from-rose-500/20 to-pink-600/10', iconColor: 'text-rose-400' },
+  { id: 'dance', label: 'Dance Hits', icon: Disc3, playlistId: '1219706999', searchQuery: 'bollywood dance party songs', color: 'from-amber-500/20 to-orange-600/10', iconColor: 'text-amber-400' },
+  { id: 'retro', label: '90s Bollywood', icon: Radio, playlistId: '1167751266', searchQuery: '90s bollywood songs classic hindi', color: 'from-emerald-500/20 to-green-600/10', iconColor: 'text-emerald-400' },
+  { id: 'english', label: 'English Pop', icon: Users, playlistId: '303128179', searchQuery: 'english pop songs trending 2024', color: 'from-blue-500/20 to-cyan-600/10', iconColor: 'text-blue-400' },
+  { id: 'lofi', label: 'Lo-Fi Chill', icon: ListMusic, playlistId: '1079336813', searchQuery: 'lofi hindi chill relax', color: 'from-purple-500/20 to-violet-600/10', iconColor: 'text-purple-400' },
+  { id: 'hiphop', label: 'Hip-Hop', icon: Mic, playlistId: '1265128247', searchQuery: 'indian hip hop rap songs', color: 'from-indigo-500/20 to-purple-600/10', iconColor: 'text-indigo-400' },
+  { id: 'sad', label: 'Sad Songs', icon: ListMusic, playlistId: '802336660', searchQuery: 'sad hindi songs heartbreak', color: 'from-sky-500/20 to-blue-600/10', iconColor: 'text-sky-400' },
+  { id: 'workout', label: 'Workout', icon: TrendingUp, playlistId: '156710699', searchQuery: 'workout gym motivation hindi songs', color: 'from-orange-500/20 to-red-600/10', iconColor: 'text-orange-400' },
+  { id: 'sufi', label: 'Sufi', icon: Radio, playlistId: '1262711873', searchQuery: 'sufi songs qawwali hindi', color: 'from-teal-500/20 to-emerald-600/10', iconColor: 'text-teal-400' },
+  { id: 'punjabi', label: 'Punjabi Hits', icon: Disc3, playlistId: '4144832', searchQuery: 'punjabi songs latest hits', color: 'from-pink-500/20 to-rose-600/10', iconColor: 'text-pink-400' },
 ];
 
 const ARTISTS = [
@@ -92,31 +92,23 @@ export default function Explore() {
   };
 
   const loadBrowse = async (section, shouldPlay = false) => {
-    if (browseData[section.id]) {
-      if (shouldPlay) {
-        const data = browseData[section.id];
-        if (data.length > 0) {
-          const filtered = data.filter(s => s.id !== (currentSong?.id || ''));
-          const toPlay = filtered.length > 0 ? filtered : data;
-          const shuffled = [...toPlay].sort(() => Math.random() - 0.5);
-          playSong(shuffled[0], shuffled);
-        }
+    if (shouldPlay) {
+      // On click — fetch fresh 30 songs via search for variety
+      const fresh = await searchSongs(section.searchQuery, 30) || [];
+      if (fresh.length > 0) {
+        const filtered = fresh.filter(s => s.id !== (currentSong?.id || ''));
+        const toPlay = filtered.length > 0 ? filtered : fresh;
+        const shuffled = [...toPlay].sort(() => Math.random() - 0.5);
+        playSong(shuffled[0], shuffled);
       }
       return;
     }
+    // On mount — load playlist for display
+    if (browseData[section.id]) return;
     setBrowseLoading(p => ({ ...p, [section.id]: true }));
-    let results = [];
-    if (section.playlistId) {
-      results = await getPlaylistById(section.playlistId) || [];
-    } else {
-      results = await searchSongs(section.query, 15) || [];
-    }
+    const results = await getPlaylistById(section.playlistId) || [];
     setBrowseData(p => ({ ...p, [section.id]: results }));
     setBrowseLoading(p => ({ ...p, [section.id]: false }));
-    if (shouldPlay && results.length > 0) {
-      const shuffled = [...results].sort(() => Math.random() - 0.5);
-      playSong(shuffled[0], shuffled);
-    }
   };
 
   // Load all browse sections on mount (NO auto-play)
