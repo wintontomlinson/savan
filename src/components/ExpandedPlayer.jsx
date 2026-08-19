@@ -378,84 +378,60 @@ function ActionPill({ icon: Icon, label, active, onClick, badge }) {
   );
 }
 
-// Synced lyrics — smart timing that matches actual song structure
+// Synced lyrics — best-effort timing without real timestamps
+// JioSaavn only provides plain text, so we estimate timing based on song structure
 function SyncedLyrics({ lyrics, currentTime, duration }) {
   const containerRef = useRef(null);
   const lines = lyrics.split('\n').filter(l => l.trim());
   const totalLines = lines.length;
 
-  // Smart timing: Most songs have structure:
-  // - Intro: ~10-15% of song (no lyrics)
-  // - Verses + Chorus: ~70-75% of song (lyrics happen here)
-  // - Outro: ~10-15% of song (no lyrics or fade)
-  // 
-  // Adjust based on song length and line count:
-  // Short songs (<180s) → less intro/outro padding
-  // Long songs (>300s) → more intro/outro padding
-  // Few lines (<15) → slower pace, more time per line
-  // Many lines (>30) → faster pace, verse-heavy song
+  // Estimate when vocals actually start and end (in seconds, not percentage)
+  // Most Indian songs: 5-15s intro, 5-15s outro
+  // The key insight: intros are relatively SHORT in absolute time regardless of song length
+  
+  // Intro: typically 8-15 seconds for most songs
+  // Shorter songs tend to have shorter intros
+  let introSec = duration < 150 ? 5 : duration < 240 ? 8 : 12;
+  
+  // Outro: typically 8-20 seconds (longer songs have longer outros)
+  let outroSec = duration < 150 ? 5 : duration < 240 ? 10 : 15;
 
-  const isShort = duration < 180;
-  const isLong = duration > 300;
-  const isFewLines = totalLines < 15;
-  const isManyLines = totalLines > 30;
-
-  // Calculate vocal start/end as percentage of song
-  let startPct = isShort ? 0.08 : isLong ? 0.12 : 0.10;
-  let endPct = isShort ? 0.95 : isLong ? 0.88 : 0.90;
-
-  // If few lines, likely a slower song — tighten the window more toward middle
-  if (isFewLines) {
-    startPct += 0.05;
-    endPct -= 0.03;
+  // For songs with very few lyrics lines, the singing is spread out more
+  // (likely has instrumental breaks between verses)
+  const avgSecPerLine = (duration - introSec - outroSec) / totalLines;
+  
+  // If average time per line > 8 seconds, there are likely instrumental gaps
+  // Reduce the singing window slightly to account for instrumental breaks
+  if (avgSecPerLine > 8 && totalLines < 20) {
+    // Very few lines spread across a long song — likely long instrumentals
+    introSec += 5;
+    outroSec += 5;
   }
 
-  // If many lines, lyrics run longer — extend end
-  if (isManyLines) {
-    startPct -= 0.02;
-    endPct += 0.02;
+  const vocalStart = introSec;
+  const vocalEnd = duration - outroSec;
+  const vocalDuration = vocalEnd - vocalStart;
+
+  // Distribute lines evenly across the vocal section
+  // Simple even distribution is actually more accurate than trying to be clever
+  // since we have no real timing data
+  const timePerLine = vocalDuration / totalLines;
+
+  // Find which line should be active at the current time
+  let activeIndex = -1;
+  
+  if (currentTime >= vocalStart) {
+    const elapsed = currentTime - vocalStart;
+    activeIndex = Math.min(totalLines - 1, Math.floor(elapsed / timePerLine));
   }
 
-  const startTime = duration * startPct;
-  const endTime = duration * Math.min(endPct, 0.97);
-  const activeRange = endTime - startTime;
-
-  // Non-linear distribution: chorus sections repeat so give slightly more time
-  // to middle lines (usually chorus) vs edges (usually verses with faster lyrics)
-  const getLineTime = (lineIndex) => {
-    // Give ~15% more time to lines in the middle third (chorus area)
-    const pos = lineIndex / totalLines;
-    if (pos > 0.3 && pos < 0.7) return 1.12; // chorus — slightly slower
-    return 0.94; // verses — slightly faster
-  };
-
-  // Calculate weighted time distribution
-  const weights = lines.map((_, i) => getLineTime(i));
-  const totalWeight = weights.reduce((s, w) => s + w, 0);
-  const timePerWeight = activeRange / totalWeight;
-
-  // Build cumulative timestamps for each line
-  const lineTimestamps = [];
-  let cumTime = startTime;
-  for (let i = 0; i < totalLines; i++) {
-    lineTimestamps.push(cumTime);
-    cumTime += weights[i] * timePerWeight;
+  // If we've passed all lines (in outro), keep last line active
+  if (currentTime >= vocalEnd && totalLines > 0) {
+    activeIndex = totalLines - 1;
   }
-
-  // Find active line based on current time
-  let activeIndex = 0;
-  for (let i = totalLines - 1; i >= 0; i--) {
-    if (currentTime >= lineTimestamps[i]) {
-      activeIndex = i;
-      break;
-    }
-  }
-
-  // Before lyrics start, show nothing highlighted
-  if (currentTime < startTime) activeIndex = -1;
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || activeIndex < 0) return;
     const el = containerRef.current.querySelector('[data-active="true"]');
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [activeIndex]);
