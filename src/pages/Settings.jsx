@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Timer, Trash2, Info, Wifi, Volume2, Shield, Headphones, Zap, Bell, SlidersHorizontal } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
-import { clearCache, getCacheSize, getQuality, setQuality } from '../data/api';
+import { clearCache, getCacheSize } from '../data/api';
 
 const EQ_PRESETS = [
   { name: 'Flat', gains: [0,0,0,0,0,0,0,0,0,0] },
@@ -23,7 +23,6 @@ const EQ_BANDS = ['31', '63', '125', '250', '500', '1K', '2K', '4K', '8K', '16K'
 export default function Settings() {
   const { volume, setVolume, boostLevel, setVolumeBoost, bassBoostOn, setBassBoost, resetAudio, applyEqPreset, setEqBand, showToast } = usePlayer();
   const [crossfade, setCrossfade] = useState(() => parseInt(localStorage.getItem('crossfade_dur') || '5'));
-  const [streamQuality, setStreamQuality] = useState(() => getQuality());
   const [notifications, setNotifications] = useState(true);
   const [activePreset, setActivePreset] = useState('Flat');
   const [eqValues, setEqValues] = useState([0,0,0,0,0,0,0,0,0,0]);
@@ -31,12 +30,6 @@ export default function Settings() {
   const handleCrossfade = (val) => {
     setCrossfade(val);
     localStorage.setItem('crossfade_dur', val.toString());
-  };
-
-  const handleQuality = (q) => {
-    setQuality(q);
-    setStreamQuality(q);
-    showToast(`Quality: ${q === 'auto' ? 'Auto' : q}`);
   };
 
   const handlePreset = (preset) => {
@@ -156,17 +149,10 @@ export default function Settings() {
 
       {/* Audio Quality */}
       <Section title="Audio Quality">
-        <SettingRow icon={Wifi} label="Streaming" desc="Quality adjusts to connection">
-          <select value={streamQuality} onChange={e => handleQuality(e.target.value)}
-            className="bg-white/[0.06] text-white text-[12px] font-medium px-3 py-2 rounded-xl border border-white/[0.06] outline-none cursor-pointer appearance-none">
-            <option value="auto" className="bg-[#1a1a1a]">Auto</option>
-            <option value="320kbps" className="bg-[#1a1a1a]">320kbps HD</option>
-            <option value="160kbps" className="bg-[#1a1a1a]">160kbps</option>
-            <option value="96kbps" className="bg-[#1a1a1a]">96kbps</option>
-            <option value="48kbps" className="bg-[#1a1a1a]">48kbps</option>
-          </select>
+        <SettingRow icon={Wifi} label="Streaming" desc="Always maximum quality">
+          <span className="text-[12px] text-emerald-400 font-semibold">320kbps HD</span>
         </SettingRow>
-        <SettingRow icon={Headphones} label="Premium Audio" desc="320kbps AAC HD streaming">
+        <SettingRow icon={Headphones} label="Format" desc="AAC High Definition">
           <span className="text-[11px] text-emerald-400 font-medium bg-emerald-500/10 px-2.5 py-1 rounded-lg">Active</span>
         </SettingRow>
       </Section>

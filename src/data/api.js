@@ -76,12 +76,11 @@ function bestImage(images) {
 
 function getAudioByQuality(urls, quality) {
   if (!urls?.length) return '';
-  // Auto mode: pick quality based on network speed
-  const resolvedQuality = quality === 'auto' ? detectQuality() : quality;
-  const match = urls.find(u => u.quality === resolvedQuality);
+  // Always try 320kbps first (best quality)
+  const match = urls.find(u => u.quality === '320kbps');
   if (match?.url) return match.url;
   // Fallback: try highest to lowest
-  const order = ['320kbps', '160kbps', '96kbps', '48kbps'];
+  const order = ['160kbps', '96kbps', '48kbps'];
   for (const q of order) {
     const m = urls.find(u => u.quality === q);
     if (m?.url) return m.url;
@@ -89,26 +88,8 @@ function getAudioByQuality(urls, quality) {
   return urls[urls.length - 1]?.url || '';
 }
 
-// Auto-detect quality based on network connection
-function detectQuality() {
-  try {
-    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    if (!conn) return '320kbps'; // Default to best if API not available
-    
-    const type = conn.effectiveType; // '4g', '3g', '2g', 'slow-2g'
-    const downlink = conn.downlink; // Mbps
-    
-    if (type === '4g' || downlink >= 5) return '320kbps';
-    if (type === '3g' || downlink >= 1.5) return '160kbps';
-    if (type === '2g' || downlink >= 0.5) return '96kbps';
-    return '48kbps';
-  } catch {
-    return '320kbps';
-  }
-}
-
 export function getQuality() {
-  try { return localStorage.getItem('audio_quality') || 'auto'; } catch { return 'auto'; }
+  return '320kbps';
 }
 
 export function setQuality(q) {
