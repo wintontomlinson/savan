@@ -204,22 +204,40 @@ export default function Settings() {
 
       {/* Download App */}
       <Section title="Get the App">
-        <div className="px-4 py-4">
-          <div className="flex items-center gap-3 mb-3">
+        <div className="px-4 py-4 space-y-3">
+          <div className="flex items-center gap-3 mb-1">
             <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-rose-500 to-purple-600 flex items-center justify-center shadow-lg shadow-rose-500/20">
               <Smartphone size={18} className="text-white" />
             </div>
             <div>
               <p className="text-[13px] text-white font-semibold">Music Area for Android</p>
-              <p className="text-[11px] text-white/40">Install the app on your phone</p>
+              <p className="text-[11px] text-white/40">Install on your device</p>
             </div>
           </div>
-          <a href="https://musicarea.vercel.app" target="_blank" rel="noopener noreferrer"
+
+          {/* Install PWA */}
+          <button onClick={() => {
+            if (window.deferredPrompt) {
+              window.deferredPrompt.prompt();
+              window.deferredPrompt.userChoice.then(() => { window.deferredPrompt = null; });
+            } else {
+              alert('Tap browser menu (⋮) → "Add to Home Screen" or "Install App"');
+            }
+          }}
             className="flex items-center justify-center gap-2 w-full py-3 bg-white rounded-xl text-[13px] text-black font-bold btn-press shadow-md hover:shadow-lg transition-all active:scale-95">
+            <Download size={15} />
+            Install App
+          </button>
+
+          {/* APK Download */}
+          <a href="https://github.com/nicotinefull/nicotinefull/releases/download/APK/app-release.apk"
+            download
+            className="flex items-center justify-center gap-2 w-full py-3 bg-white/[0.06] hover:bg-white/[0.1] rounded-xl text-[13px] text-white font-semibold btn-press transition-all active:scale-95 border border-white/[0.06]">
             <Download size={15} />
             Download APK
           </a>
-          <p className="text-[10px] text-white/25 mt-2 text-center">Or add to Home Screen from browser menu</p>
+
+          <p className="text-[10px] text-white/25 text-center">Install = adds to home screen (no download needed)</p>
         </div>
       </Section>
     </div>
