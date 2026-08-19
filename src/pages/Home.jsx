@@ -9,14 +9,22 @@ import HorizontalScroll from '../components/HorizontalScroll';
 import SongRow from '../components/SongRow';
 
 const MOODS = [
-  { label: 'Chill', query: 'lofi chill hindi relax', color: 'from-[#1a237e] to-[#0d47a1]', icon: '🎧' },
-  { label: 'Party', query: 'party bollywood dance hits', color: 'from-[#880e4f] to-[#ad1457]', icon: '🪩' },
-  { label: 'Sad', query: 'sad hindi heartbreak songs', color: 'from-[#1a1a2e] to-[#2d2d44]', icon: '🌧️' },
-  { label: 'Workout', query: 'workout gym motivation hindi', color: 'from-[#b71c1c] to-[#e65100]', icon: '🔥' },
-  { label: 'Romance', query: 'romantic hindi love songs', color: 'from-[#4a148c] to-[#7b1fa2]', icon: '💕' },
-  { label: 'Drive', query: 'road trip hindi songs', color: 'from-[#004d40] to-[#00695c]', icon: '🛣️' },
-  { label: 'Sleep', query: 'sleep calm peaceful hindi', color: 'from-[#1a237e] to-[#283593]', icon: '🌙' },
-  { label: 'Focus', query: 'study focus instrumental', color: 'from-[#33691e] to-[#558b2f]', icon: '🎯' },
+  { label: 'Chill', query: 'lofi chill hindi relax', icon: '🎧' },
+  { label: 'Party', query: 'party bollywood dance hits', icon: '🪩' },
+  { label: 'Sad', query: 'sad hindi heartbreak songs', icon: '🌧️' },
+  { label: 'Workout', query: 'workout gym motivation hindi', icon: '🔥' },
+  { label: 'Romance', query: 'romantic hindi love songs', icon: '💕' },
+  { label: 'Drive', query: 'road trip hindi songs', icon: '🛣️' },
+  { label: 'Sleep', query: 'sleep calm peaceful hindi', icon: '🌙' },
+  { label: 'Focus', query: 'study focus instrumental', icon: '🎯' },
+  { label: 'Devotional', query: 'bhajan aarti devotional hindi', icon: '🙏' },
+  { label: 'Retro', query: '90s bollywood old songs classic', icon: '📻' },
+  { label: 'Punjabi', query: 'punjabi hits latest 2024', icon: '🎵' },
+  { label: 'English', query: 'english pop hits trending', icon: '🌍' },
+  { label: 'Hip-Hop', query: 'indian hip hop rap 2024', icon: '🎤' },
+  { label: 'Sufi', query: 'sufi songs qawwali hindi', icon: '🌀' },
+  { label: 'Rain', query: 'barish rain hindi romantic', icon: '🌧️' },
+  { label: 'Night', query: 'late night hindi songs', icon: '🌃' },
 ];
 
 export default function Home() {
