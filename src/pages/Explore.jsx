@@ -232,26 +232,45 @@ export default function Explore() {
 
 function ArtistCard({ artist, isActive, onClick }) {
   return (
-    <button onClick={onClick} className="flex flex-col items-center gap-2.5 group transition-all duration-200 active:scale-95">
+    <button onClick={onClick} className="flex flex-col items-center gap-2 group transition-all duration-300 active:scale-[0.93]">
       <div className="relative w-full aspect-square">
-        <img src={artist.img} alt={artist.name}
-          className={`w-full h-full rounded-full object-cover transition-all duration-300 ${
-            isActive
-              ? 'ring-[3px] ring-rose-400 shadow-lg shadow-rose-500/20 scale-[0.95]'
-              : 'ring-1 ring-white/[0.06] group-hover:ring-white/[0.15] group-hover:scale-[1.03]'
-          }`} loading="lazy" />
-        <div className={`absolute inset-0 rounded-full flex items-center justify-center transition-all duration-200 ${
-          isActive ? 'bg-black/30 opacity-100' : 'bg-black/0 opacity-0 group-hover:bg-black/30 group-hover:opacity-100'
+        {/* Outer glow for active */}
+        {isActive && <div className="absolute -inset-1 rounded-full bg-gradient-to-b from-rose-500/30 to-rose-600/10 blur-md" />}
+        
+        {/* Image container */}
+        <div className={`relative w-full h-full rounded-full overflow-hidden transition-all duration-300 ${
+          isActive
+            ? 'ring-2 ring-rose-400 shadow-xl shadow-rose-500/25'
+            : 'ring-1 ring-white/[0.08] shadow-lg shadow-black/40 group-hover:ring-white/[0.15] group-hover:shadow-xl group-hover:shadow-black/60'
         }`}>
-          <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-200 ${
-            isActive ? 'bg-rose-500 scale-100' : 'bg-white scale-75 group-hover:scale-100'
+          <img src={artist.img} alt={artist.name}
+            className={`w-full h-full object-cover transition-all duration-300 ${
+              isActive ? 'scale-110 brightness-90' : 'group-hover:scale-110 group-hover:brightness-75'
+            }`} loading="lazy" />
+          
+          {/* Gradient overlay */}
+          <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent transition-opacity duration-300 ${
+            isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          }`} />
+          
+          {/* Play button */}
+          <div className={`absolute inset-0 flex items-center justify-center transition-all duration-250 ${
+            isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           }`}>
-            <Play size={13} className={isActive ? 'text-white ml-0.5' : 'text-black ml-0.5'} fill={isActive ? 'white' : 'black'} />
+            <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-xl transition-all duration-250 ${
+              isActive 
+                ? 'bg-rose-500 scale-100 shadow-rose-500/30' 
+                : 'bg-white/90 scale-75 group-hover:scale-100 shadow-black/30'
+            }`}>
+              <Play size={14} className={isActive ? 'text-white ml-0.5' : 'text-black ml-0.5'} fill={isActive ? 'white' : 'black'} />
+            </div>
           </div>
         </div>
       </div>
-      <p className={`text-[11px] sm:text-[12px] font-medium text-center leading-tight truncate w-full px-1 transition-colors duration-200 ${
-        isActive ? 'text-rose-400' : 'text-white/80 group-hover:text-white'
+      
+      {/* Name */}
+      <p className={`text-[11px] sm:text-[12px] font-semibold text-center leading-tight truncate w-full px-0.5 transition-colors duration-200 ${
+        isActive ? 'text-rose-400' : 'text-white/70 group-hover:text-white'
       }`}>{artist.name}</p>
     </button>
   );
