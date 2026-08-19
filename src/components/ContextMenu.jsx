@@ -16,9 +16,9 @@ export default function ContextMenu({song,className=''}){
     {icon:Play,label:'Play now',action:()=>playSong(song)},
     {icon:ListPlus,label:'Add to queue',action:()=>addToQueue(song)},
     {icon:Heart,label:liked?'Remove from Liked':'Add to Liked',action:()=>toggleLike(song.id)},
-    {icon:Disc3,label:'Go to album',action:()=>nav(`/album/${song.albumId}`)},
-    {icon:User2,label:'Go to artist',action:()=>nav(`/artist/${song.artistId}`)},
-    {icon:Share2,label:'Share',action:()=>showToast('Link copied!')},
+    {icon:Disc3,label:'Go to album',action:()=>nav(`/search?q=${encodeURIComponent(song.album||song.title)}`)},
+    {icon:User2,label:'Go to artist',action:()=>nav(`/search?q=${encodeURIComponent(song.artist?.split(',')[0]?.trim()||song.artist)}`)},
+    {icon:Share2,label:'Share',action:async()=>{const text=`${song.title} - ${song.artist}`;if(navigator.share){try{await navigator.share({title:song.title,text});}catch{}}else{await navigator.clipboard?.writeText(text);showToast('Copied!');}}},
   ];
 
   return(

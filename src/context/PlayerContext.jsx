@@ -224,6 +224,11 @@ export function PlayerProvider({ children }) {
   }, []);
 
   const playNextRef = useRef(null);
+  const playPrevRef = useRef(null);
+  const currentSongRef = useRef(null);
+
+  // Keep currentSongRef always fresh
+  useEffect(() => { currentSongRef.current = currentSong; }, [currentSong]);
 
   // ─── Audio Setup ───
   useEffect(() => {
@@ -251,10 +256,11 @@ export function PlayerProvider({ children }) {
     const onEnd = () => { if (!fadingRef.current && playNextRef.current) playNextRef.current(); };
     const onError = async (e) => {
       const a = cur();
-      if (!a?.src || !currentSong) return;
+      const song = currentSongRef.current;
+      if (!a?.src || !song) return;
       console.warn('Audio error, attempting stream URL refresh');
       // Try to get a fresh stream URL
-      const freshUrl = await refreshStreamUrl(currentSong.id);
+      const freshUrl = await refreshStreamUrl(song.id);
       if (freshUrl && freshUrl !== a.src) {
         a.src = freshUrl;
         a.load();
@@ -315,7 +321,7 @@ export function PlayerProvider({ children }) {
         const a = activeRef.current === 'A' ? audioA.current : audioB.current;
         if (a) { a.pause(); setIsPlaying(false); }
       });
-      navigator.mediaSession.setActionHandler('previoustrack', () => { if (playNextRef.current) playNextRef.current('prev'); });
+      navigator.mediaSession.setActionHandler('previoustrack', () => { if (playPrevRef.current) playPrevRef.current(); });
       navigator.mediaSession.setActionHandler('nexttrack', () => { if (playNextRef.current) playNextRef.current(); });
       navigator.mediaSession.setActionHandler('seekto', (details) => {
         if (details.seekTime != null) {
@@ -489,6 +495,7 @@ export function PlayerProvider({ children }) {
 
   // Keep ref updated for audio event handler
   useEffect(() => { playNextRef.current = playNext; }, [playNext]);
+  useEffect(() => { playPrevRef.current = playPrev; }, [playPrev]);
 
   const playPrev = useCallback(() => {
     // If more than 3 seconds in, restart current song

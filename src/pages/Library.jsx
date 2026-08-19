@@ -94,15 +94,14 @@ export default function Library() {
               </div>
               <div className="space-y-3">
                 {prefs.topArtists.map((a, i) => (
-                  <div key={a.name || a} className="flex items-center gap-3">
+                  <div key={typeof a === 'string' ? a : a.name || i} className="flex items-center gap-3">
                     <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${
                       i === 0 ? 'bg-amber-500/20 text-amber-400' :
                       i === 1 ? 'bg-gray-400/20 text-gray-400' :
                       i === 2 ? 'bg-orange-500/20 text-orange-400' :
                       'bg-white/[0.04] text-[#666]'
                     }`}>{i + 1}</span>
-                    <span className="text-[13px] text-white flex-1 font-medium">{a.name || a}</span>
-                    {a.count && <span className="text-[11px] text-[#555]">{a.count} plays</span>}
+                    <span className="text-[13px] text-white flex-1 font-medium">{typeof a === 'string' ? a : a.name}</span>
                   </div>
                 ))}
               </div>

@@ -1,37 +1,48 @@
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Download, Share2, Mic2, Volume2, VolumeX, ListMusic, X } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Download, Share2, Mic2, Volume2, VolumeX, ListMusic } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { formatDuration } from '../data/mockData';
 import { downloadSong, getLyrics } from '../data/api';
 import SleepTimer from './SleepTimer';
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 
 export default function ExpandedPlayer() {
   const { currentSong, isPlaying, togglePlay, playNext, playPrev, currentTime, duration, seekTo, shuffleMode, toggleShuffle, repeatMode, cycleRepeat, toggleLike, likedSongs, isExpanded, setExpanded, showToast, queue, volume, setVolume, playSong } = usePlayer();
-  const [showLyrics, setShowLyrics] = useState(false);
-  const [showQueue, setShowQueue] = useState(false);
+  
+  // Panel state — only one panel can be open at a time
+  const [activePanel, setActivePanel] = useState(null); // 'lyrics' | 'queue' | 'volume' | null
   const [lyrics, setLyrics] = useState(null);
   const [lyricsLoading, setLyricsLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [dragProgress, setDragProgress] = useState(0);
   const [closing, setClosing] = useState(false);
-  const [showVolume, setShowVolume] = useState(false);
   const touchStartY = useRef(0);
   const progressRef = useRef(null);
   const volumeRef = useRef(null);
 
-  // Fetch lyrics
+  // Toggle panel — auto-closes others
+  const togglePanel = useCallback((panel) => {
+    setActivePanel(prev => prev === panel ? null : panel);
+  }, []);
+
+  // Close all panels
+  const closePanels = useCallback(() => {
+    setActivePanel(null);
+  }, []);
+
+  // Fetch lyrics — try LRCLIB synced first, then JioSaavn plain
   useEffect(() => {
-    if (!currentSong || !showLyrics) return;
+    if (!currentSong || activePanel !== 'lyrics') return;
     setLyricsLoading(true);
     setLyrics(null);
-    getLyrics(currentSong.id).then(l => { setLyrics(l || null); setLyricsLoading(false); }).catch(() => setLyricsLoading(false));
-  }, [currentSong?.id, showLyrics]);
+    getLyrics(currentSong.id, currentSong.title, currentSong.artist)
+      .then(l => { setLyrics(l || null); setLyricsLoading(false); })
+      .catch(() => setLyricsLoading(false));
+  }, [currentSong?.id, activePanel]);
 
-  // Close lyrics/queue when song changes
+  // Close panels when song changes
   useEffect(() => {
-    setShowLyrics(false);
+    closePanels();
     setLyrics(null);
-    setShowQueue(false);
   }, [currentSong?.id]);
 
   // Close with animation
@@ -40,14 +51,15 @@ export default function ExpandedPlayer() {
     setTimeout(() => {
       setClosing(false);
       setExpanded(false);
+      closePanels();
     }, 350);
-  }, [setExpanded]);
+  }, [setExpanded, closePanels]);
 
-  // Touch gestures
+  // Touch gestures — swipe down to close
   const onTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; };
   const onTouchEnd = (e) => { if (e.changedTouches[0].clientY - touchStartY.current > 80) handleClose(); };
 
-  // Drag-to-seek
+  // Drag-to-seek on progress bar
   const handleSeekStart = useCallback((e) => {
     e.preventDefault();
     setIsDragging(true);
@@ -77,15 +89,17 @@ export default function ExpandedPlayer() {
     document.addEventListener('touchend', onEnd);
   }, [duration, seekTo]);
 
-  // Volume drag
+  // Volume drag — improved with larger touch area
   const handleVolumeStart = useCallback((e) => {
     e.preventDefault();
+    e.stopPropagation();
     const rect = volumeRef.current.getBoundingClientRect();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     setVolume(pct);
 
     const onMove = (ev) => {
+      ev.preventDefault();
       const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
       const p = Math.max(0, Math.min(1, (cx - rect.left) / rect.width));
       setVolume(p);
@@ -102,13 +116,25 @@ export default function ExpandedPlayer() {
     document.addEventListener('touchend', onEnd);
   }, [setVolume]);
 
+  // Play next — auto-close panels
+  const handleNext = useCallback(() => {
+    closePanels();
+    playNext();
+  }, [playNext, closePanels]);
+
+  // Play prev — auto-close panels
+  const handlePrev = useCallback(() => {
+    closePanels();
+    playPrev();
+  }, [playPrev, closePanels]);
+
   const shareSong = async () => {
-    const text = `${currentSong.title} - ${currentSong.artist}`;
+    const text = `🎵 ${currentSong.title} - ${currentSong.artist}`;
     if (navigator.share) {
       try { await navigator.share({ title: currentSong.title, text }); } catch {}
     } else {
       await navigator.clipboard?.writeText(text);
-      showToast('Copied!');
+      showToast('Copied to clipboard!');
     }
   };
 
@@ -116,84 +142,103 @@ export default function ExpandedPlayer() {
   const liked = likedSongs.includes(currentSong.id);
   const displayProgress = isDragging ? dragProgress : (duration > 0 ? currentTime / duration : 0);
   const displayTime = isDragging ? dragProgress * duration : currentTime;
+  const hasPanel = activePanel !== null;
 
   return (
-    <div className={`fixed inset-0 z-[70] flex flex-col ${closing ? 'animate-[slideDown_0.35s_cubic-bezier(0.22,1,0.36,1)_forwards]' : 'player-expanded-enter'}`}
+    <div className={`fixed inset-0 z-[100] flex flex-col bg-[#080808] ${closing ? 'animate-[slideDown_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards]' : 'player-expanded-enter'}`}
       onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       
-      {/* Background — cinematic blur */}
-      <div className="absolute inset-0 overflow-hidden">
-        <img src={currentSong.thumbnail} alt="" className="w-full h-full object-cover blur-[100px] scale-[1.4] opacity-25 transition-[src] duration-700" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-[#0a0a0a]/80 to-[#0a0a0a]/95" />
+      {/* Background — subtle album art color tint */}
+      <div className="absolute inset-0 bg-[#080808]">
+        <img src={currentSong.thumbnail} alt="" className="w-full h-full object-cover blur-[120px] scale-[1.5] opacity-10" />
+        <div className="absolute inset-0 bg-[#080808]/90" />
       </div>
 
       <div className="relative flex-1 flex flex-col min-h-0">
         
-        {/* Top Bar */}
-        <div className="flex items-center justify-between px-5 pt-5 pb-2 shrink-0">
-          <button onClick={handleClose} className="w-10 h-10 rounded-full bg-white/[0.08] flex items-center justify-center active:scale-90 transition-all duration-200 backdrop-blur-md hover:bg-white/[0.12]">
-            <ChevronDown size={22} className="text-white" />
+        {/* Top Bar — premium minimal */}
+        <div className="flex items-center justify-between px-5 pt-4 pb-2 shrink-0">
+          <button onClick={handleClose} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center active:scale-90 transition-all duration-200 backdrop-blur-sm border border-white/[0.04]">
+            <ChevronDown size={20} className="text-white/80" />
           </button>
           <div className="text-center flex-1 mx-4">
-            <p className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-medium">Now Playing</p>
-            <p className="text-[12px] text-white/70 font-medium mt-0.5 max-w-[200px] mx-auto truncate">{currentSong.album || 'Library'}</p>
+            <p className="text-[9px] text-white/30 uppercase tracking-[0.25em] font-medium">Now Playing</p>
+            <p className="text-[11px] text-white/60 font-medium mt-0.5 max-w-[200px] mx-auto truncate">{currentSong.album || 'Library'}</p>
           </div>
           <SleepTimer />
         </div>
 
-        {/* Main Content — scrollable area */}
-        <div className="flex-1 flex flex-col items-center justify-center px-6 sm:px-10 gap-4 min-h-0 scroll-y">
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col items-center justify-center px-6 sm:px-10 gap-3 min-h-0 scroll-y">
           
-          {/* Album Art */}
-          <div className={`relative transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-            showLyrics || showQueue ? 'w-[90px] h-[90px] sm:w-[110px] sm:h-[110px]' : 'w-[250px] h-[250px] sm:w-[280px] sm:h-[280px] md:w-[320px] md:h-[320px]'
+          {/* Album Art — premium with depth */}
+          <div className={`relative transition-all duration-600 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            hasPanel ? 'w-[80px] h-[80px] sm:w-[100px] sm:h-[100px]' : 'w-[240px] h-[240px] sm:w-[270px] sm:h-[270px] md:w-[300px] md:h-[300px]'
           }`}>
-            <div className={`w-full h-full rounded-[28px] overflow-hidden shadow-2xl shadow-black/80 ring-1 ring-white/[0.06] transition-all duration-500 ${isPlaying ? 'scale-100' : 'scale-[0.95]'}`}>
+            {/* Shadow layer */}
+            {!hasPanel && (
+              <div className="absolute inset-4 rounded-[24px] bg-black/60 blur-[30px] -z-10 transition-all duration-500" />
+            )}
+            <div className={`w-full h-full rounded-[24px] overflow-hidden ring-1 ring-white/[0.06] transition-all duration-600 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+              isPlaying ? 'scale-100 shadow-2xl shadow-black/80' : 'scale-[0.94] shadow-xl shadow-black/60'
+            }`}>
               <img src={currentSong.thumbnail} alt="" className="w-full h-full object-cover" />
             </div>
-            {/* Glow effect when playing */}
-            {isPlaying && !showLyrics && !showQueue && (
-              <div className="absolute -inset-4 rounded-[36px] bg-gradient-to-b from-rose-500/10 to-transparent blur-2xl playing-pulse -z-10" />
+            {/* Premium glow ring when playing */}
+            {isPlaying && !hasPanel && (
+              <>
+                <div className="absolute -inset-3 rounded-[32px] bg-gradient-to-b from-white/[0.04] to-transparent blur-xl playing-pulse -z-10" />
+                <div className="absolute -inset-6 rounded-[40px] bg-gradient-to-b from-rose-500/[0.06] to-transparent blur-2xl -z-20 opacity-60" />
+              </>
             )}
           </div>
 
-          {/* Lyrics Panel */}
-          {showLyrics && (
-            <div className="w-full max-w-sm max-h-[32vh] scroll-y animate-scale" id="lyrics-container">
+          {/* Active Panel Content */}
+          {activePanel === 'lyrics' && (
+            <div className="w-full max-w-sm max-h-[35vh] scroll-y animate-scale" id="lyrics-container">
               {lyricsLoading && (
-                <div className="flex justify-center py-8">
-                  <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                <div className="flex justify-center py-10">
+                  <div className="w-5 h-5 border-2 border-white/15 border-t-white/80 rounded-full animate-spin" />
                 </div>
               )}
               {!lyricsLoading && !lyrics && (
-                <p className="text-[14px] text-white/30 text-center py-8">Lyrics not available</p>
+                <div className="text-center py-10">
+                  <Mic2 size={24} className="text-white/15 mx-auto mb-2" />
+                  <p className="text-[13px] text-white/25">Lyrics not available</p>
+                </div>
               )}
-              {!lyricsLoading && lyrics && (
-                <SyncedLyrics lyrics={lyrics} currentTime={currentTime} duration={duration} />
+              {!lyricsLoading && lyrics && lyrics.synced && (
+                <SyncedLyrics lrcData={lyrics.data} />
+              )}
+              {!lyricsLoading && lyrics && !lyrics.synced && (
+                <PlainLyrics text={lyrics.data} />
               )}
             </div>
           )}
 
-          {/* Queue Panel */}
-          {showQueue && (
-            <div className="w-full max-w-sm max-h-[32vh] scroll-y animate-scale">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[13px] font-semibold text-white/70">Up Next</h3>
-                <span className="text-[11px] text-white/30">{queue.length} songs</span>
+          {activePanel === 'queue' && (
+            <div className="w-full max-w-sm max-h-[35vh] scroll-y animate-scale">
+              <div className="flex items-center justify-between mb-3 px-1">
+                <h3 className="text-[12px] font-semibold text-white/50 uppercase tracking-wider">Up Next</h3>
+                <span className="text-[10px] text-white/25 bg-white/[0.05] px-2 py-0.5 rounded-full">{queue.length} songs</span>
               </div>
               {queue.length === 0 ? (
-                <p className="text-[13px] text-white/30 text-center py-6">Queue is empty</p>
+                <div className="text-center py-10">
+                  <ListMusic size={24} className="text-white/15 mx-auto mb-2" />
+                  <p className="text-[13px] text-white/25">Queue is empty</p>
+                </div>
               ) : (
-                <div className="space-y-1">
-                  {queue.slice(0, 15).map((song, i) => (
-                    <button key={song.id + i} onClick={() => playSong(song, queue)}
-                      className="flex items-center gap-3 w-full p-2.5 rounded-xl hover:bg-white/[0.05] active:bg-white/[0.08] transition-all duration-150 text-left">
-                      <img src={song.thumbnail} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0 ring-1 ring-white/[0.06]" />
+                <div className="space-y-0.5">
+                  {queue.slice(0, 12).map((song, i) => (
+                    <button key={song.id + i} onClick={() => { playSong(song, queue); closePanels(); }}
+                      className="flex items-center gap-3 w-full p-2.5 rounded-xl hover:bg-white/[0.04] active:bg-white/[0.07] transition-all duration-150 text-left group">
+                      <span className="text-[10px] text-white/20 w-4 shrink-0 text-center tabular-nums">{i + 1}</span>
+                      <img src={song.thumbnail} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0 ring-1 ring-white/[0.05] group-hover:ring-white/[0.1] transition-all" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-[12px] font-medium text-white truncate">{song.title}</p>
-                        <p className="text-[10px] text-white/40 truncate">{song.artist}</p>
+                        <p className="text-[11px] font-medium text-white/80 truncate">{song.title}</p>
+                        <p className="text-[9px] text-white/30 truncate">{song.artist}</p>
                       </div>
-                      <span className="text-[10px] text-white/20 tabular-nums shrink-0">{formatDuration(song.duration)}</span>
+                      <span className="text-[9px] text-white/15 tabular-nums shrink-0">{formatDuration(song.duration)}</span>
                     </button>
                   ))}
                 </div>
@@ -202,96 +247,116 @@ export default function ExpandedPlayer() {
           )}
         </div>
 
-        {/* Bottom Controls Section — always visible */}
-        <div className="shrink-0 px-6 sm:px-10 pb-6 pt-2">
-          {/* Song Info */}
-          <div className="flex items-center justify-between mb-4 max-w-sm mx-auto">
-            <div className="min-w-0 flex-1 mr-4">
-              <h1 className="text-[20px] sm:text-[22px] font-bold text-white truncate leading-tight">{currentSong.title}</h1>
-              <p className="text-[14px] text-white/50 truncate mt-1">{currentSong.artist}</p>
+        {/* Bottom Controls — premium glass section */}
+        <div className="shrink-0 px-5 sm:px-8 pb-5 pt-1">
+          
+          {/* Song Info Row */}
+          <div className="flex items-center justify-between mb-3 max-w-sm mx-auto">
+            <div className="min-w-0 flex-1 mr-3">
+              <h1 className="text-[18px] sm:text-[20px] font-bold text-white truncate leading-tight tracking-tight">{currentSong.title}</h1>
+              <p className="text-[13px] text-white/40 truncate mt-0.5">{currentSong.artist}</p>
             </div>
-            <button onClick={() => toggleLike(currentSong.id)} className={`p-2.5 rounded-full transition-all duration-200 active:scale-90 ${liked ? 'text-rose-500 bg-rose-500/10' : 'text-white/30 hover:text-white/60'}`}>
-              <Heart size={22} fill={liked ? 'currentColor' : 'none'} strokeWidth={liked ? 0 : 1.5} />
+            <button onClick={() => toggleLike(currentSong.id)} 
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-250 active:scale-85 ${
+                liked ? 'text-rose-500 bg-rose-500/[0.12] shadow-lg shadow-rose-500/10' : 'text-white/25 bg-white/[0.04] hover:bg-white/[0.08] hover:text-white/50'
+              }`}>
+              <Heart size={20} fill={liked ? 'currentColor' : 'none'} strokeWidth={liked ? 0 : 1.5} />
             </button>
           </div>
 
-          {/* Progress Bar — drag-to-seek */}
-          <div className="max-w-sm mx-auto mb-4">
+          {/* Progress Bar */}
+          <div className="max-w-sm mx-auto mb-3">
             <div ref={progressRef}
-              className="player-progress-track w-full h-[5px] bg-white/[0.1] rounded-full group"
+              className="player-progress-track w-full h-[5px] bg-white/[0.08] rounded-full group"
               onMouseDown={handleSeekStart}
               onTouchStart={handleSeekStart}>
-              <div className="h-full bg-white rounded-full relative transition-[width] duration-100 ease-linear" 
+              <div className="h-full bg-gradient-to-r from-white/90 to-white rounded-full relative transition-[width] duration-100 ease-linear" 
                 style={{ width: `${displayProgress * 100}%` }}>
-                <div className={`absolute right-0 top-1/2 -translate-y-1/2 w-[16px] h-[16px] bg-white rounded-full shadow-lg shadow-black/30 seek-thumb transition-all duration-150 ${isDragging ? 'scale-[1.3] opacity-100' : 'scale-100 opacity-0 group-hover:opacity-100'}`} />
+                <div className={`absolute right-0 top-1/2 -translate-y-1/2 w-[14px] h-[14px] bg-white rounded-full shadow-lg shadow-black/40 transition-all duration-150 ${
+                  isDragging ? 'scale-[1.4] opacity-100' : 'scale-100 opacity-0 group-hover:opacity-100'
+                }`} />
               </div>
             </div>
-            <div className="flex justify-between mt-2 text-[11px] text-white/35 tabular-nums font-medium">
+            <div className="flex justify-between mt-1.5 text-[10px] text-white/25 tabular-nums font-medium">
               <span>{formatDuration(displayTime)}</span>
-              <span>{formatDuration(duration)}</span>
+              <span>-{formatDuration(Math.max(0, duration - displayTime))}</span>
             </div>
           </div>
 
-          {/* Main Controls */}
-          <div className="flex items-center justify-between max-w-[320px] mx-auto mb-4">
-            <button onClick={toggleShuffle} className={`p-2.5 rounded-full transition-all duration-200 active:scale-90 ${shuffleMode ? 'text-white bg-white/[0.1]' : 'text-white/30 hover:text-white/60'}`}>
-              <Shuffle size={20} />
+          {/* Main Playback Controls */}
+          <div className="flex items-center justify-between max-w-[300px] mx-auto mb-4">
+            <button onClick={toggleShuffle} className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 active:scale-85 ${
+              shuffleMode ? 'text-white bg-white/[0.1]' : 'text-white/25 hover:text-white/50'
+            }`}>
+              <Shuffle size={17} />
             </button>
-            <button onClick={playPrev} className="p-2.5 text-white active:scale-90 transition-all duration-150 hover:text-white/80">
-              <SkipBack size={28} fill="white" />
+            <button onClick={handlePrev} className="w-11 h-11 rounded-full flex items-center justify-center text-white active:scale-85 transition-all duration-150 hover:bg-white/[0.04]">
+              <SkipBack size={24} fill="white" />
             </button>
-            <button onClick={togglePlay} className="w-[68px] h-[68px] bg-white rounded-full flex items-center justify-center active:scale-90 transition-all duration-200 shadow-2xl shadow-white/15 hover:shadow-white/25 hover:scale-[1.03]">
-              {isPlaying ? <Pause size={28} className="text-black" fill="black" /> : <Play size={28} className="text-black ml-1" fill="black" />}
+            <button onClick={togglePlay} className="w-[64px] h-[64px] bg-white rounded-full flex items-center justify-center active:scale-90 transition-all duration-200 shadow-2xl shadow-white/10 hover:shadow-white/20 hover:scale-[1.02]">
+              {isPlaying ? <Pause size={26} className="text-black" fill="black" /> : <Play size={26} className="text-black ml-0.5" fill="black" />}
             </button>
-            <button onClick={playNext} className="p-2.5 text-white active:scale-90 transition-all duration-150 hover:text-white/80">
-              <SkipForward size={28} fill="white" />
+            <button onClick={handleNext} className="w-11 h-11 rounded-full flex items-center justify-center text-white active:scale-85 transition-all duration-150 hover:bg-white/[0.04]">
+              <SkipForward size={24} fill="white" />
             </button>
-            <button onClick={cycleRepeat} className={`p-2.5 rounded-full transition-all duration-200 active:scale-90 ${repeatMode !== 'none' ? 'text-white bg-white/[0.1]' : 'text-white/30 hover:text-white/60'}`}>
-              {repeatMode === 'one' ? <Repeat1 size={20} /> : <Repeat size={20} />}
+            <button onClick={cycleRepeat} className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 active:scale-85 ${
+              repeatMode !== 'none' ? 'text-white bg-white/[0.1]' : 'text-white/25 hover:text-white/50'
+            }`}>
+              {repeatMode === 'one' ? <Repeat1 size={17} /> : <Repeat size={17} />}
             </button>
           </div>
 
-          {/* Volume Slider */}
-          {showVolume && (
-            <div className="max-w-[280px] mx-auto mb-4 flex items-center gap-3 animate-scale">
-              <VolumeX size={14} className="text-white/30 shrink-0" />
-              <div ref={volumeRef} className="flex-1 h-[4px] bg-white/[0.1] rounded-full cursor-pointer relative"
-                onMouseDown={handleVolumeStart} onTouchStart={handleVolumeStart}>
-                <div className="h-full bg-white/70 rounded-full" style={{ width: `${(volume || 1) * 100}%` }}>
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[12px] h-[12px] bg-white rounded-full shadow-md" 
-                    style={{ left: `${(volume || 1) * 100}%`, transform: 'translate(-50%, -50%)' }} />
-                </div>
+          {/* Volume Slider — full-width, easy to use */}
+          {activePanel === 'volume' && (
+            <div className="max-w-[300px] mx-auto mb-4 animate-scale">
+              {/* Volume level display */}
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[11px] text-white/40 font-medium">Volume</span>
+                <span className="text-[14px] text-white font-bold tabular-nums">{Math.round(volume * 100)}%</span>
               </div>
-              <Volume2 size={14} className="text-white/30 shrink-0" />
+              {/* Slider track — large touch area */}
+              <div className="flex items-center gap-3">
+                <button onClick={() => setVolume(0)} className="shrink-0 w-8 h-8 rounded-full bg-white/[0.05] flex items-center justify-center active:scale-90 transition-all hover:bg-white/[0.1]">
+                  <VolumeX size={14} className={volume === 0 ? 'text-white' : 'text-white/30'} />
+                </button>
+                <div ref={volumeRef} className="flex-1 h-[40px] flex items-center cursor-pointer relative touch-none"
+                  onMouseDown={handleVolumeStart} onTouchStart={handleVolumeStart}>
+                  {/* Background track */}
+                  <div className="absolute inset-x-0 h-[6px] bg-white/[0.08] rounded-full top-1/2 -translate-y-1/2" />
+                  {/* Filled track */}
+                  <div className="absolute left-0 h-[6px] bg-gradient-to-r from-white/60 to-white/80 rounded-full top-1/2 -translate-y-1/2 transition-[width] duration-75" 
+                    style={{ width: `${volume * 100}%` }} />
+                  {/* Thumb — big and easy to grab */}
+                  <div className="absolute top-1/2 -translate-y-1/2 w-[20px] h-[20px] bg-white rounded-full shadow-lg shadow-black/30 transition-all duration-75 active:scale-110" 
+                    style={{ left: `calc(${volume * 100}% - 10px)` }} />
+                </div>
+                <button onClick={() => setVolume(1)} className="shrink-0 w-8 h-8 rounded-full bg-white/[0.05] flex items-center justify-center active:scale-90 transition-all hover:bg-white/[0.1]">
+                  <Volume2 size={14} className={volume >= 0.95 ? 'text-white' : 'text-white/30'} />
+                </button>
+              </div>
+              {/* Quick volume presets */}
+              <div className="flex items-center justify-between mt-3 gap-2">
+                {[25, 50, 75, 100].map(pct => (
+                  <button key={pct} onClick={() => setVolume(pct / 100)}
+                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-semibold transition-all duration-150 active:scale-95 ${
+                      Math.round(volume * 100) === pct 
+                        ? 'bg-white/[0.12] text-white border border-white/[0.1]' 
+                        : 'bg-white/[0.04] text-white/30 hover:bg-white/[0.07] hover:text-white/50'
+                    }`}>
+                    {pct}%
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
-          {/* Bottom Actions */}
-          <div className="flex items-center justify-center gap-5 max-w-sm mx-auto">
-            <button onClick={() => { setShowLyrics(!showLyrics); setShowQueue(false); }} 
-              className={`flex flex-col items-center gap-1.5 transition-all duration-200 active:scale-90 ${showLyrics ? 'text-white' : 'text-white/30 hover:text-white/60'}`}>
-              <Mic2 size={18} />
-              <span className="text-[9px] font-medium">Lyrics</span>
-            </button>
-            <button onClick={() => { setShowQueue(!showQueue); setShowLyrics(false); }}
-              className={`flex flex-col items-center gap-1.5 transition-all duration-200 active:scale-90 ${showQueue ? 'text-white' : 'text-white/30 hover:text-white/60'}`}>
-              <ListMusic size={18} />
-              <span className="text-[9px] font-medium">Queue</span>
-            </button>
-            <button onClick={() => setShowVolume(!showVolume)}
-              className={`flex flex-col items-center gap-1.5 transition-all duration-200 active:scale-90 ${showVolume ? 'text-white' : 'text-white/30 hover:text-white/60'}`}>
-              <Volume2 size={18} />
-              <span className="text-[9px] font-medium">Volume</span>
-            </button>
-            <button onClick={shareSong} className="flex flex-col items-center gap-1.5 text-white/30 hover:text-white/60 active:scale-90 transition-all duration-200">
-              <Share2 size={18} />
-              <span className="text-[9px] font-medium">Share</span>
-            </button>
-            <button onClick={async () => { showToast('Downloading...'); const ok = await downloadSong(currentSong); showToast(ok ? 'Downloaded ✓' : 'Failed'); }}
-              className="flex flex-col items-center gap-1.5 text-white/30 hover:text-white/60 active:scale-90 transition-all duration-200">
-              <Download size={18} />
-              <span className="text-[9px] font-medium">Save</span>
-            </button>
+          {/* Action Bar — premium pill buttons */}
+          <div className="flex items-center justify-center gap-2 max-w-sm mx-auto">
+            <ActionPill icon={Mic2} label="Lyrics" active={activePanel === 'lyrics'} onClick={() => togglePanel('lyrics')} />
+            <ActionPill icon={ListMusic} label="Queue" active={activePanel === 'queue'} onClick={() => togglePanel('queue')} badge={queue.length > 0 ? queue.length : null} />
+            <ActionPill icon={Volume2} label={`${Math.round(volume * 100)}%`} active={activePanel === 'volume'} onClick={() => togglePanel('volume')} />
+            <ActionPill icon={Share2} label="Share" onClick={shareSong} />
+            <ActionPill icon={Download} label="Save" onClick={async () => { closePanels(); showToast('Downloading...'); const ok = await downloadSong(currentSong); showToast(ok ? 'Downloaded ✓' : 'Download failed', ok ? 'success' : 'error'); }} />
           </div>
         </div>
       </div>
@@ -299,40 +364,58 @@ export default function ExpandedPlayer() {
   );
 }
 
-
-// Synced lyrics component
-function SyncedLyrics({ lyrics, currentTime, duration }) {
-  const containerRef = useRef(null);
-  const lines = lyrics.split('\n').filter(l => l.trim());
-
-  const startTime = duration * 0.05;
-  const endTime = duration * 0.92;
-  const activeRange = endTime - startTime;
-  const timePerLine = activeRange / lines.length;
-
-  const activeIndex = Math.min(
-    lines.length - 1,
-    Math.max(0, Math.floor((currentTime - startTime) / timePerLine))
+// Premium action pill button
+function ActionPill({ icon: Icon, label, active, onClick, badge }) {
+  return (
+    <button onClick={onClick} className={`relative flex items-center gap-1.5 px-3 py-2 rounded-full transition-all duration-250 active:scale-90 ${
+      active 
+        ? 'bg-white/[0.12] text-white border border-white/[0.1]' 
+        : 'bg-white/[0.04] text-white/35 border border-transparent hover:bg-white/[0.07] hover:text-white/60'
+    }`}>
+      <Icon size={14} />
+      <span className="text-[9px] font-semibold tracking-wide">{label}</span>
+      {badge && (
+        <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full flex items-center justify-center text-[8px] font-bold text-white">{badge > 9 ? '9+' : badge}</span>
+      )}
+    </button>
   );
+}
 
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const el = containerRef.current.querySelector('[data-active="true"]');
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, [activeIndex]);
+// SYNCED LYRICS — just displays text, scrolls with song
+function SyncedLyrics({ lrcData, currentTime }) {
+  const containerRef = useRef(null);
+
+  // Parse LRC format into [{time: seconds, text: string}]
+  const lines = useMemo(() => {
+    return lrcData.split('\n')
+      .map(line => {
+        const match = line.match(/^\[(\d{2}):(\d{2})\.(\d{2,3})\]\s?(.*)$/);
+        if (!match) return null;
+        const text = match[4].trim();
+        return text || null;
+      })
+      .filter(Boolean);
+  }, [lrcData]);
 
   return (
-    <div ref={containerRef} className="space-y-3.5 text-center py-3">
+    <div ref={containerRef} className="space-y-3 text-center py-2">
       {lines.map((line, i) => (
-        <p key={i}
-          data-active={i === activeIndex ? 'true' : undefined}
-          className={`text-[15px] sm:text-[17px] font-semibold leading-relaxed transition-all duration-400 ${
-            i === activeIndex
-              ? 'text-white scale-[1.02]'
-              : i < activeIndex
-                ? 'text-white/20'
-                : 'text-white/40'
-          }`}>
+        <p key={i} className="text-[14px] sm:text-[16px] font-medium leading-relaxed text-white/80">
+          {line}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+// PLAIN LYRICS fallback
+function PlainLyrics({ text }) {
+  const lines = text.split('\n').filter(l => l.trim());
+
+  return (
+    <div className="space-y-3 text-center py-2">
+      {lines.map((line, i) => (
+        <p key={i} className="text-[14px] sm:text-[16px] font-medium leading-relaxed text-white/80">
           {line}
         </p>
       ))}

@@ -89,7 +89,7 @@ export default function Explore() {
   };
 
   return (
-    <div className="pb-6 pt-2 page-wrapper">
+    <div className="pb-6 pt-2">
       {/* Page Title */}
       <div className="mb-6">
         <h1 className="text-[22px] sm:text-[26px] font-bold text-white">Explore</h1>
