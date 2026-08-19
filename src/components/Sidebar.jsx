@@ -17,8 +17,13 @@ export default function Sidebar() {
     <aside className="hidden md:flex flex-col w-[72px] lg:w-[240px] h-full bg-[#040404] border-r border-white/[0.04] fixed left-0 top-0 z-20">
       {/* Brand */}
       <div className="px-4 lg:px-5 py-5 flex items-center gap-2.5">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 via-pink-500 to-purple-600 flex items-center justify-center shadow-lg shadow-rose-500/25">
-          <span className="text-[12px] font-black text-white tracking-tighter">MA</span>
+        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#ff2d55] to-[#af52de] flex items-center justify-center shadow-lg shadow-[#ff2d55]/25 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="relative">
+            <path d="M9 18V5l12-2v13" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <circle cx="6" cy="18" r="3" fill="white"/>
+            <circle cx="18" cy="16" r="3" fill="white"/>
+          </svg>
         </div>
         <span className="hidden lg:block text-[16px] font-bold text-white tracking-tight">Music Area</span>
       </div>

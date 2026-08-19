@@ -7,8 +7,13 @@ export default function Header() {
       <div className="max-w-[1400px] mx-auto w-full flex items-center justify-between">
         {/* Logo — mobile only */}
         <div className="flex items-center gap-2 md:hidden">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-rose-500 via-pink-500 to-purple-600 flex items-center justify-center shadow-lg shadow-rose-500/20">
-            <span className="text-[11px] font-black text-white tracking-tighter">MA</span>
+          <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#ff2d55] to-[#af52de] flex items-center justify-center shadow-lg shadow-[#ff2d55]/30 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="relative">
+              <path d="M9 18V5l12-2v13" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="6" cy="18" r="3" fill="white"/>
+              <circle cx="18" cy="16" r="3" fill="white"/>
+            </svg>
           </div>
           <span className="text-[15px] font-bold text-white tracking-tight">Music Area</span>
         </div>
