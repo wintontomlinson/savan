@@ -66,10 +66,11 @@ export function PlayerProvider({ children }) {
       
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return false;
-      
-      // Set crossOrigin BEFORE connecting (required for CORS audio + AudioContext)
-      audioA.current.crossOrigin = 'anonymous';
-      audioB.current.crossOrigin = 'anonymous';
+
+      // Save current playback state
+      const wasPlaying = !a.paused;
+      const savedTime = a.currentTime;
+      const savedSrc = a.src;
       
       audioCtxRef.current = new AC();
       
@@ -103,8 +104,14 @@ export function PlayerProvider({ children }) {
       prevNode.connect(gainRef.current);
       gainRef.current.connect(audioCtxRef.current.destination);
       
-      // Resume if suspended
+      // Resume AudioContext
       if (audioCtxRef.current.state === 'suspended') audioCtxRef.current.resume();
+      
+      // Restore playback (audio may have stopped during connection)
+      if (savedSrc && a.src === savedSrc) {
+        a.currentTime = savedTime;
+        if (wasPlaying) a.play().catch(() => {});
+      }
       
       enhancedRef.current = true;
       return true;
@@ -175,8 +182,8 @@ export function PlayerProvider({ children }) {
   useEffect(() => {
     audioA.current = new Audio();
     audioB.current = new Audio();
-    
-    
+    audioA.current.crossOrigin = 'anonymous';
+    audioB.current.crossOrigin = 'anonymous';
     audioA.current.volume = volumeRef.current;
     audioB.current.volume = 0;
 
