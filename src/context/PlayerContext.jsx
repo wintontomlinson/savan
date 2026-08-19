@@ -257,11 +257,16 @@ export function PlayerProvider({ children }) {
 
     const onMeta = () => setDuration(cur()?.duration || 0);
     const onEnd = () => { if (!fadingRef.current && playNextRef.current) playNextRef.current(); };
-    const onError = async (e) => {
+    const onError = async function(e) {
+      const erroredElement = e.target || e.currentTarget;
+      // Only care about errors on the ACTIVE audio element
+      const activeElement = cur();
+      if (erroredElement !== activeElement) return;
+      
       const songAtError = currentSongRef.current;
       await new Promise(r => setTimeout(r, 1000));
-      // After delay, check if we're still on the same song (user might have switched)
       if (currentSongRef.current !== songAtError) return;
+      
       const a = cur();
       const song = currentSongRef.current;
       if (!a?.src || !song || a.src === '') return;
@@ -272,7 +277,6 @@ export function PlayerProvider({ children }) {
       console.warn('Audio error, attempting stream URL refresh');
       try {
         const freshUrl = await refreshStreamUrl(song.id);
-        // Re-check song hasn't changed during refresh
         if (currentSongRef.current !== song) return;
         if (freshUrl && freshUrl !== a.src) {
           a.src = freshUrl;
