@@ -1,4 +1,4 @@
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Mic2, Volume2, VolumeX, ListMusic } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Mic2, Volume2, VolumeX, ListMusic, Plus, Check } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { formatDuration } from '../data/mockData';
 import { getLyrics } from '../data/api';
@@ -246,58 +246,58 @@ export default function ExpandedPlayer() {
         <div className="shrink-0 px-5 sm:px-8 pb-5 pt-1">
           
           {/* Song Info Row */}
-          <div className="flex items-center justify-between mb-3 max-w-sm mx-auto">
+          <div className="flex items-center justify-between mb-4 max-w-sm mx-auto">
             <div className="min-w-0 flex-1 mr-3">
-              <h1 className="text-[18px] sm:text-[20px] font-bold text-white truncate leading-tight tracking-tight">{currentSong.title}</h1>
-              <p className="text-[13px] text-white/40 truncate mt-0.5">{currentSong.artist}</p>
+              <h1 className="text-[20px] sm:text-[22px] font-bold text-white truncate leading-tight tracking-tight">{currentSong.title}</h1>
+              <p className="text-[13px] text-white/40 truncate mt-1">{currentSong.artist}</p>
             </div>
             <button onClick={() => toggleLike(currentSong.id)} 
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-250 active:scale-85 ${
-                liked ? 'text-rose-500 bg-rose-500/[0.12] shadow-lg shadow-rose-500/10' : 'text-white/25 bg-white/[0.04] hover:bg-white/[0.08] hover:text-white/50'
+              className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-250 active:scale-85 ${
+                liked ? 'text-rose-500 bg-rose-500/[0.12]' : 'text-white/20 bg-white/[0.04] hover:bg-white/[0.08] hover:text-white/40'
               }`}>
-              <Heart size={20} fill={liked ? 'currentColor' : 'none'} strokeWidth={liked ? 0 : 1.5} />
+              <Heart size={22} fill={liked ? 'currentColor' : 'none'} strokeWidth={liked ? 0 : 1.5} />
             </button>
           </div>
 
           {/* Progress Bar */}
-          <div className="max-w-sm mx-auto mb-3">
+          <div className="max-w-sm mx-auto mb-5">
             <div ref={progressRef}
               className="player-progress-track w-full h-[5px] bg-white/[0.08] rounded-full group"
               onMouseDown={handleSeekStart}
               onTouchStart={handleSeekStart}>
-              <div className="h-full bg-gradient-to-r from-white/90 to-white rounded-full relative transition-[width] duration-100 ease-linear" 
+              <div className={`h-full rounded-full relative transition-[width] duration-100 ease-linear ${isDragging ? 'bg-rose-400' : 'bg-white'}`}
                 style={{ width: `${displayProgress * 100}%` }}>
-                <div className={`absolute right-0 top-1/2 -translate-y-1/2 w-[14px] h-[14px] bg-white rounded-full shadow-lg shadow-black/40 transition-all duration-150 ${
-                  isDragging ? 'scale-[1.4] opacity-100' : 'scale-100 opacity-0 group-hover:opacity-100'
+                <div className={`absolute right-0 top-1/2 -translate-y-1/2 w-[16px] h-[16px] bg-white rounded-full shadow-lg shadow-black/40 transition-all duration-150 ${
+                  isDragging ? 'scale-[1.3] opacity-100' : 'scale-100 opacity-0 group-hover:opacity-100'
                 }`} />
               </div>
             </div>
-            <div className="flex justify-between mt-1.5 text-[10px] text-white/25 tabular-nums font-medium">
+            <div className="flex justify-between mt-2 text-[10px] text-white/30 tabular-nums font-medium">
               <span>{formatDuration(displayTime)}</span>
               <span>-{formatDuration(Math.max(0, duration - displayTime))}</span>
             </div>
           </div>
 
           {/* Main Playback Controls */}
-          <div className="flex items-center justify-between max-w-[300px] mx-auto mb-4">
-            <button onClick={toggleShuffle} className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 active:scale-85 ${
-              shuffleMode ? 'text-white bg-white/[0.1]' : 'text-white/25 hover:text-white/50'
+          <div className="flex items-center justify-between max-w-[280px] mx-auto mb-5">
+            <button onClick={toggleShuffle} className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 active:scale-85 ${
+              shuffleMode ? 'text-rose-400 bg-rose-500/10' : 'text-white/25 hover:text-white/50'
             }`}>
-              <Shuffle size={17} />
+              <Shuffle size={18} />
             </button>
-            <button onClick={handlePrev} className="w-11 h-11 rounded-full flex items-center justify-center text-white active:scale-85 transition-all duration-150 hover:bg-white/[0.04]">
-              <SkipBack size={24} fill="white" />
+            <button onClick={handlePrev} className="w-12 h-12 rounded-full flex items-center justify-center text-white active:scale-85 transition-all duration-150 hover:bg-white/[0.05]">
+              <SkipBack size={26} fill="white" />
             </button>
-            <button onClick={togglePlay} className="w-[64px] h-[64px] bg-white rounded-full flex items-center justify-center active:scale-90 transition-all duration-200 shadow-2xl shadow-white/10 hover:shadow-white/20 hover:scale-[1.02]">
-              {isPlaying ? <Pause size={26} className="text-black" fill="black" /> : <Play size={26} className="text-black ml-0.5" fill="black" />}
+            <button onClick={togglePlay} className="w-[72px] h-[72px] bg-white rounded-full flex items-center justify-center active:scale-90 transition-all duration-200 shadow-[0_8px_30px_rgba(255,255,255,0.15)] hover:shadow-[0_8px_40px_rgba(255,255,255,0.25)] hover:scale-[1.03]">
+              {isPlaying ? <Pause size={30} className="text-black" fill="black" /> : <Play size={30} className="text-black ml-1" fill="black" />}
             </button>
-            <button onClick={handleNext} className="w-11 h-11 rounded-full flex items-center justify-center text-white active:scale-85 transition-all duration-150 hover:bg-white/[0.04]">
-              <SkipForward size={24} fill="white" />
+            <button onClick={handleNext} className="w-12 h-12 rounded-full flex items-center justify-center text-white active:scale-85 transition-all duration-150 hover:bg-white/[0.05]">
+              <SkipForward size={26} fill="white" />
             </button>
-            <button onClick={cycleRepeat} className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 active:scale-85 ${
-              repeatMode !== 'none' ? 'text-white bg-white/[0.1]' : 'text-white/25 hover:text-white/50'
+            <button onClick={cycleRepeat} className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 active:scale-85 ${
+              repeatMode !== 'none' ? 'text-rose-400 bg-rose-500/10' : 'text-white/25 hover:text-white/50'
             }`}>
-              {repeatMode === 'one' ? <Repeat1 size={17} /> : <Repeat size={17} />}
+              {repeatMode === 'one' ? <Repeat1 size={18} /> : <Repeat size={18} />}
             </button>
           </div>
 
@@ -346,9 +346,10 @@ export default function ExpandedPlayer() {
           )}
 
           {/* Action Bar */}
-          <div className="flex items-center justify-center gap-2 max-w-sm mx-auto">
+          <div className="flex items-center justify-center gap-2.5 max-w-sm mx-auto">
             <ActionPill icon={Mic2} label="Lyrics" active={activePanel === 'lyrics'} onClick={() => togglePanel('lyrics')} />
             <ActionPill icon={ListMusic} label="Queue" active={activePanel === 'queue'} onClick={() => togglePanel('queue')} badge={queue.length > 0 ? queue.length : null} />
+            <ActionPill icon={liked ? Check : Plus} label={liked ? 'Saved' : 'Save'} active={liked} onClick={() => toggleLike(currentSong.id)} />
             <SleepTimer />
           </div>
         </div>
