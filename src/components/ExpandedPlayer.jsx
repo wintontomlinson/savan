@@ -136,29 +136,36 @@ export default function ExpandedPlayer() {
   const hasPanel = activePanel !== null;
 
   return (
-    <div className={`fixed inset-0 z-[100] flex flex-col bg-[#080808] ${closing ? 'animate-[slideDown_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards]' : 'player-expanded-enter'}`}
+    <div className={`fixed inset-0 z-[100] flex flex-col bg-[#050505] ${closing ? 'animate-[slideDown_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards]' : 'player-expanded-enter'}`}
       onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       
-      {/* Background — subtle album art color tint */}
-      <div className="absolute inset-0 bg-[#080808]">
-        <img src={currentSong.thumbnail} alt="" className="w-full h-full object-cover blur-[120px] scale-[1.5] opacity-10" />
-        <div className="absolute inset-0 bg-[#080808]/90" />
+      {/* Background — dynamic color from album art */}
+      <div className="absolute inset-0 overflow-hidden">
+        <img src={currentSong.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover blur-[150px] scale-[2] opacity-30" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-[#050505]/70 to-[#050505]" />
+        {/* Animated disco glow orbs */}
+        {isPlaying && (
+          <>
+            <div className="absolute top-[20%] left-[10%] w-[200px] h-[200px] bg-rose-500/[0.08] rounded-full blur-[80px] animate-float" />
+            <div className="absolute bottom-[30%] right-[5%] w-[180px] h-[180px] bg-purple-500/[0.06] rounded-full blur-[80px] animate-float" style={{ animationDelay: '1.5s' }} />
+          </>
+        )}
       </div>
 
       <div className="relative flex-1 flex flex-col min-h-0">
         
-        {/* Top Bar — close left, volume right */}
+        {/* Top Bar */}
         <div className="flex items-center justify-between px-4 sm:px-5 pt-3 sm:pt-4 pb-1 sm:pb-2 shrink-0">
-          <button onClick={handleClose} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center active:scale-90 transition-all duration-200 backdrop-blur-sm border border-white/[0.04]">
-            <ChevronDown size={20} className="text-white/80" />
+          <button onClick={handleClose} className="w-9 h-9 rounded-full bg-white/[0.08] backdrop-blur-md flex items-center justify-center active:scale-90 transition-all duration-200 border border-white/[0.06]">
+            <ChevronDown size={20} className="text-white/90" />
           </button>
           <div className="text-center flex-1 mx-4">
-            <p className="text-[9px] text-white/30 uppercase tracking-[0.25em] font-medium">Now Playing</p>
-            <p className="text-[11px] text-white/60 font-medium mt-0.5 max-w-[200px] mx-auto truncate">{currentSong.album || 'Library'}</p>
+            <p className="text-[9px] text-white/40 uppercase tracking-[0.25em] font-medium">Now Playing</p>
+            <p className="text-[11px] text-white/70 font-medium mt-0.5 max-w-[200px] mx-auto truncate">{currentSong.album || 'Library'}</p>
           </div>
           <button onClick={() => togglePanel('volume')}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 ${
-              activePanel === 'volume' ? 'bg-white/10 text-white' : 'bg-white/[0.06] text-white/40 hover:text-white/60'
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 backdrop-blur-md border border-white/[0.06] ${
+              activePanel === 'volume' ? 'bg-white/15 text-white' : 'bg-white/[0.08] text-white/50 hover:text-white/80'
             }`}>
             <Volume2 size={16} />
           </button>
@@ -167,25 +174,32 @@ export default function ExpandedPlayer() {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col items-center justify-center px-5 sm:px-10 gap-2 min-h-0 overflow-hidden">
           
-          {/* Album Art — responsive sizing */}
+          {/* Album Art — vinyl/disco style */}
           <div className={`relative transition-all duration-600 ease-[cubic-bezier(0.16,1,0.3,1)] shrink-0 ${
-            hasPanel ? 'w-[70px] h-[70px] sm:w-[90px] sm:h-[90px]' : 'w-[180px] h-[180px] sm:w-[240px] sm:h-[240px] md:w-[280px] md:h-[280px]'
+            hasPanel ? 'w-[70px] h-[70px] sm:w-[90px] sm:h-[90px]' : 'w-[200px] h-[200px] sm:w-[250px] sm:h-[250px] md:w-[280px] md:h-[280px]'
           }`}>
-            {/* Shadow layer */}
-            {!hasPanel && (
-              <div className="absolute inset-4 rounded-[24px] bg-black/60 blur-[30px] -z-10 transition-all duration-500" />
+            {/* Vinyl disc behind album art */}
+            {!hasPanel && isPlaying && (
+              <div className="absolute inset-[-15%] rounded-full bg-gradient-to-br from-[#1a1a1a] via-[#111] to-[#0a0a0a] border border-white/[0.05] animate-[spin_8s_linear_infinite]">
+                <div className="absolute inset-[35%] rounded-full border border-white/[0.08]" />
+                <div className="absolute inset-[45%] rounded-full bg-[#080808] border border-white/[0.06]" />
+              </div>
             )}
-            <div className={`w-full h-full rounded-[24px] overflow-hidden ring-1 ring-white/[0.06] transition-all duration-600 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-              isPlaying ? 'scale-100 shadow-2xl shadow-black/80' : 'scale-[0.94] shadow-xl shadow-black/60'
+            {/* Shadow */}
+            {!hasPanel && (
+              <div className="absolute inset-2 rounded-full bg-black/70 blur-[25px] -z-10" />
+            )}
+            {/* Album art image */}
+            <div className={`relative w-full h-full rounded-full overflow-hidden ring-2 ring-white/[0.08] transition-all duration-600 ${
+              isPlaying ? 'shadow-2xl shadow-rose-500/10 animate-[spin_20s_linear_infinite]' : 'shadow-xl shadow-black/60'
             }`}>
               <img src={currentSong.thumbnail} alt="" className="w-full h-full object-cover" />
+              {/* Center hole */}
+              <div className="absolute inset-[42%] rounded-full bg-[#0a0a0a] ring-2 ring-white/[0.1] shadow-inner" />
             </div>
-            {/* Premium glow ring when playing */}
+            {/* Glow ring when playing */}
             {isPlaying && !hasPanel && (
-              <>
-                <div className="absolute -inset-3 rounded-[32px] bg-gradient-to-b from-white/[0.04] to-transparent blur-xl playing-pulse -z-10" />
-                <div className="absolute -inset-6 rounded-[40px] bg-gradient-to-b from-rose-500/[0.06] to-transparent blur-2xl -z-20 opacity-60" />
-              </>
+              <div className="absolute -inset-4 rounded-full bg-gradient-to-r from-rose-500/[0.12] via-purple-500/[0.08] to-rose-500/[0.12] blur-2xl playing-pulse -z-10" />
             )}
           </div>
 
@@ -282,21 +296,25 @@ export default function ExpandedPlayer() {
           {/* Main Playback Controls */}
           <div className="flex items-center justify-between max-w-[260px] sm:max-w-[280px] mx-auto mb-3 sm:mb-5">
             <button onClick={toggleShuffle} className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-200 active:scale-85 ${
-              shuffleMode ? 'text-rose-400 bg-rose-500/10' : 'text-white/25 hover:text-white/50'
+              shuffleMode ? 'text-rose-400 bg-rose-500/10' : 'text-white/30 hover:text-white/60'
             }`}>
               <Shuffle size={16} />
             </button>
-            <button onClick={handlePrev} className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white active:scale-85 transition-all duration-150 hover:bg-white/[0.05]">
+            <button onClick={handlePrev} className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white active:scale-85 transition-all duration-150 hover:bg-white/[0.06]">
               <SkipBack size={24} fill="white" />
             </button>
-            <button onClick={togglePlay} className="w-[62px] h-[62px] sm:w-[72px] sm:h-[72px] bg-white rounded-full flex items-center justify-center active:scale-90 transition-all duration-200 shadow-[0_8px_30px_rgba(255,255,255,0.15)] hover:shadow-[0_8px_40px_rgba(255,255,255,0.25)] hover:scale-[1.03]">
+            <button onClick={togglePlay} className={`w-[62px] h-[62px] sm:w-[72px] sm:h-[72px] rounded-full flex items-center justify-center active:scale-90 transition-all duration-200 hover:scale-[1.03] ${
+              isPlaying 
+                ? 'bg-white shadow-[0_0_30px_rgba(255,255,255,0.2),0_0_60px_rgba(225,29,72,0.1)]' 
+                : 'bg-white shadow-[0_8px_30px_rgba(255,255,255,0.15)]'
+            }`}>
               {isPlaying ? <Pause size={26} className="text-black" fill="black" /> : <Play size={26} className="text-black ml-1" fill="black" />}
             </button>
-            <button onClick={handleNext} className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white active:scale-85 transition-all duration-150 hover:bg-white/[0.05]">
+            <button onClick={handleNext} className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white active:scale-85 transition-all duration-150 hover:bg-white/[0.06]">
               <SkipForward size={24} fill="white" />
             </button>
             <button onClick={cycleRepeat} className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-200 active:scale-85 ${
-              repeatMode !== 'none' ? 'text-rose-400 bg-rose-500/10' : 'text-white/25 hover:text-white/50'
+              repeatMode !== 'none' ? 'text-rose-400 bg-rose-500/10' : 'text-white/30 hover:text-white/60'
             }`}>
               {repeatMode === 'one' ? <Repeat1 size={16} /> : <Repeat size={16} />}
             </button>
