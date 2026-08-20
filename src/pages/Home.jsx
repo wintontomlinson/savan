@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Play, Loader2, RefreshCw, Shuffle, Sparkles, Zap } from 'lucide-react';
+import { Play, Loader2, RefreshCw, Shuffle, Zap } from 'lucide-react';
 import { getGreeting } from '../data/mockData';
 import { searchSongs } from '../data/api';
 import { getHomeQueries, getHistory, analyzePreferences } from '../data/algorithm';
@@ -59,47 +59,37 @@ export default function Home() {
     <div className="pb-6 pt-3">
       {/* Hero Greeting */}
       <section className="mb-7 animate-in">
-        <div className="relative overflow-hidden rounded-3xl p-7 sm:p-9 bg-gradient-to-br from-[#1c1028] via-[#15101f] to-[#0d0a14] border border-white/[0.05]">
-          {/* Animated background orbs */}
-          <div className="absolute top-[-30px] right-[-20px] w-56 h-56 bg-rose-500/[0.08] rounded-full blur-[90px] animate-float" />
-          <div className="absolute bottom-[-40px] left-[-30px] w-48 h-48 bg-violet-500/[0.07] rounded-full blur-[70px] animate-float" style={{ animationDelay: '2s' }} />
-          <div className="absolute top-[50%] left-[50%] w-32 h-32 bg-blue-500/[0.04] rounded-full blur-[50px] animate-float" style={{ animationDelay: '4s' }} />
-          
-          {/* Subtle grid pattern */}
-          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+        <div className="relative overflow-hidden rounded-3xl p-7 sm:p-9 border border-white/[0.05]" style={{ background: 'linear-gradient(135deg, #0f0f13 0%, #1a1225 40%, #12101a 70%, #0a0a0f 100%)' }}>
+          {/* Animated ambient light */}
+          <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] bg-rose-500/[0.05] rounded-full blur-[100px] animate-float" />
+          <div className="absolute bottom-[-20%] left-[-10%] w-[50%] h-[50%] bg-indigo-500/[0.04] rounded-full blur-[80px] animate-float" style={{ animationDelay: '3s' }} />
           
           <div className="relative">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.06] border border-white/[0.06] mb-4 backdrop-blur-sm">
-              <Sparkles size={11} className="text-rose-400 animate-pulse" style={{ animationDuration: '2.5s' }} />
-              <span className="text-[10px] text-white/50 font-semibold uppercase tracking-widest">Personalized</span>
-            </div>
+            {/* Time of day icon + greeting */}
+            <h1 className="text-[28px] sm:text-[34px] font-bold text-white tracking-tight leading-[1.1]">{getGreeting()}</h1>
             
-            {/* Greeting */}
-            <h1 className="text-[28px] sm:text-[36px] font-bold text-white tracking-tight leading-tight">{getGreeting()}</h1>
-            
-            {/* Stats */}
-            {prefs && (
-              <div className="flex items-center gap-4 mt-4">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
-                  <span className="text-[12px] text-white/40">{prefs.totalPlays} plays</span>
-                </div>
-                {prefs.topArtists?.[0] && (
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-violet-400" />
-                    <span className="text-[12px] text-white/40">Loving {typeof prefs.topArtists[0] === 'string' ? prefs.topArtists[0] : prefs.topArtists[0].name}</span>
-                  </div>
-                )}
-              </div>
+            {/* Personalized subtitle */}
+            {prefs ? (
+              <p className="text-[13px] text-white/35 mt-3 leading-relaxed">
+                {prefs.totalPlays} songs played
+                {prefs.topArtists?.[0] && <> &middot; Top artist: <span className="text-white/50 font-medium">{typeof prefs.topArtists[0] === 'string' ? prefs.topArtists[0] : prefs.topArtists[0].name}</span></>}
+              </p>
+            ) : (
+              <p className="text-[13px] text-white/30 mt-3">Your personalized music awaits</p>
             )}
 
-            {/* Quick action */}
+            {/* Action buttons */}
             {history.length > 0 && (
-              <button onClick={() => { const s = [...history.slice(0, 20)].sort(() => Math.random() - 0.5); playSong(s[0], s); }}
-                className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 bg-white text-black text-[12px] font-bold rounded-full shadow-lg shadow-white/10 hover:shadow-xl hover:scale-[1.03] active:scale-95 transition-all duration-300">
-                <Shuffle size={13} /> Surprise Me
-              </button>
+              <div className="flex items-center gap-3 mt-6">
+                <button onClick={() => { const s = [...history.slice(0, 20)].sort(() => Math.random() - 0.5); playSong(s[0], s); }}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-black text-[12px] font-bold rounded-full shadow-lg hover:shadow-xl hover:scale-[1.03] active:scale-95 transition-all duration-300">
+                  <Shuffle size={13} /> Shuffle All
+                </button>
+                <button onClick={() => playSong(history[0], history.slice(0, 20))}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/[0.08] text-white text-[12px] font-medium rounded-full border border-white/[0.08] hover:bg-white/[0.12] hover:border-white/[0.12] active:scale-95 transition-all duration-300">
+                  <Play size={12} fill="white" /> Continue
+                </button>
+              </div>
             )}
           </div>
         </div>

@@ -29,7 +29,20 @@ export default function SearchResults() {
   const sugTimer = useRef(null);
   const inputRef = useRef(null);
 
-  const recentArtists = [...new Set(getHistory().slice(0, 30).map(s => s.artist?.split(',')[0]?.trim()).filter(Boolean))].slice(0, 8);
+  const recentArtists = (() => {
+    const hist = getHistory().slice(0, 50);
+    const seen = new Set();
+    const artists = [];
+    for (const s of hist) {
+      const name = s.artist?.split(',')[0]?.trim();
+      if (name && !seen.has(name)) {
+        seen.add(name);
+        artists.push({ name, img: s.thumbnail });
+      }
+      if (artists.length >= 8) break;
+    }
+    return artists;
+  })();
   const recentSongsFromHistory = getHistory().slice(0, 6);
 
   useEffect(() => { setQuery(q); }, [q]);
@@ -184,14 +197,14 @@ export default function SearchResults() {
           {recentArtists.length > 0 && (
             <section>
               <p className="text-[12px] text-white/50 font-semibold mb-3">Your Artists</p>
-              <div className="flex gap-3 scroll-x pb-1">
+              <div className="flex gap-4 scroll-x pb-1">
                 {recentArtists.map(a => (
-                  <button key={a} onClick={() => quickSearch(a)}
+                  <button key={a.name} onClick={() => quickSearch(a.name)}
                     className="flex flex-col items-center gap-2 shrink-0 group active:scale-95 transition-all">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.06] group-hover:border-white/[0.12] flex items-center justify-center transition-all group-hover:scale-105">
-                      <span className="text-[14px] font-bold text-white/40 group-hover:text-white/70 transition-colors">{a[0]}</span>
+                    <div className="w-16 h-16 rounded-full overflow-hidden ring-1 ring-white/[0.06] group-hover:ring-white/[0.15] shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
+                      <img src={a.img} alt={a.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
                     </div>
-                    <span className="text-[10px] text-white/40 font-medium text-center w-16 truncate group-hover:text-white/70 transition-colors">{a}</span>
+                    <span className="text-[10px] text-white/40 font-medium text-center w-16 truncate group-hover:text-white/70 transition-colors">{a.name}</span>
                   </button>
                 ))}
               </div>
