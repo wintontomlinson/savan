@@ -58,8 +58,8 @@ export default function SearchResults() {
       {/* Search Input — premium glass pill */}
       <div className="relative mb-6 sticky top-0 z-20 bg-[#060606]/90 backdrop-blur-xl pb-3 -mx-1 px-1 pt-1">
         <form onSubmit={handleSubmit} className="relative group/search">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center group-focus-within/search:bg-rose-500/15 transition-all duration-300">
-            <Search size={15} className="text-white/40 group-focus-within/search:text-rose-400 transition-colors duration-300" />
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center group-focus-within/search:bg-white/[0.1] transition-all duration-300">
+            <Search size={15} className="text-white/40 group-focus-within/search:text-white/70 transition-colors duration-300" />
           </div>
           <input
             ref={inputRef}
@@ -67,7 +67,7 @@ export default function SearchResults() {
             onChange={e => setQuery(e.target.value)}
             onFocus={() => { if (query.length >= 2 && suggestions.length > 0) setShowSuggestions(true); }}
             placeholder="Search songs, artists, albums..."
-            className="w-full bg-white/[0.06] text-white text-[14px] font-medium pl-14 pr-12 py-3.5 rounded-full placeholder:text-white/30 placeholder:font-normal focus:outline-none focus:bg-white/[0.08] focus:ring-2 focus:ring-rose-500/20 focus:shadow-[0_0_20px_rgba(225,29,72,0.06)] transition-all duration-300 border border-white/[0.08] focus:border-white/[0.12]"
+            className="w-full bg-white/[0.06] text-white text-[14px] font-medium pl-14 pr-12 py-3.5 rounded-full placeholder:text-white/30 placeholder:font-normal focus:outline-none focus:bg-white/[0.09] transition-all duration-300 border border-white/[0.06] focus:border-white/[0.12]"
             autoComplete="off"
             spellCheck="false"
           />
