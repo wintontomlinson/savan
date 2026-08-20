@@ -232,7 +232,7 @@ export default function Explore() {
                   </button>
                 )}
               </div>
-              <div className="artist-grid">
+              <div className="flex gap-4 scroll-x pb-2">
                 {visible.map(a => (
                   <ArtistCard key={a.name} artist={a} isActive={activeArtist === a.name} onClick={() => loadArtist(a)} />
                 ))}
@@ -247,12 +247,9 @@ export default function Explore() {
 
 function ArtistCard({ artist, isActive, onClick }) {
   return (
-    <button onClick={onClick} className="flex flex-col items-center gap-2 group transition-all duration-300 active:scale-[0.93]">
-      <div className="relative w-full aspect-square">
-        {/* Outer glow for active */}
+    <button onClick={onClick} className="flex flex-col items-center gap-2 shrink-0 group transition-all duration-300 active:scale-[0.93]">
+      <div className="relative w-[80px] h-[80px] sm:w-[90px] sm:h-[90px]">
         {isActive && <div className="absolute -inset-1 rounded-full bg-gradient-to-b from-rose-500/30 to-rose-600/10 blur-md" />}
-        
-        {/* Image container */}
         <div className={`relative w-full h-full rounded-full overflow-hidden transition-all duration-300 ${
           isActive
             ? 'ring-2 ring-rose-400 shadow-xl shadow-rose-500/25'
@@ -262,13 +259,9 @@ function ArtistCard({ artist, isActive, onClick }) {
             className={`w-full h-full object-cover transition-all duration-300 ${
               isActive ? 'scale-110 brightness-90' : 'group-hover:scale-110 group-hover:brightness-75'
             }`} loading="lazy" />
-          
-          {/* Gradient overlay */}
           <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent transition-opacity duration-300 ${
             isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           }`} />
-          
-          {/* Play button */}
           <div className={`absolute inset-0 flex items-center justify-center transition-all duration-250 ${
             isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           }`}>
@@ -282,9 +275,7 @@ function ArtistCard({ artist, isActive, onClick }) {
           </div>
         </div>
       </div>
-      
-      {/* Name */}
-      <p className={`text-[11px] sm:text-[12px] font-semibold text-center leading-tight truncate w-full px-0.5 transition-colors duration-200 ${
+      <p className={`text-[11px] font-semibold text-center leading-tight truncate w-[80px] sm:w-[90px] transition-colors duration-200 ${
         isActive ? 'text-rose-400' : 'text-white/70 group-hover:text-white'
       }`}>{artist.name}</p>
     </button>
