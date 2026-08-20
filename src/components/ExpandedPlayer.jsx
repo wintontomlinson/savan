@@ -1,4 +1,4 @@
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Mic2, ListMusic, Plus, Check, Download } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Mic2, ListMusic, Plus, Check, Download, Volume1, Volume2 } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { formatDuration } from '../data/mockData';
 import { getLyrics } from '../data/api';
@@ -6,7 +6,7 @@ import SleepTimer from './SleepTimer';
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 
 export default function ExpandedPlayer() {
-  const { currentSong, isPlaying, togglePlay, playNext, playPrev, currentTime, duration, seekTo, shuffleMode, toggleShuffle, repeatMode, cycleRepeat, toggleLike, likedSongs, downloadedSongs, toggleDownload, isExpanded, setExpanded, showToast, queue, playSong } = usePlayer();
+  const { currentSong, isPlaying, togglePlay, playNext, playPrev, currentTime, duration, seekTo, shuffleMode, toggleShuffle, repeatMode, cycleRepeat, toggleLike, likedSongs, downloadedSongs, toggleDownload, isExpanded, setExpanded, showToast, queue, volume, setVolume, playSong } = usePlayer();
   
   // Panel state — only one panel can be open at a time
   const [activePanel, setActivePanel] = useState(null); // 'lyrics' | 'queue' | 'volume' | null
@@ -17,6 +17,7 @@ export default function ExpandedPlayer() {
   const [closing, setClosing] = useState(false);
   const touchStartY = useRef(0);
   const progressRef = useRef(null);
+  const volumeRef = useRef(null);
 
   // Toggle panel — auto-closes others
   const togglePanel = useCallback((panel) => {
@@ -138,7 +139,7 @@ export default function ExpandedPlayer() {
             <p className="text-[9px] text-white/35 uppercase tracking-[0.25em] font-medium">Now Playing</p>
             <p className="text-[11px] text-white/60 font-medium mt-0.5 max-w-[200px] mx-auto truncate">{currentSong.album || 'Library'}</p>
           </div>
-          <div className="w-9" />
+          <SleepTimer />
         </div>
 
         {/* Main Content Area — vertical on mobile, horizontal on desktop */}
@@ -286,12 +287,42 @@ export default function ExpandedPlayer() {
             </button>
           </div>
 
+          {/* Volume — iOS style horizontal */}
+          <div className="flex items-center gap-3 max-w-[280px] sm:max-w-sm mx-auto mb-4">
+            <Volume1 size={14} className="text-white/25 shrink-0" />
+            <div ref={volumeRef} className="flex-1 h-[28px] flex items-center cursor-pointer relative touch-none"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                const rect = volumeRef.current.getBoundingClientRect();
+                const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                setVolume(pct);
+                const onMove = (ev) => { const p = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width)); setVolume(p); };
+                const onEnd = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onEnd); };
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onEnd);
+              }}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                const rect = volumeRef.current.getBoundingClientRect();
+                const pct = Math.max(0, Math.min(1, (e.touches[0].clientX - rect.left) / rect.width));
+                setVolume(pct);
+                const onMove = (ev) => { ev.preventDefault(); const p = Math.max(0, Math.min(1, (ev.touches[0].clientX - rect.left) / rect.width)); setVolume(p); };
+                const onEnd = () => { document.removeEventListener('touchmove', onMove); document.removeEventListener('touchend', onEnd); };
+                document.addEventListener('touchmove', onMove, { passive: false });
+                document.addEventListener('touchend', onEnd);
+              }}>
+              <div className="absolute inset-x-0 h-[4px] bg-white/[0.08] rounded-full top-1/2 -translate-y-1/2" />
+              <div className="absolute left-0 h-[4px] bg-white/50 rounded-full top-1/2 -translate-y-1/2 transition-[width] duration-100"
+                style={{ width: `${volume * 100}%` }} />
+            </div>
+            <Volume2 size={14} className="text-white/25 shrink-0" />
+          </div>
+
           {/* Action Bar */}
           <div className="flex items-center justify-center gap-2.5 max-w-sm mx-auto">
             <ActionPill icon={Mic2} label="Lyrics" active={activePanel === 'lyrics'} onClick={() => togglePanel('lyrics')} />
             <ActionPill icon={ListMusic} label="Queue" active={activePanel === 'queue'} onClick={() => togglePanel('queue')} badge={queue.length > 0 ? queue.length : null} />
             <ActionPill icon={downloaded ? Check : Download} label={downloaded ? 'Saved' : 'Download'} active={downloaded} onClick={() => toggleDownload(currentSong.id)} />
-            <SleepTimer />
           </div>
         </div>
       </div>
