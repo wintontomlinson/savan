@@ -9,11 +9,11 @@ export const formatDuration = (s) => {
 
 export const getGreeting = () => {
   const h = new Date().getHours();
-  if (h < 5) return 'Late night vibes 🌙';
-  if (h < 12) return 'Good morning ☀️';
-  if (h < 17) return 'Good afternoon 🎵';
-  if (h < 21) return 'Good evening 🎧';
-  return 'Night mode 🌃';
+  if (h < 5) return 'Still up? Let\u2019s vibe.';
+  if (h < 12) return 'Rise & Play';
+  if (h < 17) return 'Your Afternoon Mix';
+  if (h < 21) return 'Evening Sessions';
+  return 'Late Night Listening';
 };
 
 // Home page sections to fetch from Saavn
