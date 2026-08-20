@@ -130,6 +130,15 @@ function mapAlbum(a) {
   };
 }
 
+function mapArtist(a) {
+  if (!a) return null;
+  return {
+    id: a.id,
+    name: cleanText(a.name),
+    img: bestImage(a.image),
+  };
+}
+
 function cleanText(str) {
   if (!str) return '';
   return str.replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#039;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>');
@@ -157,6 +166,18 @@ export async function searchAlbums(query, limit = 10) {
 
   const data = await fetchApi(`/search/albums?query=${encodeURIComponent(query)}&limit=${limit}`);
   const results = (data?.results || []).map(mapAlbum).filter(Boolean);
+  if (results.length > 0) setCache(cacheKey, results);
+  return results;
+}
+
+export async function searchArtists(query, limit = 10) {
+  if (!query?.trim()) return [];
+  const cacheKey = `artists:${query}:${limit}`;
+  const cached = getCached(cacheKey, CACHE_TTL.search);
+  if (cached) return cached;
+
+  const data = await fetchApi(`/search/artists?query=${encodeURIComponent(query)}&limit=${limit}`);
+  const results = (data?.results || []).map(mapArtist).filter(Boolean);
   if (results.length > 0) setCache(cacheKey, results);
   return results;
 }

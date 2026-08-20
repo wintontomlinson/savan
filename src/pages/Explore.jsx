@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Loader2, Play, X, Shuffle, Disc3, TrendingUp, ListMusic, Mic, Users, Radio, Sparkles, ArrowUpRight } from 'lucide-react';
-import { searchSongs, getPlaylistById } from '../data/api';
+import { Loader2, Play, X, Shuffle, Disc3, TrendingUp, ListMusic, Mic, Users, Radio, ArrowUpRight } from 'lucide-react';
+import { searchSongs, searchArtists, getPlaylistById } from '../data/api';
 import { usePlayer } from '../context/PlayerContext';
 import SongRow from '../components/SongRow';
 import SongCard from '../components/SongCard';
@@ -20,48 +20,14 @@ const BROWSE_SECTIONS = [
   { id: 'punjabi', label: 'Punjabi Hits', icon: Disc3, playlistId: '4144832', searchQuery: 'punjabi songs latest hits', color: 'from-pink-500/20 to-rose-600/10', iconColor: 'text-pink-400' },
 ];
 
-const ARTISTS = [
-  { name: 'AP Dhillon', img: 'https://c.saavncdn.com/artists/AP_Dhillon_004_20251023102150_500x500.jpg' },
-  { name: 'Diljit Dosanjh', img: 'https://c.saavncdn.com/artists/Diljit_Dosanjh_005_20231025073054_500x500.jpg' },
-  { name: 'Arijit Singh', img: 'https://c.saavncdn.com/artists/Arijit_Singh_004_20241118063717_500x500.jpg' },
-  { name: 'Sidhu Moosewala', img: 'https://c.saavncdn.com/artists/Sidhu_Moose_Wala_004_20250617183705_500x500.jpg' },
-  { name: 'The Weeknd', img: 'https://c.saavncdn.com/artists/The_Weeknd_002_20241003071400_500x500.jpg' },
-  { name: 'Shreya Ghoshal', img: 'https://c.saavncdn.com/artists/Shreya_Ghoshal_007_20241101074144_500x500.jpg' },
-  { name: 'Karan Aujla', img: 'https://c.saavncdn.com/artists/Karan_Aujla_004_20260810121947_500x500.jpg' },
-  { name: 'Drake', img: 'https://c.saavncdn.com/artists/Drake_006_20260520062317_500x500.jpg' },
-  { name: 'Badshah', img: 'https://c.saavncdn.com/artists/Badshah_006_20241118064015_500x500.jpg' },
-  { name: 'Taylor Swift', img: 'https://c.saavncdn.com/artists/Taylor_Swift_003_20200226074119_500x500.jpg' },
-  { name: 'Honey Singh', img: 'https://c.saavncdn.com/artists/Yo_Yo_Honey_Singh_004_20260811095253_500x500.jpg' },
-  { name: 'Jubin Nautiyal', img: 'https://c.saavncdn.com/artists/Jubin_Nautiyal_003_20231130204020_500x500.jpg' },
-  { name: 'Shubh', img: 'https://c.saavncdn.com/artists/Shubh_000_20220921112507_500x500.jpg' },
-  { name: 'Ed Sheeran', img: 'https://c.saavncdn.com/artists/Ed_Sheeran_002_20250625073038_500x500.jpg' },
-  { name: 'Neha Kakkar', img: 'https://c.saavncdn.com/artists/Neha_Kakkar_007_20241212115832_500x500.jpg' },
-  { name: 'Guru Randhawa', img: 'https://c.saavncdn.com/artists/Guru_Randhawa_004_20250701125845_500x500.jpg' },
-  { name: 'Atif Aslam', img: 'https://c.saavncdn.com/artists/Atif_Aslam_500x500.jpg' },
-  { name: 'Dua Lipa', img: 'https://c.saavncdn.com/artists/Dua_Lipa_004_20231120090922_500x500.jpg' },
-  { name: 'Divine', img: 'https://c.saavncdn.com/artists/DIVINE_006_20250911071442_500x500.jpg' },
-  { name: 'Vishal Mishra', img: 'https://c.saavncdn.com/artists/Vishal_Mishra_005_20251120085316_500x500.jpg' },
-  { name: 'Justin Bieber', img: 'https://c.saavncdn.com/artists/Justin_Bieber_005_20201127112218_500x500.jpg' },
-  { name: 'Darshan Raval', img: 'https://c.saavncdn.com/artists/Darshan_Raval_006_20250807060352_500x500.jpg' },
-  { name: 'A.R. Rahman', img: 'https://c.saavncdn.com/artists/AR_Rahman_002_20210120084455_500x500.jpg' },
-  { name: 'Eminem', img: 'https://c.saavncdn.com/artists/Eminem_003_20240403152835_500x500.jpg' },
-  { name: 'Pritam', img: 'https://c.saavncdn.com/artists/Pritam_Chakraborty-20170711073326_500x500.jpg' },
-  { name: 'Billie Eilish', img: 'https://c.saavncdn.com/artists/Billie_Eilish_20190211151539_500x500.jpg' },
-  { name: 'Harrdy Sandhu', img: 'https://c.saavncdn.com/artists/Hardy_Sandhu_001_20190913112018_500x500.jpg' },
-  { name: 'Armaan Malik', img: 'https://c.saavncdn.com/artists/Armaan_Malik_006_20260813132832_500x500.jpg' },
-  { name: 'B Praak', img: 'https://c.saavncdn.com/artists/B_Praak_001_20191118112005_500x500.jpg' },
-  { name: 'Raftaar', img: 'https://c.saavncdn.com/artists/Raftaar_009_20230223100912_500x500.jpg' },
-  { name: 'Selena Gomez', img: 'https://c.saavncdn.com/artists/Selena_Gomez_003_20231023065157_500x500.jpg' },
-  { name: 'Kishore Kumar', img: 'https://c.saavncdn.com/artists/Kishore_Kumar_005_20230721111052_500x500.jpg' },
-  { name: 'Lata Mangeshkar', img: 'https://c.saavncdn.com/artists/Lata_Mangeshkar_004_20230623105323_500x500.jpg' },
-];
-
 export default function Explore() {
   const [activeArtist, setActiveArtist] = useState(null);
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [browseData, setBrowseData] = useState({});
   const [browseLoading, setBrowseLoading] = useState({});
+  const [artists, setArtists] = useState([]);
+  const [artistsLoading, setArtistsLoading] = useState(true);
   const { playSong, currentSong } = usePlayer();
   const songsRef = useRef(null);
 
@@ -99,9 +65,25 @@ export default function Explore() {
     setBrowseLoading(p => ({ ...p, [section.id]: false }));
   };
 
-  // Load all browse sections on mount (NO auto-play)
   useEffect(() => {
-    BROWSE_SECTIONS.forEach(sec => loadBrowse(sec, false));
+    let cancelled = false;
+    const loadExploreData = async () => {
+      setBrowseLoading(Object.fromEntries(BROWSE_SECTIONS.map(section => [section.id, true])));
+      const collections = await Promise.all(BROWSE_SECTIONS.map(async section => [section.id, await getPlaylistById(section.playlistId) || []]));
+      if (cancelled) return;
+      const data = Object.fromEntries(collections);
+      setBrowseData(data);
+      setBrowseLoading({});
+
+      const names = [...new Set(collections.flatMap(([, songs]) => songs.flatMap(song => song.artist.split(',').map(name => name.trim()).filter(Boolean))))];
+      const profiles = await Promise.all(names.map(async name => (await searchArtists(name, 1))[0]));
+      if (!cancelled) {
+        setArtists(profiles.filter(Boolean));
+        setArtistsLoading(false);
+      }
+    };
+    loadExploreData();
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -116,24 +98,16 @@ export default function Explore() {
   };
 
   return (
-    <div className="pb-8 pt-2">
-      <section className="relative mb-8 overflow-hidden rounded-[28px] border border-white/[0.08] bg-[#11110f] px-5 py-6 sm:px-8 sm:py-8">
-        <div className="absolute -right-16 -top-24 h-64 w-64 rounded-full bg-amber-400/15 blur-3xl" />
-        <div className="absolute -bottom-28 left-1/3 h-56 w-56 rounded-full bg-rose-500/15 blur-3xl" />
-        <div className="relative max-w-xl">
-          <div className="mb-4 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-200/80">
-            <Sparkles size={13} /> Discover your next favorite
-          </div>
-          <h1 className="max-w-md text-3xl font-black tracking-tight text-white sm:text-4xl">Music for every version of your day.</h1>
-          <p className="mt-3 max-w-md text-[13px] leading-6 text-white/55 sm:text-sm">Fresh picks, familiar voices, and a soundtrack tailored to the moment.</p>
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <button onClick={() => loadBrowse(BROWSE_SECTIONS[0], true)} className="flex items-center gap-2 rounded-full bg-amber-300 px-5 py-3 text-xs font-extrabold text-black shadow-lg shadow-amber-300/10 transition-transform hover:scale-[1.03] active:scale-95">
-              <Play size={14} fill="currentColor" /> Start listening
-            </button>
-            <span className="text-[11px] font-medium text-white/40">Curated from the latest Hindi hits</span>
-          </div>
+    <div className="pb-8 pt-3">
+      <div className="mb-8 flex items-end justify-between border-b border-white/[0.07] pb-5">
+        <div>
+          <h1 className="text-[26px] font-bold tracking-tight text-white sm:text-3xl">Explore</h1>
+          <p className="mt-1 text-[13px] text-white/45">New songs, artists and playlists from across music.</p>
         </div>
-      </section>
+        <button onClick={() => loadBrowse(BROWSE_SECTIONS[0], true)} className="flex shrink-0 items-center gap-2 rounded-full bg-rose-500 px-4 py-2.5 text-[11px] font-bold text-white transition-colors hover:bg-rose-400 active:scale-95">
+          <Play size={13} fill="currentColor" /> Play trending
+        </button>
+      </div>
 
       <section className="mb-9">
         <div className="mb-4 flex items-end justify-between gap-4">
@@ -141,7 +115,7 @@ export default function Explore() {
             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-rose-300/70">Find a feeling</p>
             <h2 className="mt-1 text-xl font-bold tracking-tight text-white">Browse by mood</h2>
           </div>
-          <span className="hidden text-[11px] text-white/35 sm:block">Tap a collection to play a fresh mix</span>
+          <span className="hidden text-[11px] text-white/35 sm:block">Play a fresh mix from any collection</span>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {BROWSE_SECTIONS.map((sec, index) => (
@@ -161,16 +135,19 @@ export default function Explore() {
       <section className="mb-10 animate-in" style={{ animationDelay: '0.05s' }}>
         <div className="mb-4 flex items-end justify-between">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-rose-300/70">The voices behind the hits</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-rose-300/70">Live from the music catalog</p>
             <h2 className="mt-1 text-xl font-bold tracking-tight text-white">Top artists</h2>
           </div>
-          <span className="text-[11px] text-white/35">{ARTISTS.length} artists</span>
+          <span className="text-[11px] text-white/35">{artists.length} artists</span>
         </div>
+        {artistsLoading ? (
+          <div className="flex gap-4 overflow-hidden pb-2">{[1, 2, 3, 4, 5, 6].map(item => <div key={item} className="h-24 w-20 shrink-0 rounded-full skeleton" />)}</div>
+        ) : (
         <div className="flex gap-4 scroll-x pb-2">
-          {ARTISTS.map(a => (
+          {artists.map(a => (
             <ArtistCard key={a.name} artist={a} isActive={activeArtist === a.name} onClick={() => loadArtist(a)} />
           ))}
-        </div>
+        </div>)}
       </section>
 
       <div className="mb-5 flex items-end justify-between">
@@ -209,7 +186,7 @@ export default function Explore() {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3 min-w-0">
-                  <img src={ARTISTS.find(a => a.name === activeArtist)?.img} alt="" className="w-12 h-12 rounded-full object-cover ring-2 ring-white/10 shrink-0" />
+                  <img src={artists.find(a => a.name === activeArtist)?.img} alt="" className="w-12 h-12 rounded-full object-cover ring-2 ring-white/10 shrink-0" />
                   <div className="min-w-0">
                     <h2 className="text-[17px] font-bold text-white truncate">{activeArtist}</h2>
                     <p className="text-[11px] text-white/40">{songs.length} songs</p>
