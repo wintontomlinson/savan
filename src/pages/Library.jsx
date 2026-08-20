@@ -48,7 +48,7 @@ export default function Library() {
         <div className="animate-in mb-5">
           <div className="flex items-center justify-between mb-5">
             <h1 className="text-[24px] font-bold text-white tracking-tight">Library</h1>
-            <button onClick={() => setShowCreate(true)} className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/[0.06] hover:bg-white/[0.1] text-[11px] text-white/60 font-medium transition-all active:scale-95 border border-white/[0.06]">
+            <button onClick={() => setShowCreate(true)} className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white text-[11px] font-bold shadow-lg shadow-fuchsia-500/15 hover:shadow-fuchsia-500/25 hover:scale-[1.04] active:scale-95 transition-all">
               <Plus size={12} /> Create
             </button>
           </div>
@@ -211,33 +211,50 @@ export default function Library() {
       {tab === 'stats' && !openPlaylist && (
         prefs && prefs.totalPlays > 0 ? (
           <div className="animate-in space-y-3">
-            {/* Stats Row */}
-            <div className="grid grid-cols-3 gap-2">
-              <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.04] text-center">
-                <p className="text-[20px] font-bold text-white">{prefs.totalPlays}</p>
-                <p className="text-[9px] text-white/25 mt-0.5">Plays</p>
-              </div>
-              <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.04] text-center">
-                <p className="text-[20px] font-bold text-white">{likedSongs_full.length}</p>
-                <p className="text-[9px] text-white/25 mt-0.5">Liked</p>
-              </div>
-              <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.04] text-center">
-                <p className="text-[20px] font-bold text-white">{prefs.topArtists?.length || 0}</p>
-                <p className="text-[9px] text-white/25 mt-0.5">Artists</p>
+            {/* Hero Stat */}
+            <div className="relative overflow-hidden rounded-2xl p-5 border border-white/[0.06]" style={{ background: 'linear-gradient(135deg, #1a0a2e 0%, #15102a 50%, #0d0620 100%)' }}>
+              <div className="absolute top-[-20%] right-[-10%] w-32 h-32 bg-fuchsia-500/[0.08] rounded-full blur-[50px]" />
+              <div className="absolute bottom-[-20%] left-[-10%] w-28 h-28 bg-violet-500/[0.06] rounded-full blur-[40px]" />
+              <div className="relative flex items-end justify-between">
+                <div>
+                  <p className="text-[10px] text-fuchsia-300/60 uppercase tracking-wider font-medium">Total Plays</p>
+                  <p className="text-[36px] font-black text-white leading-none mt-1">{prefs.totalPlays}</p>
+                </div>
+                <div className="flex gap-4">
+                  <div className="text-right">
+                    <p className="text-[18px] font-bold text-white">{likedSongs_full.length}</p>
+                    <p className="text-[9px] text-white/30">Liked</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[18px] font-bold text-white">{downloadedFromHistory.length}</p>
+                    <p className="text-[9px] text-white/30">Saved</p>
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Top Artists */}
             {prefs.topArtists?.length > 0 && (
-              <div className="rounded-xl p-4 bg-white/[0.02] border border-white/[0.04]">
-                <p className="text-[12px] text-white/50 font-semibold mb-3">Top Artists</p>
-                <div className="space-y-2.5">
+              <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]">
+                <div className="flex items-center gap-2 mb-4">
+                  <Trophy size={13} className="text-amber-400" />
+                  <p className="text-[12px] text-white/60 font-semibold">Most Played</p>
+                </div>
+                <div className="space-y-3">
                   {prefs.topArtists.slice(0, 5).map((a, i) => {
                     const name = typeof a === 'string' ? a : a.name;
+                    const widths = ['w-full', 'w-4/5', 'w-3/5', 'w-2/5', 'w-1/4'];
                     return (
-                      <div key={name || i} className="flex items-center gap-2.5">
-                        <span className={`text-[11px] font-bold w-4 tabular-nums ${i === 0 ? 'text-amber-400' : 'text-white/20'}`}>{i + 1}</span>
-                        <span className="text-[12px] text-white/70 font-medium flex-1">{name}</span>
+                      <div key={name || i} className="flex items-center gap-3">
+                        <span className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold ${
+                          i === 0 ? 'bg-amber-500/15 text-amber-400' : i === 1 ? 'bg-white/[0.06] text-white/40' : i === 2 ? 'bg-orange-500/10 text-orange-300' : 'bg-white/[0.03] text-white/20'
+                        }`}>{i + 1}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[12px] text-white/80 font-medium truncate">{name}</p>
+                          <div className="mt-1 h-1 rounded-full bg-white/[0.04] overflow-hidden">
+                            <div className={`h-full rounded-full ${i === 0 ? 'bg-gradient-to-r from-fuchsia-500 to-violet-400' : i === 1 ? 'bg-white/20' : i === 2 ? 'bg-white/15' : 'bg-white/10'} ${widths[i]}`} />
+                          </div>
+                        </div>
                       </div>
                     );
                   })}
