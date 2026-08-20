@@ -17,9 +17,12 @@ import { useEffect, useRef } from 'react';
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
-    // Reset scroll on all main content areas
     const main = document.getElementById('main-scroll');
-    if (main) main.scrollTop = 0;
+    if (main) {
+      main.scrollTop = 0;
+      main.scrollTo({ top: 0, behavior: 'instant' });
+    }
+    window.scrollTo(0, 0);
   }, [pathname]);
   return null;
 }

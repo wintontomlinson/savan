@@ -1,17 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, X, Play, Loader2, SearchX, TrendingUp, RefreshCw, Mic } from 'lucide-react';
+import { Search, X, Play, Loader2, SearchX, TrendingUp, RefreshCw, Clock, Trash2, Shuffle } from 'lucide-react';
 import { searchSongs } from '../data/api';
 import { usePlayer } from '../context/PlayerContext';
 import { getHistory } from '../data/algorithm';
 import SongRow from '../components/SongRow';
+import SongCard from '../components/SongCard';
+import HorizontalScroll from '../components/HorizontalScroll';
 
 const TRENDING = ['Arijit Singh', 'Diljit Dosanjh', 'AP Dhillon', 'Shreya Ghoshal', 'Sidhu Moosewala', 'Atif Aslam', 'Jubin Nautiyal', 'The Weeknd', 'Karan Aujla', 'Pritam'];
 
 export default function SearchResults() {
   const [params, setParams] = useSearchParams();
   const q = params.get('q') || '';
-  const { playSong } = usePlayer();
+  const { playSong, showToast } = usePlayer();
   const [query, setQuery] = useState(q);
   const [songs, setSongs] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
@@ -20,11 +22,15 @@ export default function SearchResults() {
   const [error, setError] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [focused, setFocused] = useState(false);
+  const [recentSearches, setRecentSearches] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ma_recent_searches')) || []; } catch { return []; }
+  });
   const requestId = useRef(0);
   const sugTimer = useRef(null);
   const inputRef = useRef(null);
 
-  const recentArtists = [...new Set(getHistory().slice(0, 20).map(s => s.artist?.split(',')[0]?.trim()).filter(Boolean))].slice(0, 6);
+  const recentArtists = [...new Set(getHistory().slice(0, 30).map(s => s.artist?.split(',')[0]?.trim()).filter(Boolean))].slice(0, 8);
+  const recentSongsFromHistory = getHistory().slice(0, 6);
 
   useEffect(() => { setQuery(q); }, [q]);
   useEffect(() => { if (!q) inputRef.current?.focus(); }, []);
@@ -32,6 +38,11 @@ export default function SearchResults() {
   const doSearch = async () => {
     if (!q?.trim()) return;
     setLoading(true); setError(false); setShowSuggestions(false);
+    // Save to recent searches
+    const updated = [q, ...recentSearches.filter(s => s !== q)].slice(0, 10);
+    setRecentSearches(updated);
+    try { localStorage.setItem('ma_recent_searches', JSON.stringify(updated)); } catch {}
+    
     const id = ++requestId.current;
     const s = await searchSongs(q, 30) || [];
     if (id !== requestId.current) return;
@@ -54,6 +65,28 @@ export default function SearchResults() {
 
   const handleSubmit = (e) => { e.preventDefault(); if (query.trim()) { setParams({ q: query.trim() }); setShowSuggestions(false); } };
   const quickSearch = (term) => { setQuery(term); setParams({ q: term }); setShowSuggestions(false); };
+  
+  const clearRecentSearches = () => {
+    setRecentSearches([]);
+    localStorage.removeItem('ma_recent_searches');
+    showToast('Recent searches cleared');
+  };
+
+  const removeRecentSearch = (term) => {
+    const updated = recentSearches.filter(s => s !== term);
+    setRecentSearches(updated);
+    try { localStorage.setItem('ma_recent_searches', JSON.stringify(updated)); } catch {}
+  };
+
+  const clearSearch = () => {
+    setQuery('');
+    setSongs([]);
+    setSuggestions([]);
+    setError(false);
+    setShowSuggestions(false);
+    setParams({});
+    inputRef.current?.focus();
+  };
 
   return (
     <div className="pb-6 pt-3">
@@ -65,7 +98,7 @@ export default function SearchResults() {
               ? 'bg-[#1c1c20] ring-1 ring-white/[0.12] shadow-2xl shadow-black/40'
               : 'bg-[#131315] ring-1 ring-white/[0.05] hover:ring-white/[0.08]'
           }`}>
-            <Search size={17} className={`absolute left-4 transition-all duration-300 ${focused ? 'text-white/70 scale-110' : 'text-white/25'}`} />
+            <Search size={17} className={`absolute left-4 transition-all duration-300 ${focused ? 'text-white/70' : 'text-white/25'}`} />
             <input
               ref={inputRef}
               value={query}
@@ -78,9 +111,9 @@ export default function SearchResults() {
               spellCheck="false"
             />
             {query && (
-              <button type="button" onClick={() => { setQuery(''); setSongs([]); setSuggestions([]); setError(false); setShowSuggestions(false); setParams({}); inputRef.current?.focus(); }}
-                className="absolute right-3 w-8 h-8 rounded-full bg-white/[0.1] flex items-center justify-center hover:bg-white/[0.18] active:scale-85 transition-all duration-200">
-                <X size={14} className="text-white/70" />
+              <button type="button" onClick={clearSearch}
+                className="absolute right-3 w-8 h-8 rounded-full bg-white/[0.12] flex items-center justify-center hover:bg-white/[0.2] active:scale-85 transition-all duration-200">
+                <X size={14} className="text-white/80" />
               </button>
             )}
           </div>
@@ -96,8 +129,7 @@ export default function SearchResults() {
               )}
               {!sugLoading && suggestions.map((s, i) => (
                 <button key={s.id || i} onClick={() => { playSong(s, suggestions); setShowSuggestions(false); }}
-                  style={{ animationDelay: `${i * 30}ms` }}
-                  className="flex items-center gap-3 w-full px-5 py-3.5 hover:bg-white/[0.04] active:bg-white/[0.07] transition-all duration-150 text-left border-b border-white/[0.03] last:border-0 animate-in">
+                  className="flex items-center gap-3 w-full px-5 py-3.5 hover:bg-white/[0.04] active:bg-white/[0.07] transition-all duration-150 text-left border-b border-white/[0.03] last:border-0">
                   <img src={s.thumbnail} alt="" className="w-11 h-11 rounded-xl object-cover shrink-0 shadow-md" loading="lazy" />
                   <div className="min-w-0 flex-1">
                     <p className="text-[13px] text-white truncate font-medium">{s.title}</p>
@@ -118,21 +150,60 @@ export default function SearchResults() {
         </form>
       </div>
 
-      {/* Empty State */}
+      {/* Empty State - Discovery */}
       {!q && (
-        <div className="space-y-7 animate-in">
-          {/* Recent */}
+        <div className="space-y-8 animate-in">
+          {/* Recent Searches with clear */}
+          {recentSearches.length > 0 && (
+            <section>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Clock size={13} className="text-white/25" />
+                  <p className="text-[12px] text-white/50 font-semibold">Recent Searches</p>
+                </div>
+                <button onClick={clearRecentSearches} className="flex items-center gap-1 text-[11px] text-white/25 hover:text-white/50 transition-colors active:scale-95">
+                  <Trash2 size={11} /> Clear all
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {recentSearches.map(term => (
+                  <div key={term} className="flex items-center gap-1 bg-white/[0.04] rounded-full border border-white/[0.04] hover:border-white/[0.08] transition-all group">
+                    <button onClick={() => quickSearch(term)} className="pl-3.5 pr-1 py-2 text-[12px] text-white/60 font-medium hover:text-white/80 transition-colors">
+                      {term}
+                    </button>
+                    <button onClick={() => removeRecentSearch(term)} className="pr-2.5 py-2 text-white/20 hover:text-white/50 transition-colors">
+                      <X size={11} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Recently Played Artists */}
           {recentArtists.length > 0 && (
             <section>
-              <p className="text-[12px] text-white/25 font-semibold uppercase tracking-wider mb-3">Recent</p>
-              <div className="flex flex-wrap gap-2">
+              <p className="text-[12px] text-white/50 font-semibold mb-3">Your Artists</p>
+              <div className="flex gap-3 scroll-x pb-1">
                 {recentArtists.map(a => (
                   <button key={a} onClick={() => quickSearch(a)}
-                    className="px-4 py-2 bg-white/[0.04] hover:bg-white/[0.08] rounded-full text-[12px] text-white/60 font-medium border border-white/[0.04] hover:border-white/[0.08] transition-all duration-200 active:scale-95 hover:scale-[1.02]">
-                    {a}
+                    className="flex flex-col items-center gap-2 shrink-0 group active:scale-95 transition-all">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.06] group-hover:border-white/[0.12] flex items-center justify-center transition-all group-hover:scale-105">
+                      <span className="text-[14px] font-bold text-white/40 group-hover:text-white/70 transition-colors">{a[0]}</span>
+                    </div>
+                    <span className="text-[10px] text-white/40 font-medium text-center w-16 truncate group-hover:text-white/70 transition-colors">{a}</span>
                   </button>
                 ))}
               </div>
+            </section>
+          )}
+
+          {/* Recently Played Songs */}
+          {recentSongsFromHistory.length > 0 && (
+            <section>
+              <HorizontalScroll title="Recently Played">
+                {recentSongsFromHistory.map(s => <SongCard key={s.id} song={s} />)}
+              </HorizontalScroll>
             </section>
           )}
 
@@ -140,14 +211,13 @@ export default function SearchResults() {
           <section>
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp size={15} className="text-rose-400" />
-              <p className="text-[14px] text-white font-bold">Trending Searches</p>
+              <p className="text-[14px] text-white font-bold">Trending</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
               {TRENDING.map((t, i) => (
                 <button key={t} onClick={() => quickSearch(t)}
-                  style={{ animationDelay: `${i * 30}ms` }}
-                  className="flex items-center gap-3 px-4 py-3.5 bg-white/[0.02] hover:bg-white/[0.05] rounded-xl border border-white/[0.03] hover:border-white/[0.07] transition-all duration-200 active:scale-[0.98] text-left group animate-in hover:-translate-y-0.5">
-                  <span className={`text-[13px] font-bold w-6 tabular-nums ${i < 3 ? 'text-rose-400' : 'text-white/15'}`}>{i + 1}</span>
+                  className="flex items-center gap-3 px-4 py-3.5 bg-white/[0.02] hover:bg-white/[0.05] rounded-xl border border-white/[0.03] hover:border-white/[0.07] transition-all duration-200 active:scale-[0.98] text-left group hover:-translate-y-0.5">
+                  <span className={`text-[13px] font-bold w-5 tabular-nums ${i < 3 ? 'text-rose-400' : 'text-white/15'}`}>{i + 1}</span>
                   <span className="text-[13px] text-white/70 font-medium group-hover:text-white transition-colors flex-1">{t}</span>
                   <Play size={11} className="text-white/0 group-hover:text-white/30 transition-all shrink-0" />
                 </button>
@@ -166,10 +236,16 @@ export default function SearchResults() {
               <p className="text-[11px] text-white/25 mt-0.5">{loading ? 'Searching...' : songs.length > 0 ? `${songs.length} results` : ''}</p>
             </div>
             {songs.length > 0 && (
-              <button onClick={() => playSong(songs[0], songs)}
-                className="flex items-center gap-2 px-5 py-2.5 bg-white text-black text-[12px] font-bold rounded-full shadow-lg hover:shadow-xl hover:scale-[1.03] active:scale-95 transition-all duration-300">
-                <Play size={13} fill="black" /> Play All
-              </button>
+              <div className="flex items-center gap-2">
+                <button onClick={() => { const s = [...songs].sort(() => Math.random() - 0.5); playSong(s[0], s); }}
+                  className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center hover:bg-white/[0.1] active:scale-90 transition-all">
+                  <Shuffle size={14} className="text-white/60" />
+                </button>
+                <button onClick={() => playSong(songs[0], songs)}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-white text-black text-[12px] font-bold rounded-full shadow-lg hover:shadow-xl hover:scale-[1.03] active:scale-95 transition-all duration-300">
+                  <Play size={13} fill="black" /> Play All
+                </button>
+              </div>
             )}
           </div>
 
@@ -211,7 +287,7 @@ export default function SearchResults() {
                 </button>
               </div>
 
-              {/* Songs */}
+              {/* Songs List */}
               <div className="rounded-2xl border border-white/[0.04] overflow-hidden">
                 {songs.slice(1).map((s, i) => <SongRow key={`${s.id}-${i}`} song={s} index={i + 1} songList={songs} />)}
               </div>
