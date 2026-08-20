@@ -32,7 +32,7 @@ export default function Settings() {
 
   return (
     <div className="pb-6 pt-3 max-w-lg">
-      <h1 className="text-[26px] font-bold text-white tracking-tight mb-1">Settings</h1>
+      <h1 className="text-[26px] font-black text-transparent bg-clip-text tracking-tight mb-1" style={{ backgroundImage: 'linear-gradient(90deg, #fff 0%, #e879f9 60%, #a78bfa 100%)' }}>Settings</h1>
       <p className="text-[12px] text-white/35 mb-7">Audio & app preferences</p>
 
       {/* Volume */}
@@ -179,8 +179,8 @@ function Row({ label, desc, children }) {
 
 function Toggle({ on, onChange }) {
   return (
-    <button onClick={() => onChange(!on)} className={`w-10 h-[22px] rounded-full relative transition-all duration-200 ${on ? 'bg-white' : 'bg-white/[0.1]'}`}>
-      <div className={`absolute top-[3px] w-4 h-4 rounded-full shadow-sm transition-all duration-200 ${on ? 'translate-x-[21px] bg-black' : 'translate-x-[3px] bg-white/50'}`} />
+    <button onClick={() => onChange(!on)} className={`w-11 h-[24px] rounded-full relative transition-all duration-300 ${on ? 'bg-gradient-to-r from-fuchsia-500 to-violet-500 shadow-md shadow-fuchsia-500/20' : 'bg-white/[0.1]'}`}>
+      <div className={`absolute top-[3px] w-[18px] h-[18px] rounded-full shadow-sm transition-all duration-300 ${on ? 'translate-x-[24px] bg-white' : 'translate-x-[3px] bg-white/50'}`} />
     </button>
   );
 }

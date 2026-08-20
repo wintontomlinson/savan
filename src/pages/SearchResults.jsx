@@ -245,7 +245,7 @@ export default function SearchResults() {
         <div className="animate-in">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h2 className="text-[20px] font-bold text-white">{q}</h2>
+              <h2 className="text-[20px] font-black text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(90deg, #fff 0%, #e879f9 60%, #a78bfa 100%)' }}>{q}</h2>
               <p className="text-[11px] text-white/25 mt-0.5">{loading ? 'Searching...' : songs.length > 0 ? `${songs.length} results` : ''}</p>
             </div>
             {songs.length > 0 && (
@@ -255,8 +255,8 @@ export default function SearchResults() {
                   <Shuffle size={14} className="text-white/60" />
                 </button>
                 <button onClick={() => playSong(songs[0], songs)}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-white text-black text-[12px] font-bold rounded-full shadow-lg hover:shadow-xl hover:scale-[1.03] active:scale-95 transition-all duration-300">
-                  <Play size={13} fill="black" /> Play All
+                  className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white text-[12px] font-bold rounded-full shadow-lg shadow-fuchsia-500/20 hover:shadow-fuchsia-500/30 hover:scale-[1.03] active:scale-95 transition-all duration-300">
+                  <Play size={13} fill="white" /> Play All
                 </button>
               </div>
             )}
