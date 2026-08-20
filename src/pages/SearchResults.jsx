@@ -248,14 +248,14 @@ export default function SearchResults() {
           {/* Trending */}
           <section>
             <div className="flex items-center gap-2 mb-4">
-              <TrendingUp size={15} className="text-fuchsia-400" />
+              <TrendingUp size={15} className="text-rose-400" />
               <p className="text-[14px] text-white font-bold">Trending</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
               {trending.map((t, i) => (
                 <button key={t} onClick={() => quickSearch(t)}
                   className="flex items-center gap-3 px-4 py-3.5 bg-white/[0.02] hover:bg-white/[0.05] rounded-xl border border-white/[0.03] hover:border-white/[0.07] transition-all duration-200 active:scale-[0.98] text-left group hover:-translate-y-0.5">
-                  <span className={`text-[13px] font-bold w-5 tabular-nums ${i < 3 ? 'text-fuchsia-400' : 'text-white/15'}`}>{i + 1}</span>
+                  <span className={`text-[13px] font-bold w-5 tabular-nums ${i < 3 ? 'text-rose-400' : 'text-white/15'}`}>{i + 1}</span>
                   <span className="text-[13px] text-white/70 font-medium group-hover:text-white transition-colors flex-1">{t}</span>
                   <Play size={11} className="text-white/0 group-hover:text-white/30 transition-all shrink-0" />
                 </button>

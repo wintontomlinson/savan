@@ -126,7 +126,7 @@ export default function Home() {
         <section className="mb-8 animate-in">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-[15px] font-bold text-white flex items-center gap-2">
-              <Zap size={13} className="text-fuchsia-400" /> Up Next
+              <Zap size={13} className="text-rose-400" /> Up Next
             </h2>
             <span className="text-[10px] text-white/20">{upNext.length} songs</span>
           </div>

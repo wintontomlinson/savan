@@ -56,8 +56,8 @@ export default function MiniPlayer() {
         className="player-progress-track h-[3px] bg-white/[0.06] group"
         onMouseDown={handleSeekStart}
         onTouchStart={handleSeekStart}>
-        <div className="h-full bg-gradient-to-r from-fuchsia-500 to-violet-400 relative transition-[width] duration-100 ease-linear" style={{ width: `${progress}%` }}>
-          <div className={`absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg shadow-fuchsia-500/30 transition-all duration-150 ${isDragging ? 'scale-[1.4] opacity-100' : 'scale-0 opacity-0 group-hover:scale-100 group-hover:opacity-100'}`} />
+        <div className="h-full bg-gradient-to-r from-rose-500 to-rose-400 relative transition-[width] duration-100 ease-linear" style={{ width: `${progress}%` }}>
+          <div className={`absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg shadow-rose-500/30 transition-all duration-150 ${isDragging ? 'scale-[1.4] opacity-100' : 'scale-0 opacity-0 group-hover:scale-100 group-hover:opacity-100'}`} />
         </div>
       </div>
 
@@ -67,10 +67,10 @@ export default function MiniPlayer() {
         {/* Song Info — tap to expand */}
         <div className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer active:opacity-80 transition-opacity" onClick={() => setExpanded(true)}>
           <div className="relative shrink-0">
-            <div className={`w-11 h-11 rounded-xl overflow-hidden shadow-lg ring-1 ring-white/[0.06] transition-all duration-300 ${isPlaying ? 'shadow-fuchsia-500/15' : ''}`}>
+            <div className={`w-11 h-11 rounded-xl overflow-hidden shadow-lg ring-1 ring-white/[0.06] transition-all duration-300 ${isPlaying ? 'shadow-rose-500/15' : ''}`}>
               <img src={currentSong.thumbnail} alt="" className="w-full h-full object-cover" />
             </div>
-            {isPlaying && <div className="absolute -inset-0.5 rounded-xl bg-fuchsia-500/10 blur-md -z-10 playing-pulse" />}
+            {isPlaying && <div className="absolute -inset-0.5 rounded-xl bg-rose-500/10 blur-md -z-10 playing-pulse" />}
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-[13px] font-semibold text-white truncate leading-tight">{currentSong.title}</p>
