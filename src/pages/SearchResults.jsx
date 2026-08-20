@@ -55,8 +55,8 @@ export default function SearchResults() {
 
   return (
     <div className="pb-6 pt-2">
-      {/* Search Input — premium glass pill */}
-      <div className="relative mb-6 sticky top-0 z-20 backdrop-blur-xl pb-3 pt-1">
+      {/* Search Input — pill shape */}
+      <div className="sticky top-0 z-20 pb-2 pt-1">
         <form onSubmit={handleSubmit} className="relative">
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" />
           <input
@@ -65,7 +65,7 @@ export default function SearchResults() {
             onChange={e => setQuery(e.target.value)}
             onFocus={() => { if (query.length >= 2 && suggestions.length > 0) setShowSuggestions(true); }}
             placeholder="Search songs, artists, albums..."
-            className="w-full bg-[#1a1a1a] text-white text-[14px] font-medium pl-11 pr-11 py-3 rounded-full placeholder:text-white/30 placeholder:font-normal focus:outline-none focus:bg-[#1f1f1f] transition-all duration-300"
+            className="w-full bg-[#1c1c1e] text-white text-[14px] font-medium pl-11 pr-11 py-3 rounded-full placeholder:text-white/30 placeholder:font-normal focus:outline-none focus:bg-[#232326] transition-all duration-300"
             autoComplete="off"
             spellCheck="false"
           />
@@ -75,35 +75,35 @@ export default function SearchResults() {
               <X size={12} className="text-white/60" />
             </button>
           )}
-        </form>
 
-        {/* Live Suggestions */}
-        {showSuggestions && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-[#151515] backdrop-blur-2xl rounded-2xl border border-white/[0.06] shadow-2xl shadow-black/70 overflow-hidden z-50 animate-scale">
-            {sugLoading && (
-              <div className="flex items-center gap-3 px-4 py-3.5">
-                <Loader2 size={14} className="text-rose-400 animate-spin" />
-                <span className="text-[12px] text-white/40">Searching...</span>
-              </div>
-            )}
-            {!sugLoading && suggestions.length > 0 && suggestions.map((s, i) => (
-              <button key={s.id || i} onClick={() => { playSong(s, suggestions); setShowSuggestions(false); }}
-                className="flex items-center gap-3 w-full px-4 py-3 hover:bg-white/[0.04] active:bg-white/[0.07] transition-all duration-200 text-left border-b border-white/[0.03] last:border-0">
-                <img src={s.thumbnail} alt="" className="w-10 h-10 rounded-xl object-cover shrink-0 ring-1 ring-white/[0.05]" loading="lazy" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-[13px] text-white truncate font-medium">{s.title}</p>
-                  <p className="text-[10px] text-white/30 truncate">{s.artist}</p>
+          {/* Live Suggestions — inside form so it's positioned relative to input */}
+          {showSuggestions && (
+            <div className="absolute left-0 right-0 top-[calc(100%+8px)] bg-[#1c1c1e] rounded-2xl border border-white/[0.06] shadow-2xl shadow-black/80 overflow-hidden z-50 animate-scale">
+              {sugLoading && (
+                <div className="flex items-center gap-3 px-4 py-3.5">
+                  <Loader2 size={14} className="text-rose-400 animate-spin" />
+                  <span className="text-[12px] text-white/40">Searching...</span>
                 </div>
-                <Play size={12} className="text-white/20 shrink-0" />
-              </button>
-            ))}
-            {!sugLoading && suggestions.length > 0 && (
-              <button onClick={handleSubmit} className="w-full px-4 py-3 text-[11px] text-rose-400 font-semibold hover:bg-white/[0.03] transition-colors text-center">
-                See all results for "{query}"
-              </button>
-            )}
-          </div>
-        )}
+              )}
+              {!sugLoading && suggestions.length > 0 && suggestions.map((s, i) => (
+                <button key={s.id || i} onClick={() => { playSong(s, suggestions); setShowSuggestions(false); }}
+                  className="flex items-center gap-3 w-full px-4 py-3 hover:bg-white/[0.04] active:bg-white/[0.07] transition-all duration-200 text-left border-b border-white/[0.03] last:border-0">
+                  <img src={s.thumbnail} alt="" className="w-10 h-10 rounded-xl object-cover shrink-0 ring-1 ring-white/[0.05]" loading="lazy" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] text-white truncate font-medium">{s.title}</p>
+                    <p className="text-[10px] text-white/30 truncate">{s.artist}</p>
+                  </div>
+                  <Play size={12} className="text-white/20 shrink-0" />
+                </button>
+              ))}
+              {!sugLoading && suggestions.length > 0 && (
+                <button onClick={handleSubmit} className="w-full px-4 py-3 text-[11px] text-rose-400 font-semibold hover:bg-white/[0.03] transition-colors text-center">
+                  See all results for "{query}"
+                </button>
+              )}
+            </div>
+          )}
+        </form>
       </div>
 
       {/* Empty State — Recent + Trending */}
