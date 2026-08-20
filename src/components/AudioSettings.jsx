@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { SlidersHorizontal, X, Timer, Waves } from 'lucide-react';
-import { usePlayer } from '../context/PlayerContext';
 
 export default function AudioSettings() {
   const [open, setOpen] = useState(false);

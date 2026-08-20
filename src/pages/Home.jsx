@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { usePlayer } from '../context/PlayerContext';
 import { getHistory, analyzePreferences } from '../data/algorithm';
-import { searchSongs, searchArtists } from '../data/api';
+import { searchSongs } from '../data/api';
 import { getHomeQueries } from '../data/algorithm';
 import { getGreeting } from '../data/mockData';
 import SongRow from '../components/SongRow';

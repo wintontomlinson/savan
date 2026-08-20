@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Volume2, Trash2, Shield, Music, Waves, Settings as SettingsIcon, Info, RefreshCw, SlidersHorizontal, Headphones, Zap, ExternalLink } from 'lucide-react';
+import { Volume2, Trash2, Shield, Music, Waves, Settings as SettingsIcon, Info, RefreshCw, SlidersHorizontal, Zap, ExternalLink } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { clearCache, getCacheSize } from '../data/api';
 
@@ -21,18 +21,16 @@ const EQ_PRESETS = [
 const EQ_BANDS = ['31', '63', '125', '250', '500', '1K', '2K', '4K', '8K', '16K'];
 
 export default function Settings() {
-  const { 
-    boostLevel, 
-    setVolumeBoost, 
-    bassBoostOn, 
-    setBassBoost, 
-    vocalMode, 
-    setVocalMode, 
-    resetAudio, 
-    applyEqPreset, 
-    setEqBand, 
-    showToast 
-  } = usePlayer();
+const { 
+     boostLevel, 
+     setVolumeBoost, 
+     vocalMode, 
+     setVocalMode, 
+     resetAudio, 
+     applyEqPreset, 
+     setEqBand, 
+     showToast 
+   } = usePlayer();
   
   const [crossfade, setCrossfade] = useState(() => parseInt(localStorage.getItem('crossfade_dur') || '5'));
   const [activePreset, setActivePreset] = useState(() => { try { return localStorage.getItem('ma_eq_preset') || 'Flat'; } catch { return 'Flat'; } });
@@ -85,24 +83,23 @@ export default function Settings() {
     setTimeout(() => window.location.reload(), 800);
   };
 
-  const handleResetAudio = () => {
-    resetAudio();
-    handlePreset(EQ_PRESETS[0]);
-    setCrossfade(5);
-    localStorage.setItem('crossfade_dur', '5');
-    setVolumeBoost(100);
-    setBassBoost(false);
-    setVocalMode(false);
-    showToast('Audio settings reset');
-  };
+const handleResetAudio = () => {
+     resetAudio();
+     handlePreset(EQ_PRESETS[0]);
+     setCrossfade(5);
+     localStorage.setItem('crossfade_dur', '5');
+     setVolumeBoost(100);
+     setVocalMode(false);
+     showToast('Audio settings reset');
+   };
 
-  const sections = [
-    { id: 'audio', label: 'Audio', icon: SlidersHorizontal, desc: 'Volume, output, quality' },
-    { id: 'effects', label: 'Effects', icon: Waves, desc: 'Bass boost, vocal mode' },
-    { id: 'equalizer', label: 'Equalizer', icon: Music, desc: '10-band EQ, presets' },
-    { id: 'playback', label: 'Playback', icon: Zap, desc: 'Crossfade, gapless' },
-    { id: 'data', label: 'Data', icon: Info, desc: 'Cache, history, reset' },
-  ];
+const sections = [
+     { id: 'audio', label: 'Audio', icon: SlidersHorizontal, desc: 'Volume, output, quality' },
+     { id: 'effects', label: 'Effects', icon: Waves, desc: 'Vocal mode' },
+     { id: 'equalizer', label: 'Equalizer', icon: Music, desc: '10-band EQ, presets' },
+     { id: 'playback', label: 'Playback', icon: Zap, desc: 'Crossfade, gapless' },
+     { id: 'data', label: 'Data', icon: Info, desc: 'Cache, history, reset' },
+   ];
 
   return (
     <div className="min-h-screen bg-[#060606]">
@@ -147,14 +144,12 @@ export default function Settings() {
               showToast={showToast}
             />
           )}
-          {activeSection === 'effects' && (
-            <EffectsSection 
-              bassBoostOn={bassBoostOn} 
-              setBassBoost={setBassBoost} 
-              vocalMode={vocalMode} 
-              setVocalMode={setVocalMode}
-            />
-          )}
+{activeSection === 'effects' && (
+             <EffectsSection 
+               vocalMode={vocalMode} 
+               setVocalMode={setVocalMode}
+             />
+           )}
           {activeSection === 'equalizer' && (
             <EqualizerSection 
               activePreset={activePreset}
@@ -238,42 +233,34 @@ function AudioSection({ boostLevel, setVolumeBoost }) {
   );
 }
 
-function EffectsSection({ bassBoostOn, setBassBoost, vocalMode, setVocalMode }) {
-  return (
-    <div className="p-6 space-y-4">
-      <div className="border-b border-white/[0.06] pb-4">
-        <h2 className="text-lg font-bold text-white flex items-center gap-2">
-          <Waves size={20} className="text-rose-400" />
-          Sound Effects
-        </h2>
-        <p className="text-white/40 text-sm mt-1">Enhance your audio with real-time processing</p>
-      </div>
+function EffectsSection({ vocalMode, setVocalMode }) {
+   return (
+     <div className="p-6 space-y-4">
+       <div className="border-b border-white/[0.06] pb-4">
+         <h2 className="text-lg font-bold text-white flex items-center gap-2">
+           <Waves size={20} className="text-rose-400" />
+           Sound Effects
+         </h2>
+         <p className="text-white/40 text-sm mt-1">Enhance your audio with real-time processing</p>
+       </div>
 
-      <div className="space-y-3">
-        <EffectRow
-          label="Bass Boost"
-          desc="Enhances low frequencies for deeper, punchier bass"
-          icon={<Headphones size={18} className="text-amber-400" />}
-          on={bassBoostOn}
-          onChange={setBassBoost}
-          accent="amber"
-        />
-        <EffectRow
-          label="Vocal Mode"
-          desc="Boosts mid-range for clearer vocals and dialogue"
-          icon={<Music size={18} className="text-blue-400" />}
-          on={vocalMode}
-          onChange={setVocalMode}
-          accent="blue"
-        />
-      </div>
+       <div className="space-y-3">
+         <EffectRow
+           label="Vocal Mode"
+           desc="Boosts mid-range for clearer vocals and dialogue"
+           icon={<Music size={18} className="text-blue-400" />}
+           on={vocalMode}
+           onChange={setVocalMode}
+           accent="blue"
+         />
+       </div>
 
-      <div className="p-4 bg-white/[0.03] rounded-xl border border-white/[0.05]">
-        <p className="text-white/50 text-sm">Uses Web Audio API with 10-band EQ and dynamic compression for transparent processing.</p>
-      </div>
-    </div>
-  );
-}
+       <div className="p-4 bg-white/[0.03] rounded-xl border border-white/[0.05]">
+         <p className="text-white/50 text-sm">Uses Web Audio API with 10-band EQ and dynamic compression for transparent processing.</p>
+       </div>
+     </div>
+   );
+ }
 
 function EffectRow({ label, desc, icon, on, onChange, accent }) {
   const accentColors = {

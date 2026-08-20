@@ -5,7 +5,6 @@ import { usePlayer } from '../context/PlayerContext';
 export default function SleepTimer() {
   const [open, setOpen] = useState(false);
   const [remaining, setRemaining] = useState(0);
-  const [selected, setSelected] = useState(0);
   const timerRef = useRef(null);
   const { togglePlay, isPlaying, showToast } = usePlayer();
 
@@ -29,19 +28,17 @@ export default function SleepTimer() {
     return () => clearInterval(timerRef.current);
   }, [remaining > 0]);
 
-  const start = (mins) => {
-    setRemaining(mins * 60);
-    setSelected(mins);
-    showToast(`Sleep · ${mins} min`);
-    setOpen(false);
-  };
+const start = (mins) => {
+     setRemaining(mins * 60);
+     showToast(`Sleep · ${mins} min`);
+     setOpen(false);
+   };
 
-  const cancel = () => {
-    setRemaining(0);
-    setSelected(0);
-    showToast('Timer off');
-    setOpen(false);
-  };
+const cancel = () => {
+     setRemaining(0);
+     showToast('Timer off');
+     setOpen(false);
+   };
 
   const m = Math.floor(remaining / 60);
   const s = remaining % 60;
