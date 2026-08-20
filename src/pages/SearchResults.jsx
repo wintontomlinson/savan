@@ -19,6 +19,7 @@ export default function SearchResults() {
   const [sugLoading, setSugLoading] = useState(false);
   const [error, setError] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [focused, setFocused] = useState(false);
   const requestId = useRef(0);
   const sugTimer = useRef(null);
   const inputRef = useRef(null);
@@ -53,32 +54,47 @@ export default function SearchResults() {
   const quickSearch = (term) => { setQuery(term); setParams({ q: term }); setShowSuggestions(false); };
   const recentArtists = [...new Set(getHistory().slice(0, 20).map(s => s.artist?.split(',')[0]?.trim()).filter(Boolean))].slice(0, 8);
 
+  const clearSearch = () => {
+    setQuery('');
+    setSongs([]);
+    setSuggestions([]);
+    setError(false);
+    setShowSuggestions(false);
+    setParams({});
+    inputRef.current?.focus();
+  };
+
   return (
     <div className="pb-6 pt-2">
-      {/* Search Input — pill shape */}
-      <div className="sticky top-0 z-20 pb-2 pt-1">
+      {/* Search Bar */}
+      <div className="sticky top-0 z-20 pb-3 pt-1">
         <form onSubmit={handleSubmit} className="relative">
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" />
+          <Search size={16} className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-200 ${focused ? 'text-white/70' : 'text-white/35'}`} />
           <input
             ref={inputRef}
             value={query}
             onChange={e => setQuery(e.target.value)}
-            onFocus={() => { if (query.length >= 2 && suggestions.length > 0) setShowSuggestions(true); }}
+            onFocus={() => { setFocused(true); if (query.length >= 2 && suggestions.length > 0) setShowSuggestions(true); }}
+            onBlur={() => setFocused(false)}
             placeholder="Search songs, artists, albums..."
-            className="w-full bg-[#1c1c1e] text-white text-[14px] font-medium pl-11 pr-11 py-3 rounded-full placeholder:text-white/30 placeholder:font-normal focus:outline-none transition-all duration-300 border border-white/[0.06] focus:border-white/[0.1] focus:bg-[#222225]"
+            className={`w-full text-white text-[14px] font-medium pl-11 pr-11 py-3 rounded-full placeholder:text-white/25 placeholder:font-normal focus:outline-none transition-all duration-300 ${
+              focused
+                ? 'bg-[#252528] border border-white/[0.12] shadow-lg shadow-black/30'
+                : 'bg-[#1c1c1e] border border-white/[0.06]'
+            }`}
             autoComplete="off"
             spellCheck="false"
           />
           {query && (
-            <button type="button" onClick={() => { setQuery(''); setSongs([]); setSuggestions([]); setError(false); setShowSuggestions(false); setParams({}); inputRef.current?.focus(); }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/[0.1] flex items-center justify-center hover:bg-white/[0.15] transition-all duration-200 active:scale-90">
-              <X size={12} className="text-white/60" />
+            <button type="button" onClick={clearSearch}
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/[0.12] flex items-center justify-center hover:bg-white/[0.2] transition-all duration-200 active:scale-90">
+              <X size={13} className="text-white/70" />
             </button>
           )}
 
-          {/* Live Suggestions — inside form so it's positioned relative to input */}
+          {/* Live Suggestions */}
           {showSuggestions && (
-            <div className="absolute left-0 right-0 top-[calc(100%+10px)] bg-[#1c1c1e] rounded-2xl border border-[#2a2a2d] shadow-2xl shadow-black/80 overflow-hidden z-50 animate-scale">
+            <div className="absolute left-0 right-0 top-[calc(100%+8px)] bg-[#1c1c1e] rounded-2xl border border-white/[0.08] shadow-2xl shadow-black/80 overflow-hidden z-50 animate-scale">
               {sugLoading && (
                 <div className="flex items-center gap-3 px-4 py-3.5">
                   <Loader2 size={14} className="text-rose-400 animate-spin" />
@@ -87,8 +103,8 @@ export default function SearchResults() {
               )}
               {!sugLoading && suggestions.length > 0 && suggestions.map((s, i) => (
                 <button key={s.id || i} onClick={() => { playSong(s, suggestions); setShowSuggestions(false); }}
-                  className="flex items-center gap-3 w-full px-4 py-3 hover:bg-white/[0.04] active:bg-white/[0.07] transition-all duration-200 text-left border-b border-white/[0.03] last:border-0">
-                  <img src={s.thumbnail} alt="" className="w-10 h-10 rounded-xl object-cover shrink-0 ring-1 ring-white/[0.05]" loading="lazy" />
+                  className="flex items-center gap-3 w-full px-4 py-3 hover:bg-white/[0.05] active:bg-white/[0.08] transition-all duration-200 text-left border-b border-white/[0.04] last:border-0">
+                  <img src={s.thumbnail} alt="" className="w-10 h-10 rounded-xl object-cover shrink-0 ring-1 ring-white/[0.06]" loading="lazy" />
                   <div className="min-w-0 flex-1">
                     <p className="text-[13px] text-white truncate font-medium">{s.title}</p>
                     <p className="text-[10px] text-white/30 truncate">{s.artist}</p>
@@ -98,7 +114,7 @@ export default function SearchResults() {
               ))}
               {!sugLoading && suggestions.length > 0 && (
                 <button onClick={handleSubmit} className="w-full px-4 py-3 text-[11px] text-rose-400 font-semibold hover:bg-white/[0.03] transition-colors text-center">
-                  See all results for "{query}"
+                  See all results for &ldquo;{query}&rdquo;
                 </button>
               )}
             </div>
@@ -106,10 +122,9 @@ export default function SearchResults() {
         </form>
       </div>
 
-      {/* Empty State — Recent + Trending */}
+      {/* Empty State */}
       {!q && (
         <div className="animate-in">
-          {/* Recent */}
           {recentArtists.length > 0 && (
             <section className="mb-8">
               <div className="flex items-center gap-2 mb-3">
@@ -127,7 +142,6 @@ export default function SearchResults() {
             </section>
           )}
 
-          {/* Trending */}
           <section>
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp size={14} className="text-rose-400" />
@@ -152,7 +166,7 @@ export default function SearchResults() {
         <>
           <div className="flex items-center justify-between mb-4 animate-in">
             <div>
-              <h2 className="text-[18px] font-bold text-white">"{q}"</h2>
+              <h2 className="text-[18px] font-bold text-white">&ldquo;{q}&rdquo;</h2>
               <p className="text-[11px] text-white/30 mt-0.5">{loading ? 'Searching...' : songs.length > 0 ? `${songs.length} songs found` : ''}</p>
             </div>
             {songs.length > 0 && (
@@ -187,7 +201,6 @@ export default function SearchResults() {
 
           {!loading && !error && songs.length > 0 && (
             <div className="animate-in">
-              {/* Top Result — premium card */}
               <div className="mb-5">
                 <button onClick={() => playSong(songs[0], songs)}
                   className="group flex items-center gap-4 p-4 bg-gradient-to-r from-white/[0.03] to-white/[0.01] rounded-2xl border border-white/[0.04] hover:border-white/[0.08] w-full text-left transition-all duration-300 hover:shadow-lg hover:shadow-black/20">
@@ -203,7 +216,6 @@ export default function SearchResults() {
                 </button>
               </div>
 
-              {/* Song List */}
               <div className="bg-[#0a0a0a] rounded-2xl overflow-hidden border border-white/[0.04]">
                 {songs.slice(1).map((s, i) => <SongRow key={`${s.id}-${i}`} song={s} index={i + 1} songList={songs} />)}
               </div>

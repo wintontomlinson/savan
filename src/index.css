@@ -14,7 +14,6 @@
   }
   * { scroll-behavior: smooth; }
   
-  /* Buttery smooth transitions on EVERYTHING */
   *, *::before, *::after {
     transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   }
@@ -23,14 +22,14 @@
   img { content-visibility: auto; }
 }
 
-/* ─── Scroll ─── */
+/* Scroll */
 .scroll-y { overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; overscroll-behavior-y: contain; scroll-behavior: smooth; }
 .scroll-y::-webkit-scrollbar { display: none; }
 .scroll-x { overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-behavior: smooth; }
 .scroll-x::-webkit-scrollbar { display: none; }
 .scroll-x > * { scroll-snap-align: start; }
 
-/* ─── Equalizer ─── */
+/* Equalizer */
 @keyframes eq1 { 0%,100%{height:3px} 50%{height:14px} }
 @keyframes eq2 { 0%,100%{height:9px} 50%{height:3px} }
 @keyframes eq3 { 0%,100%{height:5px} 50%{height:16px} }
@@ -43,7 +42,7 @@
 .eq-bar:nth-child(4) { animation: eq4 0.85s ease-in-out infinite; }
 .eq-bar:nth-child(5) { animation: eq5 1.05s ease-in-out infinite; }
 
-/* ─── Animations ─── */
+/* Animations */
 @keyframes fadeIn { from { opacity: 0; transform: translate3d(0, 12px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
 @keyframes fadeInFast { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { opacity: 0; transform: translate3d(0, 100%, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
@@ -75,14 +74,14 @@
   border-radius: 10px;
 }
 
-/* ─── Glass ─── */
+/* Glass */
 .glass {
   background: rgba(10, 10, 10, 0.8);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
 }
 
-/* ─── Card Hover ─── */
+/* Card Hover */
 .card-hover {
   transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease, filter 0.4s ease;
   transform: translate3d(0, 0, 0);
@@ -96,7 +95,7 @@
   transition-duration: 0.15s;
 }
 
-/* ─── Button Press ─── */
+/* Button Press */
 .btn-press {
   transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease, background 0.3s ease;
   transform: translate3d(0, 0, 0);
@@ -106,10 +105,10 @@
   opacity: 0.85;
 }
 
-/* ─── Progress Bar ─── */
+/* Progress Bar */
 .progress-bar { transition: width 0.2s linear; }
 
-/* ─── Stagger Children ─── */
+/* Stagger Children */
 .stagger > * { animation: fadeIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .stagger > *:nth-child(1) { animation-delay: 0.03s; }
 .stagger > *:nth-child(2) { animation-delay: 0.06s; }
@@ -124,26 +123,26 @@
 .stagger > *:nth-child(11) { animation-delay: 0.33s; }
 .stagger > *:nth-child(12) { animation-delay: 0.36s; }
 
-/* ─── Image Loading ─── */
+/* Image Loading */
 img { transition: opacity 0.6s cubic-bezier(0.22,1,0.36,1), transform 0.6s cubic-bezier(0.22,1,0.36,1); }
 img[loading="lazy"] { opacity: 0; transform: scale(0.97); }
 img[loading="lazy"][src] { opacity: 1; transform: scale(1); }
 
-/* ─── Player ─── */
+/* Player */
 .player-expanded-enter { animation: expandIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both; }
 .player-progress-track { position: relative; cursor: pointer; touch-action: none; }
 .player-progress-track::before { content: ''; position: absolute; inset: -10px -4px; }
 .playing-pulse { animation: pulseGlow 2.5s ease-in-out infinite; }
 
-/* ─── Page Transitions ─── */
+/* Page Transitions */
 .page-wrapper { animation: pageEnter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
-/* ─── Artist Grid ─── */
+/* Artist Grid */
 .artist-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 16px; }
 @media (min-width: 640px) { .artist-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 20px; } }
 @media (min-width: 1024px) { .artist-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 24px; } }
 
-/* ─── Ripple ─── */
+/* Ripple */
 .ripple-effect { position: relative; overflow: hidden; }
 .ripple-effect::after {
   content: ''; position: absolute; inset: 0;
@@ -153,11 +152,11 @@ img[loading="lazy"][src] { opacity: 1; transform: scale(1); }
 }
 .ripple-effect:active::after { transform: scale(2.5); opacity: 1; transition: 0s; }
 
-/* ─── Hover Glow (for cards) ─── */
+/* Hover Glow */
 .hover-glow { transition: box-shadow 0.3s ease; }
 .hover-glow:hover { box-shadow: 0 0 30px rgba(225, 29, 72, 0.08), 0 10px 40px rgba(0,0,0,0.3); }
 
-/* ─── Text Gradient ─── */
+/* Text Gradient */
 .text-gradient {
   background: linear-gradient(135deg, #fff 0%, #ff2d55 50%, #af52de 100%);
   background-size: 200% 200%;
@@ -167,7 +166,7 @@ img[loading="lazy"][src] { opacity: 1; transform: scale(1); }
   animation: gradient 4s ease infinite;
 }
 
-/* ─── Smooth Focus Ring ─── */
+/* Focus */
 input:focus, button:focus-visible {
   outline: none;
 }
@@ -176,7 +175,7 @@ button:focus-visible {
   border-radius: inherit;
 }
 
-/* ─── Inter Font ─── */
+/* Inter Font */
 @font-face {
   font-family: 'Inter';
   font-style: normal;
@@ -185,9 +184,7 @@ button:focus-visible {
   src: url('https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZ9hiA.woff2') format('woff2');
 }
 
-
-
-/* ─── Line Clamp ─── */
+/* Line Clamp */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;

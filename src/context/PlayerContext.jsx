@@ -50,7 +50,7 @@ export function PlayerProvider({ children }) {
     }
   }, []);
 
-  // ─── Audio Enhancement (EQ + Volume Boost) ───
+  // Audio Enhancement (EQ + Volume Boost)
   const audioCtxRef = useRef(null);
   const gainRef = useRef(null);
   const eqFiltersRef = useRef([]);
@@ -233,7 +233,7 @@ export function PlayerProvider({ children }) {
   // Keep currentSongRef always fresh
   useEffect(() => { currentSongRef.current = currentSong; }, [currentSong]);
 
-  // ─── Audio Setup ───
+  // Audio Setup
   useEffect(() => {
     audioA.current = new Audio();
     audioB.current = new Audio();
@@ -322,7 +322,7 @@ export function PlayerProvider({ children }) {
   useEffect(() => {
     if (!currentSong) return;
 
-    // ─── Media Session API (notification controls) ───
+    // Media Session API (notification controls)
     if ('mediaSession' in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: currentSong.title || 'Unknown',
@@ -369,7 +369,7 @@ export function PlayerProvider({ children }) {
     });
   }, [currentSong]);
 
-  // ─── CROSSFADE ───
+  // CROSSFADE
   function startCrossfade() {
     if (fadingRef.current) return;
     const q = queueRef.current;
@@ -458,7 +458,7 @@ export function PlayerProvider({ children }) {
     }
   }
 
-  // ─── Public actions ───
+  // Public actions
   const showToast = useCallback((msg, type = 'info') => { const id = Date.now(); setToasts(p => [...p, { id, msg, type }]); setTimeout(() => setToasts(p => p.filter(t => t.id !== id)), 3000); }, []);
   const dismissToast = useCallback(id => setToasts(p => p.filter(t => t.id !== id)), []);
 

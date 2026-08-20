@@ -1,12 +1,12 @@
-// ═══════════════════════════════════════════════
+// MusicArea API Layer
 // MusicArea API Layer — JioSaavn + YouTube Music
 // JioSaavn: audio playback, lyrics, suggestions
 // YT Music: search discovery, trending
-// ═══════════════════════════════════════════════
+// MusicArea API Layer
 
 const BASE = 'https://jiosavan-api2.vercel.app/api';
 
-// ─── In-Memory Cache ───
+// In-Memory Cache
 const cache = new Map();
 const CACHE_TTL = {
   search: 5 * 60 * 1000,    // 5 min
@@ -25,7 +25,7 @@ function getCached(key, ttl) {
 
 function setCache(key, data) { cache.set(key, { data, time: Date.now() }); }
 
-// ─── Request with Timeout & Retry ───
+// Request with Timeout & Retry
 const activeRequests = new Map(); // Prevent duplicate concurrent requests
 
 async function fetchApi(endpoint, { retries = 2, timeout = 8000 } = {}) {
@@ -68,7 +68,7 @@ async function fetchApi(endpoint, { retries = 2, timeout = 8000 } = {}) {
 
 function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-// ─── Data Normalization ───
+// Data Normalization
 function bestImage(images) {
   if (!images?.length) return 'https://picsum.photos/seed/def/300/300';
   return images[images.length - 1]?.url || images[0]?.url;
@@ -135,7 +135,7 @@ function cleanText(str) {
   return str.replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#039;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>');
 }
 
-// ─── Public API Functions ───
+// Public API Functions
 
 export async function searchSongs(query, limit = 15) {
   if (!query?.trim()) return [];
@@ -255,7 +255,7 @@ export async function getLyrics(songId, title, artist) {
   return null;
 }
 
-// ─── Stream URL Refresh ───
+// Stream URL Refresh
 // If a stream URL fails, re-fetch song details to get fresh URL
 export async function refreshStreamUrl(songId) {
   if (!songId) return null;
@@ -265,7 +265,7 @@ export async function refreshStreamUrl(songId) {
   return song?.audio || null;
 }
 
-// ─── Download ───
+// Download
 export async function downloadSong(song) {
   if (!song) return false;
   const urls = song.audioAll || [];
@@ -288,6 +288,6 @@ export async function downloadSong(song) {
   } catch { return false; }
 }
 
-// ─── Cache Management ───
+// Cache Management
 export function clearCache() { cache.clear(); }
 export function getCacheSize() { return cache.size; }
