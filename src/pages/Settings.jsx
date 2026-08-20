@@ -42,9 +42,9 @@ export default function Settings() {
             <span className="text-[13px] text-white/60">Output Level</span>
             <span className={`text-[13px] font-bold tabular-nums ${boostLevel > 100 ? 'text-orange-400' : 'text-white'}`}>{boostLevel}%</span>
           </div>
-            <input type="range" min="0" max="100" step="5" value={boostLevel} onChange={e => setVolumeBoost(parseInt(e.target.value))}
+            <input type="range" min="0" max="200" step="5" value={boostLevel} onChange={e => setVolumeBoost(parseInt(e.target.value))}
             className="w-full h-1.5 rounded-full appearance-none bg-white/[0.08] cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md" />
-          <div className="flex justify-between text-[9px] text-white/20 mt-1.5"><span>0%</span><span>50%</span><span>100%</span></div>
+          <div className="flex justify-between text-[9px] text-white/20 mt-1.5"><span>0%</span><span>100%</span><span>200%</span></div>
         </div>
       </Section>
 

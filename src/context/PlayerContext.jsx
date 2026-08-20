@@ -125,15 +125,25 @@ export function PlayerProvider({ children }) {
 
   // Set volume boost (0-200%)
   const setVolumeBoost = useCallback((pct) => {
-    const safePct = Math.max(0, Math.min(100, pct));
+    const safePct = Math.max(0, Math.min(200, pct));
+    const a = activeRef.current === 'A' ? audioA.current : audioB.current;
+    if (safePct > 100) {
+      if (!enhancedRef.current && !initEnhancement()) return;
+      setBoostLevel(safePct);
+      _setVolume(1);
+      volumeRef.current = 1;
+      if (a) a.volume = 1;
+      if (gainRef.current) gainRef.current.gain.value = safePct / 100;
+      return;
+    }
+
     const val = safePct / 100;
     setBoostLevel(safePct);
     _setVolume(val);
     volumeRef.current = val;
-    const a = activeRef.current === 'A' ? audioA.current : audioB.current;
     if (a) a.volume = val;
     if (gainRef.current) gainRef.current.gain.value = 1;
-  }, []);
+  }, [initEnhancement]);
 
   // Set EQ band (0-4, gain in dB)
   const setEqBand = useCallback((bandIndex, gainDb) => {
@@ -160,9 +170,21 @@ export function PlayerProvider({ children }) {
 
   // Bass Boost — pumps 60Hz and 250Hz
   const [bassBoostOn, setBassBoostOn] = useState(false);
+  const bassBoostRef = useRef(false);
   const setBassBoost = useCallback((on) => {
+    bassBoostRef.current = on;
     setBassBoostOn(on);
     if (on) setVocalModeState(false);
+    if (on) {
+      cancelFade();
+      const inactive = activeRef.current === 'A' ? audioB.current : audioA.current;
+      if (inactive) {
+        inactive.pause();
+        inactive.removeAttribute('src');
+        inactive.load();
+        inactive.volume = 0;
+      }
+    }
     if (!enhancedRef.current) {
       const ok = initEnhancement();
       if (!ok) return;
@@ -250,7 +272,7 @@ export function PlayerProvider({ children }) {
       setCurrentTime(a.currentTime);
 
       // CROSSFADE CHECK
-      const cfSec = getCfSec();
+      const cfSec = bassBoostRef.current ? 0 : getCfSec();
       const left = a.duration - a.currentTime;
       if (cfSec > 0 && a.duration > cfSec + 3 && left <= cfSec && left > 0.3 && !fadingRef.current && queueRef.current.length > 0) {
         startCrossfade();
