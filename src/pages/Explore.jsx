@@ -232,7 +232,7 @@ export default function Explore() {
                   </button>
                 )}
               </div>
-              <div className="flex gap-4 scroll-x pb-2">
+              <div className="artist-grid">
                 {visible.map(a => (
                   <ArtistCard key={a.name} artist={a} isActive={activeArtist === a.name} onClick={() => loadArtist(a)} />
                 ))}
@@ -247,8 +247,8 @@ export default function Explore() {
 
 function ArtistCard({ artist, isActive, onClick }) {
   return (
-    <button onClick={onClick} className="flex flex-col items-center gap-2 shrink-0 group transition-all duration-300 active:scale-[0.93]">
-      <div className="relative w-[80px] h-[80px] sm:w-[90px] sm:h-[90px]">
+    <button onClick={onClick} className="flex flex-col items-center gap-2 group transition-all duration-300 active:scale-[0.93]">
+      <div className="relative w-full aspect-square">
         {isActive && <div className="absolute -inset-1 rounded-full bg-gradient-to-b from-rose-500/30 to-rose-600/10 blur-md" />}
         <div className={`relative w-full h-full rounded-full overflow-hidden transition-all duration-300 ${
           isActive
@@ -275,7 +275,7 @@ function ArtistCard({ artist, isActive, onClick }) {
           </div>
         </div>
       </div>
-      <p className={`text-[11px] font-semibold text-center leading-tight truncate w-[80px] sm:w-[90px] transition-colors duration-200 ${
+      <p className={`text-[11px] sm:text-[12px] font-semibold text-center leading-tight truncate w-full px-0.5 transition-colors duration-200 ${
         isActive ? 'text-rose-400' : 'text-white/70 group-hover:text-white'
       }`}>{artist.name}</p>
     </button>
