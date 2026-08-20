@@ -473,7 +473,11 @@ export function PlayerProvider({ children }) {
   function playDirect(song) {
     if (!song) return;
     cancelFade();
-    errorHandlingRef.current = false; // Reset error handling on intentional play
+    errorHandlingRef.current = false;
+    // Auto-init audio enhancement if user had settings saved
+    if (!enhancedRef.current && (bassBoostOn || vocalMode || boostLevel > 100)) {
+      initEnhancement();
+    }
     // Resume AudioContext if enhanced mode active
     if (enhancedRef.current && audioCtxRef.current?.state === 'suspended') {
       audioCtxRef.current.resume();
