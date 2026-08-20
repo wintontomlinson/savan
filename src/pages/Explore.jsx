@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Loader2, Play, X, Shuffle, Disc3, TrendingUp, ListMusic, Mic, Users, Radio } from 'lucide-react';
+import { Loader2, Play, X, Shuffle, Disc3, TrendingUp, ListMusic, Mic, Users, Radio, Sparkles, ArrowUpRight } from 'lucide-react';
 import { searchSongs, getPlaylistById } from '../data/api';
 import { usePlayer } from '../context/PlayerContext';
 import SongRow from '../components/SongRow';
@@ -116,27 +116,70 @@ export default function Explore() {
   };
 
   return (
-    <div className="pb-6 pt-2">
-      {/* Page Title */}
-      <div className="mb-5">
-        <h1 className="text-[22px] sm:text-[26px] font-bold text-white">Explore</h1>
-        <p className="text-[13px] text-white/40 mt-1">Discover music you love</p>
-      </div>
+    <div className="pb-8 pt-2">
+      <section className="relative mb-8 overflow-hidden rounded-[28px] border border-white/[0.08] bg-[#11110f] px-5 py-6 sm:px-8 sm:py-8">
+        <div className="absolute -right-16 -top-24 h-64 w-64 rounded-full bg-amber-400/15 blur-3xl" />
+        <div className="absolute -bottom-28 left-1/3 h-56 w-56 rounded-full bg-rose-500/15 blur-3xl" />
+        <div className="relative max-w-xl">
+          <div className="mb-4 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-200/80">
+            <Sparkles size={13} /> Discover your next favorite
+          </div>
+          <h1 className="max-w-md text-3xl font-black tracking-tight text-white sm:text-4xl">Music for every version of your day.</h1>
+          <p className="mt-3 max-w-md text-[13px] leading-6 text-white/55 sm:text-sm">Fresh picks, familiar voices, and a soundtrack tailored to the moment.</p>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <button onClick={() => loadBrowse(BROWSE_SECTIONS[0], true)} className="flex items-center gap-2 rounded-full bg-amber-300 px-5 py-3 text-xs font-extrabold text-black shadow-lg shadow-amber-300/10 transition-transform hover:scale-[1.03] active:scale-95">
+              <Play size={14} fill="currentColor" /> Start listening
+            </button>
+            <span className="text-[11px] font-medium text-white/40">Curated from the latest Hindi hits</span>
+          </div>
+        </div>
+      </section>
 
-      {/* Browse Categories Grid */}
-      <section className="mb-8">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
-          {BROWSE_SECTIONS.map(sec => (
+      <section className="mb-9">
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-rose-300/70">Find a feeling</p>
+            <h2 className="mt-1 text-xl font-bold tracking-tight text-white">Browse by mood</h2>
+          </div>
+          <span className="hidden text-[11px] text-white/35 sm:block">Tap a collection to play a fresh mix</span>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {BROWSE_SECTIONS.map((sec, index) => (
             <button key={sec.id} onClick={() => loadBrowse(sec, true)}
-              className={`relative overflow-hidden rounded-2xl p-4 text-left transition-all duration-200 active:scale-[0.97] border border-white/[0.04] hover:border-white/[0.08] bg-gradient-to-br ${sec.color}`}>
-              <sec.icon size={20} className={`${sec.iconColor} mb-2`} />
-              <p className="text-[13px] font-semibold text-white">{sec.label}</p>
+              className={`group relative min-h-[122px] overflow-hidden rounded-2xl border border-white/[0.07] bg-gradient-to-br ${sec.color} p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:border-white/[0.16] hover:shadow-xl hover:shadow-black/25 active:scale-[0.98]`}>
+              <span className="absolute right-3 top-3 text-[10px] font-bold text-white/25">0{index + 1}</span>
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/20 ring-1 ring-white/[0.08] backdrop-blur-sm">
+                <sec.icon size={18} className={sec.iconColor} />
+              </div>
+              <p className="mt-6 text-[13px] font-bold text-white">{sec.label}</p>
+              <ArrowUpRight size={15} className="absolute bottom-4 right-4 text-white/0 transition-all duration-300 group-hover:text-white/80" />
             </button>
           ))}
         </div>
       </section>
 
-      {/* Browse Section Results — horizontal scroll cards */}
+      <section className="mb-10 animate-in" style={{ animationDelay: '0.05s' }}>
+        <div className="mb-4 flex items-end justify-between">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-rose-300/70">The voices behind the hits</p>
+            <h2 className="mt-1 text-xl font-bold tracking-tight text-white">Top artists</h2>
+          </div>
+          <span className="text-[11px] text-white/35">{ARTISTS.length} artists</span>
+        </div>
+        <div className="flex gap-4 scroll-x pb-2">
+          {ARTISTS.map(a => (
+            <ArtistCard key={a.name} artist={a} isActive={activeArtist === a.name} onClick={() => loadArtist(a)} />
+          ))}
+        </div>
+      </section>
+
+      <div className="mb-5 flex items-end justify-between">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-rose-300/70">Ready when you are</p>
+          <h2 className="mt-1 text-xl font-bold tracking-tight text-white">Curated collections</h2>
+        </div>
+      </div>
+
       {BROWSE_SECTIONS.map(sec => {
         const data = browseData[sec.id];
         const isLoading = browseLoading[sec.id];
@@ -156,7 +199,6 @@ export default function Explore() {
         );
       })}
 
-      {/* Songs Panel — shows when artist selected */}
       {activeArtist && (
         <div ref={songsRef} className="mb-8 animate-scale">
           {loading ? (
@@ -193,15 +235,6 @@ export default function Explore() {
         </div>
       )}
 
-      {/* All Artists - One swipeable row at top */}
-      <section className="mb-7 animate-in" style={{ animationDelay: '0.05s' }}>
-        <h2 className="text-[15px] font-bold text-white mb-3">Top Artists</h2>
-        <div className="flex gap-4 scroll-x pb-2">
-          {ARTISTS.map(a => (
-            <ArtistCard key={a.name} artist={a} isActive={activeArtist === a.name} onClick={() => loadArtist(a)} />
-          ))}
-        </div>
-      </section>
     </div>
   );
 }
