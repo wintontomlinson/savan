@@ -136,20 +136,23 @@ export default function ExpandedPlayer() {
   const hasPanel = activePanel !== null;
 
   return (
-    <div className={`fixed inset-0 z-[100] flex flex-col bg-[#030303] ${closing ? 'animate-[slideDown_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards]' : 'player-expanded-enter'}`}
+    <div className={`fixed inset-0 z-[100] flex flex-col bg-[#020202] ${closing ? 'animate-[slideDown_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards]' : 'player-expanded-enter'}`}
       onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       
-      {/* Background — animated color wash */}
+      {/* Background — premium animated mesh */}
       <div className="absolute inset-0 overflow-hidden">
-        <img src={currentSong.thumbnail} alt="" className={`absolute inset-0 w-full h-full object-cover blur-[100px] scale-[2] saturate-150 transition-opacity duration-1000 ${isPlaying ? 'opacity-25' : 'opacity-10'}`} />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-[#030303]/75 to-[#030303]" />
-        {/* Animated gradient orbs */}
+        <img src={currentSong.thumbnail} alt="" className={`absolute inset-0 w-full h-full object-cover blur-[80px] scale-[2.5] saturate-200 transition-opacity duration-1000 ${isPlaying ? 'opacity-30' : 'opacity-8'}`} />
+        <div className="absolute inset-0 bg-[#020202]/60" />
+        {/* Animated moving gradient mesh */}
         {isPlaying && (
           <>
-            <div className="absolute top-[15%] left-[-10%] w-[300px] h-[300px] bg-rose-600/[0.07] rounded-full blur-[100px] animate-float" />
-            <div className="absolute bottom-[20%] right-[-10%] w-[250px] h-[250px] bg-violet-600/[0.06] rounded-full blur-[100px] animate-float" style={{ animationDelay: '2s', animationDuration: '5s' }} />
+            <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] bg-rose-500/[0.06] rounded-full blur-[120px] animate-float" style={{ animationDuration: '6s' }} />
+            <div className="absolute bottom-[-10%] right-[-15%] w-[50%] h-[50%] bg-purple-600/[0.05] rounded-full blur-[100px] animate-float" style={{ animationDelay: '2s', animationDuration: '7s' }} />
+            <div className="absolute top-[40%] left-[50%] w-[30%] h-[30%] bg-blue-500/[0.04] rounded-full blur-[80px] animate-float" style={{ animationDelay: '4s', animationDuration: '8s' }} />
           </>
         )}
+        {/* Subtle noise texture */}
+        <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")' }} />
       </div>
 
       <div className="relative flex-1 flex flex-col min-h-0">
@@ -174,27 +177,32 @@ export default function ExpandedPlayer() {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col items-center justify-center px-5 sm:px-10 gap-3 min-h-0 overflow-hidden">
           
-          {/* Album Art — with animated ring */}
+          {/* Album Art — premium with effects */}
           <div className={`relative transition-all duration-600 ease-[cubic-bezier(0.16,1,0.3,1)] shrink-0 ${
             hasPanel ? 'w-[70px] h-[70px] sm:w-[90px] sm:h-[90px]' : 'w-[200px] h-[200px] sm:w-[260px] sm:h-[260px] md:w-[280px] md:h-[280px]'
           }`}>
-            {/* Animated pulsing ring */}
+            {/* Rotating outer glow ring */}
             {isPlaying && !hasPanel && (
-              <div className="absolute -inset-3 rounded-[28px] border border-white/[0.06] animate-breathe" />
+              <div className="absolute -inset-4 rounded-[30px] animate-[spin_12s_linear_infinite] -z-10" 
+                style={{ background: 'conic-gradient(from 0deg, rgba(225,29,72,0.08), transparent, rgba(147,51,234,0.06), transparent, rgba(225,29,72,0.08))' }} />
+            )}
+            {/* Pulsing ring */}
+            {isPlaying && !hasPanel && (
+              <div className="absolute -inset-2 rounded-[26px] border border-white/[0.04] animate-breathe" />
             )}
             {/* Shadow */}
             {!hasPanel && (
-              <div className={`absolute inset-4 rounded-[24px] blur-[30px] -z-10 transition-all duration-700 ${isPlaying ? 'bg-black/70 translate-y-5 scale-95' : 'bg-black/50 translate-y-2'}`} />
+              <div className={`absolute inset-4 rounded-[24px] blur-[35px] -z-20 transition-all duration-700 ${isPlaying ? 'bg-black/80 translate-y-6 scale-90' : 'bg-black/40 translate-y-2'}`} />
             )}
-            {/* Art */}
+            {/* Album Art */}
             <div className={`w-full h-full rounded-[24px] overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-              isPlaying ? 'scale-100 ring-1 ring-white/[0.1] shadow-2xl' : 'scale-[0.94] ring-1 ring-white/[0.05] shadow-lg'
+              isPlaying ? 'scale-100 ring-1 ring-white/[0.08] shadow-2xl' : 'scale-[0.92] ring-1 ring-white/[0.04] shadow-lg'
             }`}>
-              <img src={currentSong.thumbnail} alt="" className={`w-full h-full object-cover transition-all duration-700 ${isPlaying ? 'scale-100' : 'scale-[1.05] brightness-75'}`} />
+              <img src={currentSong.thumbnail} alt="" className={`w-full h-full object-cover transition-all duration-700 ${isPlaying ? 'scale-100 brightness-100' : 'scale-[1.08] brightness-[0.6]'}`} />
             </div>
-            {/* Ambient color glow */}
+            {/* Ambient glow */}
             {isPlaying && !hasPanel && (
-              <div className="absolute -inset-8 rounded-[40px] -z-10 playing-pulse" style={{ background: 'radial-gradient(ellipse at center, rgba(225,29,72,0.06) 0%, transparent 60%)' }} />
+              <div className="absolute -inset-10 rounded-[44px] -z-10 playing-pulse" style={{ background: 'radial-gradient(ellipse at center, rgba(225,29,72,0.07) 0%, rgba(147,51,234,0.03) 40%, transparent 70%)' }} />
             )}
           </div>
 
