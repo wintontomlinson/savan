@@ -181,11 +181,10 @@ export function PlayerProvider({ children }) {
     }
     const gains = Array(10).fill(0);
     if (on) gains.splice(0, 3, 2, 1, 0.5);
-    const now = audioCtxRef.current?.currentTime || 0;
+    // Directly set gain values to avoid audio glitches
     eqFiltersRef.current.forEach((filter, index) => {
       if (filter) {
-        filter.gain.cancelScheduledValues(now);
-        filter.gain.setTargetAtTime(gains[index], now, 0.08);
+        filter.gain.value = gains[index];
       }
     });
   }, [initEnhancement]);
