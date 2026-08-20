@@ -133,7 +133,7 @@ export default function ExpandedPlayer() {
   const downloaded = downloadedSongs.includes(currentSong.id);
   const displayProgress = isDragging ? dragProgress : (duration > 0 ? currentTime / duration : 0);
   const displayTime = isDragging ? dragProgress * duration : currentTime;
-  const hasPanel = activePanel !== null;
+  const hasPanel = activePanel === 'lyrics' || activePanel === 'queue';
 
   return (
     <div className={`fixed inset-0 z-[100] flex flex-col bg-[#020202] ${closing ? 'animate-[slideDown_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards]' : 'player-expanded-enter'}`}
@@ -331,7 +331,7 @@ export default function ExpandedPlayer() {
 
       {/* Volume — Premium Right Panel */}
       {activePanel === 'volume' && (
-        <div className="absolute right-0 top-0 bottom-0 w-[72px] flex flex-col items-center justify-center py-16 bg-[#0a0a0a]/80 backdrop-blur-2xl border-l border-white/[0.05] z-10"
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 w-[56px] h-[320px] flex flex-col items-center justify-center py-6 bg-[#111]/90 backdrop-blur-2xl border border-white/[0.06] rounded-[28px] z-10 shadow-2xl shadow-black/50"
           style={{ animation: 'fadeIn 0.3s cubic-bezier(0.22,1,0.36,1) both' }}>
           
           {/* Max icon */}
@@ -340,7 +340,7 @@ export default function ExpandedPlayer() {
           </button>
 
           {/* Slider */}
-          <div ref={volumeRef} className="flex-1 w-[50px] flex items-center justify-center cursor-pointer relative touch-none"
+          <div ref={volumeRef} className="flex-1 w-[44px] flex items-center justify-center cursor-pointer relative touch-none"
             onMouseDown={(e) => {
               e.preventDefault();
               const rect = volumeRef.current.getBoundingClientRect();
