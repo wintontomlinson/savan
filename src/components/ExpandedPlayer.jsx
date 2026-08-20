@@ -329,14 +329,14 @@ export default function ExpandedPlayer() {
         </div>
       </div>
 
-      {/* Volume — minimal side line */}
+      {/* Volume — smooth side slider */}
       {activePanel === 'volume' && (
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 w-[32px] h-[240px] flex flex-col items-center py-4 z-10"
-          style={{ animation: 'fadeIn 0.25s cubic-bezier(0.22,1,0.36,1) both' }}>
+        <div className="absolute right-5 sm:right-6 top-1/2 -translate-y-1/2 w-[28px] h-[180px] sm:h-[220px] flex flex-col items-center py-3 z-10"
+          style={{ animation: 'scaleIn 0.3s cubic-bezier(0.22,1,0.36,1) both' }}>
           
-          <Volume2 size={12} className="text-white/40 mb-3 shrink-0" />
+          <Volume2 size={11} className="text-white/30 mb-2.5 shrink-0" />
 
-          <div ref={volumeRef} className="flex-1 w-[32px] flex items-center justify-center cursor-pointer relative touch-none"
+          <div ref={volumeRef} className="flex-1 w-[28px] flex items-center justify-center cursor-pointer relative touch-none"
             onMouseDown={(e) => {
               e.preventDefault();
               const rect = volumeRef.current.getBoundingClientRect();
@@ -357,14 +357,14 @@ export default function ExpandedPlayer() {
               document.addEventListener('touchmove', onMove, { passive: false });
               document.addEventListener('touchend', onEnd);
             }}>
-            <div className="absolute inset-y-0 w-[3px] bg-white/[0.08] rounded-full left-1/2 -translate-x-1/2" />
-            <div className="absolute bottom-0 w-[3px] bg-white/60 rounded-full left-1/2 -translate-x-1/2 transition-[height] duration-75"
+            <div className="absolute inset-y-0 w-[2px] bg-white/[0.06] rounded-full left-1/2 -translate-x-1/2" />
+            <div className="absolute bottom-0 w-[2px] bg-white/50 rounded-full left-1/2 -translate-x-1/2 transition-[height] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]"
               style={{ height: `${volume * 100}%` }} />
-            <div className="absolute w-[12px] h-[12px] bg-white rounded-full left-1/2 -translate-x-1/2 transition-[bottom] duration-75"
-              style={{ bottom: `calc(${volume * 100}% - 6px)` }} />
+            <div className="absolute w-[10px] h-[10px] bg-white rounded-full left-1/2 -translate-x-1/2 shadow-sm transition-[bottom] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]"
+              style={{ bottom: `calc(${volume * 100}% - 5px)` }} />
           </div>
 
-          <span className="text-[9px] text-white/30 font-medium mt-3 tabular-nums shrink-0">{Math.round(volume * 100)}</span>
+          <span className="text-[8px] text-white/25 font-medium mt-2.5 tabular-nums shrink-0">{Math.round(volume * 100)}</span>
         </div>
       )}
     </div>
