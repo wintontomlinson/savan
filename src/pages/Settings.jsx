@@ -214,32 +214,29 @@ export default function Settings() {
 
       {/* Import Playlist */}
       <Section title="Import Playlist">
-        <div className="px-4 py-4">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-white/[0.05] flex items-center justify-center">
-              <span className="text-[16px]">📥</span>
+        <div className="px-4 py-5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 flex items-center justify-center">
+              <span className="text-[20px]">📥</span>
             </div>
             <div>
-              <p className="text-[13px] text-white font-medium">Import from other apps</p>
-              <p className="text-[11px] text-[#555]">YouTube, Spotify, Apple Music</p>
+              <p className="text-[14px] text-white font-semibold">Import from any app</p>
+              <p className="text-[11px] text-white/35">Paste any playlist link — YouTube, Spotify, etc.</p>
             </div>
           </div>
-          <div className="space-y-2">
-            <div className="flex items-center gap-3 px-3 py-3 bg-white/[0.03] rounded-xl border border-white/[0.04]">
-              <span className="text-[14px]">▶️</span>
-              <span className="text-[12px] text-white/60 flex-1">YouTube Music</span>
-              <span className="text-[9px] text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full font-semibold">Coming Soon</span>
-            </div>
-            <div className="flex items-center gap-3 px-3 py-3 bg-white/[0.03] rounded-xl border border-white/[0.04]">
-              <span className="text-[14px]">🟢</span>
-              <span className="text-[12px] text-white/60 flex-1">Spotify</span>
-              <span className="text-[9px] text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full font-semibold">Coming Soon</span>
-            </div>
-            <div className="flex items-center gap-3 px-3 py-3 bg-white/[0.03] rounded-xl border border-white/[0.04]">
-              <span className="text-[14px]">🍎</span>
-              <span className="text-[12px] text-white/60 flex-1">Apple Music</span>
-              <span className="text-[9px] text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full font-semibold">Coming Soon</span>
-            </div>
+          <div className="relative">
+            <input
+              type="url"
+              placeholder="Paste playlist URL here..."
+              className="w-full bg-white/[0.04] border border-white/[0.06] rounded-xl px-4 py-3.5 text-[13px] text-white placeholder:text-white/25 focus:outline-none focus:border-rose-500/30 focus:bg-white/[0.06] transition-all duration-300 pr-20"
+            />
+            <button className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 bg-gradient-to-r from-rose-500 to-rose-600 rounded-lg text-[11px] text-white font-bold shadow-lg shadow-rose-500/20 active:scale-95 transition-all">
+              Import
+            </button>
+          </div>
+          <p className="text-[10px] text-white/20 mt-2.5">Supports YouTube, Spotify, Apple Music, JioSaavn links</p>
+          <div className="mt-3 px-3 py-2.5 bg-amber-500/[0.06] border border-amber-500/10 rounded-xl">
+            <p className="text-[10px] text-amber-400/80 font-medium">⚡ Coming soon — this feature is under development</p>
           </div>
         </div>
       </Section>
