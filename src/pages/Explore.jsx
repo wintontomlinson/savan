@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Loader2, Play, X, Shuffle } from 'lucide-react';
+import { Loader2, Play, X, Shuffle, ChevronRight } from 'lucide-react';
 import { searchSongs, getPlaylistById } from '../data/api';
 import { usePlayer } from '../context/PlayerContext';
 import SongRow from '../components/SongRow';
@@ -54,6 +54,7 @@ export default function Explore() {
   const [loading, setLoading] = useState(false);
   const [browseData, setBrowseData] = useState({});
   const [browseLoading, setBrowseLoading] = useState({});
+  const [expandedSection, setExpandedSection] = useState(null);
   const { playSong } = usePlayer();
   const songsRef = useRef(null);
 
@@ -166,13 +167,46 @@ export default function Explore() {
       {GENRES.slice(0, 4).map(sec => {
         const data = browseData[sec.id];
         const isLoading = browseLoading[sec.id];
+        const isExpanded = expandedSection === sec.id;
         if (!data && !isLoading) return null;
         return (
-          <section key={sec.id} className="animate-in">
+          <section key={sec.id} className="animate-in mb-2">
             {isLoading ? (
               <div className="flex justify-center py-3"><Loader2 size={14} className="text-white/15 animate-spin" /></div>
             ) : data && data.length > 0 && (
-              <HorizontalScroll title={sec.label}>{data.map(s => <SongCard key={s.id} song={s} />)}</HorizontalScroll>
+              <>
+                {!isExpanded ? (
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h2 className="text-[15px] sm:text-[17px] font-bold text-white">{sec.label}</h2>
+                      <button onClick={() => setExpandedSection(sec.id)} className="flex items-center gap-0.5 text-[12px] text-white/35 hover:text-white/60 transition-colors active:scale-95">
+                        More <ChevronRight size={14} />
+                      </button>
+                    </div>
+                    <div className="flex gap-3 sm:gap-4 scroll-x pb-1 stagger">
+                      {data.slice(0, 8).map(s => <SongCard key={s.id} song={s} />)}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="animate-in">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-[17px] font-bold text-white">{sec.label}</h2>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => { const shuffled = [...data].sort(() => Math.random() - 0.5); playSong(shuffled[0], shuffled); }}
+                          className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white rounded-full text-[11px] font-bold shadow-md hover:scale-[1.03] active:scale-95 transition-all">
+                          <Play size={11} fill="white" /> Play All
+                        </button>
+                        <button onClick={() => setExpandedSection(null)} className="text-[12px] text-white/35 hover:text-white/60 transition-colors active:scale-95">
+                          Close
+                        </button>
+                      </div>
+                    </div>
+                    <div className="rounded-2xl border border-white/[0.04] overflow-hidden">
+                      {data.map((s, i) => <SongRow key={s.id} song={s} index={i} songList={data} />)}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </section>
         );
