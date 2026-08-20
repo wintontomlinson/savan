@@ -76,23 +76,22 @@ function bestImage(images) {
 
 function getAudioByQuality(urls, quality) {
   if (!urls?.length) return '';
-  // Always try 320kbps first (best quality)
-  const match = urls.find(u => u.quality === '320kbps');
+  const match = urls.find(u => u.quality === quality);
   if (match?.url) return match.url;
-  // Fallback: try highest to lowest
-  const order = ['160kbps', '96kbps', '48kbps'];
-  for (const q of order) {
-    const m = urls.find(u => u.quality === q);
-    if (m?.url) return m.url;
-  }
-  return urls[urls.length - 1]?.url || '';
+  return [...urls]
+    .filter(item => item?.url)
+    .sort((a, b) => parseInt(b.quality, 10) - parseInt(a.quality, 10))[0]?.url || '';
 }
 
 export function getQuality() {
-  return '320kbps';
+  try {
+    const quality = localStorage.getItem('audio_quality');
+    return ['320kbps', '160kbps', '96kbps', '48kbps'].includes(quality) ? quality : '320kbps';
+  } catch { return '320kbps'; }
 }
 
 export function setQuality(q) {
+  if (!['320kbps', '160kbps', '96kbps', '48kbps'].includes(q)) return;
   try { localStorage.setItem('audio_quality', q); } catch {}
 }
 
