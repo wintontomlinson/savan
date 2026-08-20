@@ -287,36 +287,8 @@ export default function ExpandedPlayer() {
             </button>
           </div>
 
-          {/* Volume — iOS style horizontal */}
-          <div className="flex items-center gap-3 max-w-[280px] sm:max-w-sm mx-auto mb-4">
-            <Volume1 size={14} className="text-white/25 shrink-0" />
-            <div ref={volumeRef} className="flex-1 h-[28px] flex items-center cursor-pointer relative touch-none"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                const rect = volumeRef.current.getBoundingClientRect();
-                const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                setVolume(pct);
-                const onMove = (ev) => { const p = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width)); setVolume(p); };
-                const onEnd = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onEnd); };
-                document.addEventListener('mousemove', onMove);
-                document.addEventListener('mouseup', onEnd);
-              }}
-              onTouchStart={(e) => {
-                e.preventDefault();
-                const rect = volumeRef.current.getBoundingClientRect();
-                const pct = Math.max(0, Math.min(1, (e.touches[0].clientX - rect.left) / rect.width));
-                setVolume(pct);
-                const onMove = (ev) => { ev.preventDefault(); const p = Math.max(0, Math.min(1, (ev.touches[0].clientX - rect.left) / rect.width)); setVolume(p); };
-                const onEnd = () => { document.removeEventListener('touchmove', onMove); document.removeEventListener('touchend', onEnd); };
-                document.addEventListener('touchmove', onMove, { passive: false });
-                document.addEventListener('touchend', onEnd);
-              }}>
-              <div className="absolute inset-x-0 h-[4px] bg-white/[0.08] rounded-full top-1/2 -translate-y-1/2" />
-              <div className="absolute left-0 h-[4px] bg-white/50 rounded-full top-1/2 -translate-y-1/2 transition-[width] duration-100"
-                style={{ width: `${volume * 100}%` }} />
-            </div>
-            <Volume2 size={14} className="text-white/25 shrink-0" />
-          </div>
+          {/* Volume — inline horizontal */}
+          {/* Removed — volume is now on right side */}
 
           {/* Action Bar */}
           <div className="flex items-center justify-center gap-2.5 max-w-sm mx-auto">
@@ -326,6 +298,39 @@ export default function ExpandedPlayer() {
             <SleepTimer />
           </div>
         </div>
+      </div>
+
+      {/* Volume — right side vertical bar (app volume) */}
+      <div className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 w-[28px] h-[160px] sm:h-[200px] flex flex-col items-center py-3 z-10">
+        <Volume2 size={11} className="text-white/30 mb-2 shrink-0" />
+        <div ref={volumeRef} className="flex-1 w-[28px] flex items-center justify-center cursor-pointer relative touch-none"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            const rect = volumeRef.current.getBoundingClientRect();
+            const pct = 1 - Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+            setVolume(pct);
+            const onMove = (ev) => { const p = 1 - Math.max(0, Math.min(1, (ev.clientY - rect.top) / rect.height)); setVolume(p); };
+            const onEnd = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onEnd); };
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onEnd);
+          }}
+          onTouchStart={(e) => {
+            e.preventDefault();
+            const rect = volumeRef.current.getBoundingClientRect();
+            const pct = 1 - Math.max(0, Math.min(1, (e.touches[0].clientY - rect.top) / rect.height));
+            setVolume(pct);
+            const onMove = (ev) => { ev.preventDefault(); const p = 1 - Math.max(0, Math.min(1, (ev.touches[0].clientY - rect.top) / rect.height)); setVolume(p); };
+            const onEnd = () => { document.removeEventListener('touchmove', onMove); document.removeEventListener('touchend', onEnd); };
+            document.addEventListener('touchmove', onMove, { passive: false });
+            document.addEventListener('touchend', onEnd);
+          }}>
+          <div className="absolute inset-y-0 w-[3px] bg-white/[0.06] rounded-full left-1/2 -translate-x-1/2" />
+          <div className="absolute bottom-0 w-[3px] bg-white/50 rounded-full left-1/2 -translate-x-1/2 transition-[height] duration-150"
+            style={{ height: `${volume * 100}%` }} />
+          <div className="absolute w-[10px] h-[10px] bg-white rounded-full left-1/2 -translate-x-1/2 transition-[bottom] duration-150"
+            style={{ bottom: `calc(${volume * 100}% - 5px)` }} />
+        </div>
+        <Volume1 size={11} className="text-white/20 mt-2 shrink-0" />
       </div>
 
     </div>
