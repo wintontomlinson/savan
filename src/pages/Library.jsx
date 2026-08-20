@@ -39,27 +39,27 @@ export default function Library() {
     <div className="pb-6 pt-3">
       {/* Header */}
       {!openPlaylist && (
-        <div className="animate-in mb-6">
+        <div className="animate-in mb-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-[26px] font-black text-transparent bg-clip-text tracking-tight" style={{ backgroundImage: 'linear-gradient(90deg, #fff 0%, #e879f9 60%, #a78bfa 100%)' }}>Library</h1>
-            <button onClick={() => setShowCreate(true)} className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white text-[11px] font-bold shadow-md shadow-fuchsia-500/20 hover:scale-[1.04] active:scale-95 transition-all">
-              <Plus size={13} /> New
+            <h1 className="text-[22px] font-black text-transparent bg-clip-text tracking-tight" style={{ backgroundImage: 'linear-gradient(90deg, #fff 0%, #e879f9 60%, #a78bfa 100%)' }}>Library</h1>
+            <button onClick={() => setShowCreate(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white text-[10px] font-bold shadow-sm shadow-fuchsia-500/20 hover:scale-[1.04] active:scale-95 transition-all">
+              <Plus size={11} /> New
             </button>
           </div>
 
           {/* Quick Stats Bar */}
-          <div className="flex items-center gap-3 mt-4">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-              <Heart size={12} className="text-rose-400" />
-              <span className="text-[11px] text-white/50 font-medium">{likedSongs_full.length} liked</span>
+          <div className="flex items-center gap-2 mt-3">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.05]">
+              <Heart size={10} className="text-rose-400" />
+              <span className="text-[10px] text-white/50 font-medium">{likedSongs_full.length}</span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-              <Download size={12} className="text-emerald-400" />
-              <span className="text-[11px] text-white/50 font-medium">{downloadedFromHistory.length} saved</span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.05]">
+              <Download size={10} className="text-emerald-400" />
+              <span className="text-[10px] text-white/50 font-medium">{downloadedFromHistory.length}</span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-              <Headphones size={12} className="text-violet-400" />
-              <span className="text-[11px] text-white/50 font-medium">{history.length} played</span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.05]">
+              <Headphones size={10} className="text-violet-400" />
+              <span className="text-[10px] text-white/50 font-medium">{history.length}</span>
             </div>
           </div>
         </div>
@@ -74,9 +74,9 @@ export default function Library() {
 
       {/* Navigation Cards (replaces tabs) */}
       {!openPlaylist && (
-        <div className="grid grid-cols-2 gap-2.5 mb-6 animate-in" style={{ animationDelay: '0.04s' }}>
+        <div className="grid grid-cols-4 gap-1.5 mb-5 animate-in" style={{ animationDelay: '0.04s' }}>
           <NavCard active={tab === 'playlists'} onClick={() => setTab('playlists')} icon={ListMusic} label="Playlists" count={playlists.length} color="violet" />
-          <NavCard active={tab === 'downloads'} onClick={() => setTab('downloads')} icon={Download} label="Downloads" count={downloadedFromHistory.length} color="emerald" />
+          <NavCard active={tab === 'downloads'} onClick={() => setTab('downloads')} icon={Download} label="Saved" count={downloadedFromHistory.length} color="emerald" />
           <NavCard active={tab === 'history'} onClick={() => setTab('history')} icon={Clock} label="History" count={history.length} color="blue" />
           <NavCard active={tab === 'stats'} onClick={() => setTab('stats')} icon={BarChart3} label="Stats" count={prefs?.totalPlays || 0} color="amber" />
         </div>
@@ -264,14 +264,13 @@ function NavCard({ active, onClick, icon: Icon, label, count, color }) {
   const c = colors[color];
   return (
     <button onClick={onClick}
-      className={`relative p-4 rounded-2xl text-left transition-all duration-300 active:scale-[0.96] ${
+      className={`p-2.5 rounded-xl text-center transition-all duration-300 active:scale-[0.95] ${
         active
-          ? `bg-gradient-to-br ${c.bg} border ${c.border} shadow-lg`
-          : 'bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.07]'
+          ? `bg-gradient-to-br ${c.bg} border ${c.border}`
+          : 'bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04]'
       }`}>
-      <Icon size={18} className={active ? c.icon : 'text-white/25'} />
-      <p className={`text-[12px] font-semibold mt-2 ${active ? 'text-white' : 'text-white/50'}`}>{label}</p>
-      <p className={`text-[10px] mt-0.5 ${active ? 'text-white/40' : 'text-white/20'}`}>{count > 0 ? `${count} items` : 'Empty'}</p>
+      <Icon size={15} className={`mx-auto ${active ? c.icon : 'text-white/25'}`} />
+      <p className={`text-[9px] font-semibold mt-1.5 ${active ? 'text-white' : 'text-white/40'}`}>{label}</p>
     </button>
   );
 }
