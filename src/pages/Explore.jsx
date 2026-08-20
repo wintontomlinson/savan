@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Loader2, Play, X, Shuffle, Disc3, TrendingUp, ListMusic, Mic, Users, Radio, Flame, Heart, Music } from 'lucide-react';
+import { Loader2, Play, X, Shuffle } from 'lucide-react';
 import { searchSongs, getPlaylistById } from '../data/api';
 import { usePlayer } from '../context/PlayerContext';
 import SongRow from '../components/SongRow';
@@ -54,7 +54,7 @@ export default function Explore() {
   const [loading, setLoading] = useState(false);
   const [browseData, setBrowseData] = useState({});
   const [browseLoading, setBrowseLoading] = useState({});
-  const { playSong, currentSong } = usePlayer();
+  const { playSong } = usePlayer();
   const songsRef = useRef(null);
 
   const loadArtist = async (artist) => {
@@ -91,60 +91,66 @@ export default function Explore() {
   return (
     <div className="pb-6 pt-3">
       {/* Title */}
-      <h1 className="text-[26px] font-bold text-white tracking-tight mb-5 animate-in">Explore</h1>
+      <h1 className="text-[26px] font-bold text-white tracking-tight mb-4 animate-in">Explore</h1>
 
-      {/* Genre Pills - Horizontal Scroll */}
-      <section className="mb-7 animate-in" style={{ animationDelay: '0.03s' }}>
-        <div className="flex gap-2 scroll-x pb-2">
-          {GENRES.map((g, i) => (
+      {/* Genre Pills */}
+      <section className="mb-5 animate-in" style={{ animationDelay: '0.03s' }}>
+        <div className="flex gap-2 scroll-x pb-1">
+          {GENRES.map(g => (
             <button key={g.id} onClick={() => playGenre(g)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-full shrink-0 bg-gradient-to-r ${g.gradient} text-white text-[12px] font-bold shadow-md hover:shadow-lg hover:scale-[1.05] active:scale-[0.95] transition-all duration-300 border border-white/[0.15]`}>
-              <span className="text-[13px]">{g.icon}</span>
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full shrink-0 bg-gradient-to-r ${g.gradient} text-white text-[11px] font-bold shadow-md hover:shadow-lg hover:scale-[1.05] active:scale-[0.95] transition-all duration-300 border border-white/[0.15]`}>
+              <span>{g.icon}</span>
               {g.label}
             </button>
           ))}
         </div>
       </section>
 
-      {/* Curated Playlists - Only top 4 */}
-      {GENRES.slice(0, 4).map(sec => {
-        const data = browseData[sec.id];
-        const isLoading = browseLoading[sec.id];
-        if (!data && !isLoading) return null;
-        return (
-          <section key={sec.id} className="animate-in">
-            {isLoading ? (
-              <div className="flex justify-center py-4"><Loader2 size={16} className="text-white/15 animate-spin" /></div>
-            ) : data && data.length > 0 && (
-              <HorizontalScroll title={sec.label}>{data.map(s => <SongCard key={s.id} song={s} />)}</HorizontalScroll>
-            )}
-          </section>
-        );
-      })}
+      {/* Artists - RIGHT AFTER genres so they're immediately visible */}
+      <section className="mb-6 animate-in" style={{ animationDelay: '0.05s' }}>
+        <h2 className="text-[15px] font-bold text-white mb-3">Artists</h2>
+        <div className="flex gap-3.5 scroll-x pb-2">
+          {ARTISTS.map(a => (
+            <button key={a.name} onClick={() => loadArtist(a)}
+              className="flex flex-col items-center gap-1.5 shrink-0 group active:scale-[0.93] transition-all duration-300">
+              <div className={`w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-full overflow-hidden transition-all duration-300 ${
+                activeArtist === a.name
+                  ? 'ring-[3px] ring-fuchsia-400 shadow-lg shadow-fuchsia-500/20 scale-110'
+                  : 'ring-1 ring-white/[0.08] group-hover:ring-fuchsia-400/40 group-hover:scale-105'
+              }`}>
+                <img src={a.img} alt={a.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
+              </div>
+              <p className={`text-[9px] sm:text-[10px] font-medium text-center w-16 sm:w-[72px] truncate transition-colors ${
+                activeArtist === a.name ? 'text-fuchsia-300' : 'text-white/40 group-hover:text-white/75'
+              }`}>{a.name}</p>
+            </button>
+          ))}
+        </div>
+      </section>
 
       {/* Artist Songs Panel */}
       {activeArtist && (
-        <div ref={songsRef} className="mb-8 animate-scale">
+        <div ref={songsRef} className="mb-6 animate-scale">
           {loading ? (
-            <div className="flex justify-center py-12"><Loader2 size={20} className="text-white/25 animate-spin" /></div>
+            <div className="flex justify-center py-8"><Loader2 size={18} className="text-white/25 animate-spin" /></div>
           ) : songs.length > 0 && (
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <img src={ARTISTS.find(a => a.name === activeArtist)?.img} alt="" className="w-12 h-12 rounded-full object-cover ring-2 ring-fuchsia-400/40 shadow-lg" />
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2.5">
+                  <img src={ARTISTS.find(a => a.name === activeArtist)?.img} alt="" className="w-10 h-10 rounded-full object-cover ring-2 ring-fuchsia-400/40" />
                   <div>
-                    <h2 className="text-[16px] font-bold text-white">{activeArtist}</h2>
-                    <p className="text-[11px] text-white/30">{songs.length} songs</p>
+                    <h3 className="text-[14px] font-bold text-white">{activeArtist}</h3>
+                    <p className="text-[10px] text-white/25">{songs.length} songs</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={() => playSong(songs[0], songs)}
-                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white rounded-full text-[12px] font-bold shadow-lg shadow-fuchsia-500/20 hover:scale-[1.03] active:scale-95 transition-all">
-                    <Play size={12} fill="white" /> Play
+                    className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white rounded-full text-[11px] font-bold shadow-md hover:scale-[1.03] active:scale-95 transition-all">
+                    <Play size={11} fill="white" /> Play
                   </button>
                   <button onClick={() => { setActiveArtist(null); setSongs([]); }}
-                    className="w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center hover:bg-white/[0.1] active:scale-90 transition-all">
-                    <X size={14} className="text-white/40" />
+                    className="w-7 h-7 rounded-full bg-white/[0.06] flex items-center justify-center hover:bg-white/[0.1] active:scale-90">
+                    <X size={12} className="text-white/40" />
                   </button>
                 </div>
               </div>
@@ -156,34 +162,21 @@ export default function Explore() {
         </div>
       )}
 
-      {/* Artists */}
-      <div className="space-y-7 mt-2">
-        {CATEGORIES.map((cat, ci) => {
-          const artists = ARTISTS.filter(a => a.cat === cat);
-          return (
-            <section key={cat} className="animate-in" style={{ animationDelay: `${ci * 0.04}s` }}>
-              <h2 className="text-[15px] font-bold text-white mb-3">{cat}</h2>
-              <div className="flex gap-4 scroll-x pb-1">
-                {artists.map(a => (
-                  <button key={a.name} onClick={() => loadArtist(a)}
-                    className="flex flex-col items-center gap-2 shrink-0 group active:scale-[0.93] transition-all duration-300">
-                    <div className={`w-[72px] h-[72px] sm:w-20 sm:h-20 rounded-full overflow-hidden transition-all duration-300 ${
-                      activeArtist === a.name
-                        ? 'ring-[3px] ring-fuchsia-400 shadow-xl shadow-fuchsia-500/20 scale-105'
-                        : 'ring-1 ring-white/[0.08] group-hover:ring-fuchsia-400/40 group-hover:shadow-lg group-hover:scale-105'
-                    }`}>
-                      <img src={a.img} alt={a.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
-                    </div>
-                    <p className={`text-[10px] sm:text-[11px] font-medium text-center w-[72px] sm:w-20 truncate transition-colors ${
-                      activeArtist === a.name ? 'text-fuchsia-300' : 'text-white/45 group-hover:text-white/80'
-                    }`}>{a.name}</p>
-                  </button>
-                ))}
-              </div>
-            </section>
-          );
-        })}
-      </div>
+      {/* Curated Playlists */}
+      {GENRES.slice(0, 4).map(sec => {
+        const data = browseData[sec.id];
+        const isLoading = browseLoading[sec.id];
+        if (!data && !isLoading) return null;
+        return (
+          <section key={sec.id} className="animate-in">
+            {isLoading ? (
+              <div className="flex justify-center py-3"><Loader2 size={14} className="text-white/15 animate-spin" /></div>
+            ) : data && data.length > 0 && (
+              <HorizontalScroll title={sec.label}>{data.map(s => <SongCard key={s.id} song={s} />)}</HorizontalScroll>
+            )}
+          </section>
+        );
+      })}
     </div>
   );
 }
