@@ -7,16 +7,16 @@ import SongCard from '../components/SongCard';
 import HorizontalScroll from '../components/HorizontalScroll';
 
 const GENRES = [
-  { id: 'trending', label: 'Trending', playlistId: '1219706044', searchQuery: 'latest hindi hits trending', color: 'from-rose-600 to-pink-500', icon: Flame },
-  { id: 'dance', label: 'Dance', playlistId: '1219706999', searchQuery: 'bollywood dance party', color: 'from-amber-500 to-orange-500', icon: Disc3 },
-  { id: 'retro', label: '90s Hits', playlistId: '1167751266', searchQuery: '90s bollywood classic', color: 'from-emerald-500 to-teal-500', icon: Radio },
-  { id: 'english', label: 'English', playlistId: '303128179', searchQuery: 'english pop trending', color: 'from-blue-500 to-sky-400', icon: Users },
-  { id: 'lofi', label: 'Lo-Fi', playlistId: '1079336813', searchQuery: 'lofi chill hindi', color: 'from-purple-500 to-violet-400', icon: Music },
-  { id: 'hiphop', label: 'Hip-Hop', playlistId: '1265128247', searchQuery: 'indian hip hop rap', color: 'from-indigo-600 to-blue-500', icon: Mic },
-  { id: 'sad', label: 'Sad', playlistId: '802336660', searchQuery: 'sad hindi heartbreak', color: 'from-slate-500 to-gray-500', icon: Heart },
-  { id: 'workout', label: 'Workout', playlistId: '156710699', searchQuery: 'workout gym hindi', color: 'from-red-500 to-orange-500', icon: TrendingUp },
-  { id: 'punjabi', label: 'Punjabi', playlistId: '4144832', searchQuery: 'punjabi hits latest', color: 'from-fuchsia-500 to-pink-500', icon: Disc3 },
-  { id: 'sufi', label: 'Sufi', playlistId: '1262711873', searchQuery: 'sufi qawwali', color: 'from-teal-500 to-cyan-400', icon: Radio },
+  { id: 'trending', label: 'Trending', playlistId: '1219706044', searchQuery: 'latest hindi hits trending', color: 'from-fuchsia-600 via-pink-500 to-rose-500', icon: Flame },
+  { id: 'dance', label: 'Dance', playlistId: '1219706999', searchQuery: 'bollywood dance party', color: 'from-amber-500 via-orange-500 to-yellow-500', icon: Disc3 },
+  { id: 'retro', label: '90s Hits', playlistId: '1167751266', searchQuery: '90s bollywood classic', color: 'from-emerald-500 via-teal-400 to-cyan-400', icon: Radio },
+  { id: 'english', label: 'English', playlistId: '303128179', searchQuery: 'english pop trending', color: 'from-blue-500 via-indigo-400 to-violet-400', icon: Users },
+  { id: 'lofi', label: 'Lo-Fi', playlistId: '1079336813', searchQuery: 'lofi chill hindi', color: 'from-violet-600 via-purple-500 to-fuchsia-400', icon: Music },
+  { id: 'hiphop', label: 'Hip-Hop', playlistId: '1265128247', searchQuery: 'indian hip hop rap', color: 'from-indigo-600 via-blue-500 to-cyan-400', icon: Mic },
+  { id: 'sad', label: 'Sad', playlistId: '802336660', searchQuery: 'sad hindi heartbreak', color: 'from-slate-600 via-gray-500 to-zinc-400', icon: Heart },
+  { id: 'workout', label: 'Workout', playlistId: '156710699', searchQuery: 'workout gym hindi', color: 'from-red-600 via-orange-500 to-amber-400', icon: TrendingUp },
+  { id: 'punjabi', label: 'Punjabi', playlistId: '4144832', searchQuery: 'punjabi hits latest', color: 'from-pink-600 via-fuchsia-500 to-purple-400', icon: Disc3 },
+  { id: 'sufi', label: 'Sufi', playlistId: '1262711873', searchQuery: 'sufi qawwali', color: 'from-teal-600 via-emerald-400 to-green-300', icon: Radio },
 ];
 
 const ARTISTS = [
@@ -91,19 +91,30 @@ export default function Explore() {
   return (
     <div className="pb-6 pt-3">
       {/* Title */}
-      <h1 className="text-[26px] font-bold text-white tracking-tight mb-6 animate-in">Explore</h1>
+      <section className="mb-7 animate-in">
+        <div className="relative overflow-hidden rounded-2xl p-5 sm:p-6 border border-white/[0.08]" style={{ background: 'linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 35%, #1a1145 65%, #0d0620 100%)' }}>
+          <div className="absolute top-[-30%] left-[10%] w-28 h-28 bg-fuchsia-500/[0.12] rounded-full blur-[50px] animate-pulse" style={{ animationDuration: '4s' }} />
+          <div className="absolute bottom-[-20%] right-[15%] w-24 h-24 bg-violet-400/[0.1] rounded-full blur-[40px] animate-pulse" style={{ animationDuration: '3s', animationDelay: '1.5s' }} />
+          <div className="relative">
+            <h1 className="text-[26px] sm:text-[30px] font-black text-transparent bg-clip-text tracking-tight" style={{ backgroundImage: 'linear-gradient(90deg, #fff 0%, #e879f9 50%, #a78bfa 100%)' }}>Explore</h1>
+            <p className="text-[12px] text-white/30 mt-1 font-medium">Discover your next obsession</p>
+          </div>
+        </div>
+      </section>
 
-      {/* Genre Cards - colorful grid */}
-      <section className="mb-8 animate-in" style={{ animationDelay: '0.03s' }}>
+      {/* Genre Cards */}
+      <section className="mb-8 animate-in" style={{ animationDelay: '0.05s' }}>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
           {GENRES.map((g, i) => (
             <button key={g.id} onClick={() => playGenre(g)}
               style={{ animationDelay: `${i * 40}ms` }}
-              className={`relative overflow-hidden rounded-2xl p-4 sm:p-5 text-left bg-gradient-to-br ${g.color} transition-all duration-300 active:scale-[0.95] hover:scale-[1.02] hover:shadow-xl group animate-in`}>
-              <g.icon size={20} className="text-white/80 mb-2 group-hover:scale-110 transition-transform duration-300" />
-              <p className="text-[13px] font-bold text-white">{g.label}</p>
-              {/* Animated shine */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.05] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+              className={`relative overflow-hidden rounded-2xl p-4 sm:p-5 text-left bg-gradient-to-br ${g.color} transition-all duration-300 active:scale-[0.93] hover:scale-[1.04] hover:shadow-2xl hover:shadow-black/40 group animate-in border border-white/[0.1]`}>
+              {/* Inner glow */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/[0.05]" />
+              {/* Shine sweep */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.08] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+              <g.icon size={22} className="relative text-white/90 mb-2.5 group-hover:scale-125 group-hover:rotate-12 transition-all duration-400 drop-shadow-lg" />
+              <p className="relative text-[13px] font-bold text-white drop-shadow-sm">{g.label}</p>
             </button>
           ))}
         </div>
@@ -129,12 +140,12 @@ export default function Explore() {
       {activeArtist && (
         <div ref={songsRef} className="mb-8 animate-scale">
           {loading ? (
-            <div className="flex justify-center py-12"><Loader2 size={20} className="text-white/25 animate-spin" /></div>
+            <div className="flex justify-center py-12"><Loader2 size={20} className="text-fuchsia-400/50 animate-spin" /></div>
           ) : songs.length > 0 && (
             <div>
-              <div className="flex items-center justify-between mb-4 p-4 bg-white/[0.02] rounded-2xl border border-white/[0.04]">
+              <div className="flex items-center justify-between mb-4 p-4 rounded-2xl border border-white/[0.06]" style={{ background: 'linear-gradient(135deg, #1a0a2e 0%, #15102a 100%)' }}>
                 <div className="flex items-center gap-3">
-                  <img src={ARTISTS.find(a => a.name === activeArtist)?.img} alt="" className="w-14 h-14 rounded-full object-cover ring-2 ring-white/10 shadow-xl" />
+                  <img src={ARTISTS.find(a => a.name === activeArtist)?.img} alt="" className="w-14 h-14 rounded-full object-cover ring-2 ring-fuchsia-400/30 shadow-xl shadow-fuchsia-500/10" />
                   <div>
                     <h2 className="text-[17px] font-bold text-white">{activeArtist}</h2>
                     <p className="text-[11px] text-white/30">{songs.length} songs</p>
@@ -146,8 +157,8 @@ export default function Explore() {
                     <Shuffle size={14} className="text-white/60" />
                   </button>
                   <button onClick={() => playSong(songs[0], songs)}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-white text-black rounded-full text-[12px] font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
-                    <Play size={13} fill="black" /> Play
+                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white rounded-full text-[12px] font-bold shadow-lg shadow-fuchsia-500/20 hover:shadow-fuchsia-500/30 hover:scale-[1.03] active:scale-95 transition-all">
+                    <Play size={13} fill="white" /> Play
                   </button>
                   <button onClick={() => { setActiveArtist(null); setSongs([]); }}
                     className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center hover:bg-white/[0.1] active:scale-90 transition-all">
@@ -175,17 +186,19 @@ export default function Explore() {
                   <button key={a.name} onClick={() => loadArtist(a)}
                     className="flex flex-col items-center gap-2 group active:scale-[0.92] transition-all duration-300">
                     <div className={`relative w-full aspect-square rounded-full overflow-hidden shadow-lg transition-all duration-300 ${
-                      activeArtist === a.name ? 'ring-2 ring-white shadow-xl scale-105' : 'ring-1 ring-white/[0.06] group-hover:ring-white/[0.12] group-hover:shadow-xl group-hover:scale-105'
+                      activeArtist === a.name
+                        ? 'ring-2 ring-fuchsia-400 shadow-xl shadow-fuchsia-500/20 scale-105'
+                        : 'ring-1 ring-white/[0.06] group-hover:ring-fuchsia-400/30 group-hover:shadow-xl group-hover:shadow-fuchsia-500/10 group-hover:scale-105'
                     }`}>
                       <img src={a.img} alt={a.name} className="w-full h-full object-cover group-hover:scale-110 group-hover:brightness-75 transition-all duration-500" loading="lazy" />
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-2xl scale-50 group-hover:scale-100 transition-transform duration-400">
-                          <Play size={14} className="text-black ml-0.5" fill="black" />
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-fuchsia-500 to-violet-500 flex items-center justify-center shadow-2xl shadow-fuchsia-500/30 scale-50 group-hover:scale-100 transition-transform duration-400">
+                          <Play size={14} className="text-white ml-0.5" fill="white" />
                         </div>
                       </div>
                     </div>
                     <p className={`text-[11px] font-medium text-center truncate w-full transition-colors duration-200 ${
-                      activeArtist === a.name ? 'text-white' : 'text-white/50 group-hover:text-white/90'
+                      activeArtist === a.name ? 'text-fuchsia-300' : 'text-white/50 group-hover:text-white/90'
                     }`}>{a.name}</p>
                   </button>
                 ))}
