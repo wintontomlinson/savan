@@ -24,6 +24,16 @@ export default function ExpandedPlayer() {
     setActivePanel(prev => prev === panel ? null : panel);
   }, []);
 
+  // Auto-hide volume after 3s
+  const volumeTimerRef = useRef(null);
+  useEffect(() => {
+    if (activePanel === 'volume') {
+      if (volumeTimerRef.current) clearTimeout(volumeTimerRef.current);
+      volumeTimerRef.current = setTimeout(() => setActivePanel(null), 3000);
+    }
+    return () => { if (volumeTimerRef.current) clearTimeout(volumeTimerRef.current); };
+  }, [activePanel, volume]);
+
   // Close all panels
   const closePanels = useCallback(() => {
     setActivePanel(null);
