@@ -55,7 +55,7 @@ export function PlayerProvider({ children }) {
   const gainRef = useRef(null);
   const eqFiltersRef = useRef([]);
   const enhancedRef = useRef(false);
-  const [boostLevel, setBoostLevel] = useState(() => { try { return parseInt(localStorage.getItem('ma_boost')) || 100; } catch { return 100; } });
+  const [boostLevel, setBoostLevel] = useState(100);
 
   // Initialize audio processing chain (called on user action only)
   const initEnhancement = useCallback(() => {
@@ -131,24 +131,6 @@ export function PlayerProvider({ children }) {
       }
       
       enhancedRef.current = true;
-      
-      // Re-apply saved audio settings
-      try {
-        const savedEq = JSON.parse(localStorage.getItem('ma_eq_values'));
-        if (savedEq && Array.isArray(savedEq)) {
-          savedEq.forEach((g, i) => { if (eqFiltersRef.current[i]) eqFiltersRef.current[i].gain.value = g; });
-        }
-        if (localStorage.getItem('ma_bass') === 'true' && eqFiltersRef.current.length >= 3) {
-          eqFiltersRef.current[0].gain.value = 8;
-          eqFiltersRef.current[1].gain.value = 6;
-          eqFiltersRef.current[2].gain.value = 3;
-        }
-        if (localStorage.getItem('ma_vocal') === 'true') {
-          const vg = [-4, -3, -2, 1, 3, 5, 5, 3, -1, -3];
-          eqFiltersRef.current.forEach((f, i) => { if (f) f.gain.value = vg[i]; });
-        }
-      } catch {}
-      
       return true;
     } catch (e) {
       console.warn('Audio enhancement failed:', e);
@@ -214,7 +196,7 @@ export function PlayerProvider({ children }) {
   }, [initEnhancement]);
 
   // Bass Boost — pumps 60Hz and 250Hz
-  const [bassBoostOn, setBassBoostOn] = useState(() => { try { return localStorage.getItem('ma_bass') === 'true'; } catch { return false; } });
+  const [bassBoostOn, setBassBoostOn] = useState(false);
   const setBassBoost = useCallback((on) => {
     setBassBoostOn(on);
     if (!enhancedRef.current) {
@@ -229,7 +211,7 @@ export function PlayerProvider({ children }) {
   }, [initEnhancement]);
 
   // Vocal Mode — boosts mids (vocals), cuts bass/treble (instruments)
-  const [vocalMode, setVocalModeState] = useState(() => { try { return localStorage.getItem('ma_vocal') === 'true'; } catch { return false; } });
+  const [vocalMode, setVocalModeState] = useState(false);
   const setVocalMode = useCallback((on) => {
     setVocalModeState(on);
     if (!enhancedRef.current) {
@@ -343,9 +325,6 @@ export function PlayerProvider({ children }) {
   }, []);
 
   useEffect(() => { try { localStorage.setItem('liked', JSON.stringify(likedSongs)); } catch {} }, [likedSongs]);
-  useEffect(() => { try { localStorage.setItem('ma_boost', boostLevel.toString()); } catch {} }, [boostLevel]);
-  useEffect(() => { try { localStorage.setItem('ma_bass', bassBoostOn.toString()); } catch {} }, [bassBoostOn]);
-  useEffect(() => { try { localStorage.setItem('ma_vocal', vocalMode.toString()); } catch {} }, [vocalMode]);
   useEffect(() => { volumeRef.current = volume; }, [volume]);
   useEffect(() => { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused'; }, [isPlaying]);
   
@@ -474,10 +453,6 @@ export function PlayerProvider({ children }) {
     if (!song) return;
     cancelFade();
     errorHandlingRef.current = false;
-    // Auto-init audio enhancement if user had settings saved
-    if (!enhancedRef.current && (bassBoostOn || vocalMode || boostLevel > 100)) {
-      initEnhancement();
-    }
     // Resume AudioContext if enhanced mode active
     if (enhancedRef.current && audioCtxRef.current?.state === 'suspended') {
       audioCtxRef.current.resume();
