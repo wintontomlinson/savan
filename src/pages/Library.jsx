@@ -162,9 +162,14 @@ export default function Library() {
                   </button>
                 )}
                 {pl.id !== '__liked__' && (
-                  <button onClick={e => { e.stopPropagation(); deletePlaylist(pl.id); }} className="w-8 h-8 rounded-full flex items-center justify-center text-white/20 hover:text-red-400 hover:bg-red-500/10 active:scale-90 transition-all">
-                    <Trash2 size={12} />
-                  </button>
+                  <>
+                    <button onClick={e => { e.stopPropagation(); setRenaming(pl.id); setRenameText(pl.name); }} className="w-8 h-8 rounded-full flex items-center justify-center text-white/20 hover:text-white/60 hover:bg-white/[0.06] active:scale-90 transition-all">
+                      <Pencil size={11} />
+                    </button>
+                    <button onClick={e => { e.stopPropagation(); deletePlaylist(pl.id); }} className="w-8 h-8 rounded-full flex items-center justify-center text-white/20 hover:text-red-400 hover:bg-red-500/10 active:scale-90 transition-all">
+                      <Trash2 size={12} />
+                    </button>
+                  </>
                 )}
               </div>
             </div>
