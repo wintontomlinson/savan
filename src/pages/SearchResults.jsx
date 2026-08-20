@@ -57,23 +57,21 @@ export default function SearchResults() {
     <div className="pb-6 pt-2">
       {/* Search Input — premium glass pill */}
       <div className="relative mb-6 sticky top-0 z-20 bg-[#060606]/90 backdrop-blur-xl pb-3 -mx-1 px-1 pt-1">
-        <form onSubmit={handleSubmit} className="relative group/search">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center group-focus-within/search:bg-white/[0.1] transition-all duration-300">
-            <Search size={15} className="text-white/40 group-focus-within/search:text-white/70 transition-colors duration-300" />
-          </div>
+        <form onSubmit={handleSubmit} className="relative">
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" />
           <input
             ref={inputRef}
             value={query}
             onChange={e => setQuery(e.target.value)}
             onFocus={() => { if (query.length >= 2 && suggestions.length > 0) setShowSuggestions(true); }}
             placeholder="Search songs, artists, albums..."
-            className="w-full bg-white/[0.06] text-white text-[14px] font-medium pl-14 pr-12 py-3.5 rounded-full placeholder:text-white/30 placeholder:font-normal focus:outline-none focus:bg-white/[0.09] transition-all duration-300 border border-white/[0.06] focus:border-white/[0.12]"
+            className="w-full bg-white/[0.07] text-white text-[14px] font-medium pl-11 pr-11 py-3 rounded-full placeholder:text-white/30 placeholder:font-normal focus:outline-none focus:bg-white/[0.09] transition-all duration-300 border-none ring-0"
             autoComplete="off"
             spellCheck="false"
           />
           {query && (
             <button type="button" onClick={() => { setQuery(''); setSongs([]); setSuggestions([]); setError(false); setShowSuggestions(false); setParams({}); inputRef.current?.focus(); }}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/[0.08] flex items-center justify-center hover:bg-white/[0.15] transition-all duration-200 active:scale-90">
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/[0.08] flex items-center justify-center hover:bg-white/[0.15] transition-all duration-200 active:scale-90">
               <X size={12} className="text-white/60" />
             </button>
           )}
@@ -81,7 +79,7 @@ export default function SearchResults() {
 
         {/* Live Suggestions */}
         {showSuggestions && (
-          <div className="absolute top-full left-1 right-1 mt-1 bg-[#111]/95 backdrop-blur-2xl rounded-2xl border border-white/[0.06] shadow-2xl shadow-black/70 overflow-hidden z-50 animate-scale">
+          <div className="absolute top-full left-1 right-1 mt-2 bg-[#111]/95 backdrop-blur-2xl rounded-2xl border border-white/[0.06] shadow-2xl shadow-black/70 overflow-hidden z-50 animate-scale">
             {sugLoading && (
               <div className="flex items-center gap-3 px-4 py-3.5">
                 <Loader2 size={14} className="text-rose-400 animate-spin" />
