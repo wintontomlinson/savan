@@ -154,7 +154,7 @@ export default function Library() {
                   </>
                 )}
               </div>
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+              <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-all">
                 {pl.songs.length > 0 && (
                   <button onClick={e => { e.stopPropagation(); const s = [...pl.songs].sort(() => Math.random() - 0.5); playSong(s[0], s); }}
                     className="w-9 h-9 rounded-full bg-gradient-to-r from-fuchsia-500 to-violet-500 flex items-center justify-center shadow-md shadow-fuchsia-500/20 active:scale-90 transition-all">
@@ -162,10 +162,9 @@ export default function Library() {
                   </button>
                 )}
                 {pl.id !== '__liked__' && (
-                  <>
-                    <button onClick={e => { e.stopPropagation(); setRenaming(pl.id); setRenameText(pl.name); }} className="w-7 h-7 rounded-full flex items-center justify-center text-white/15 hover:text-white/50 hover:bg-white/[0.06]"><Pencil size={11} /></button>
-                    <button onClick={e => { e.stopPropagation(); deletePlaylist(pl.id); }} className="w-7 h-7 rounded-full flex items-center justify-center text-white/15 hover:text-red-400 hover:bg-red-500/10"><Trash2 size={11} /></button>
-                  </>
+                  <button onClick={e => { e.stopPropagation(); deletePlaylist(pl.id); }} className="w-8 h-8 rounded-full flex items-center justify-center text-white/20 hover:text-red-400 hover:bg-red-500/10 active:scale-90 transition-all">
+                    <Trash2 size={12} />
+                  </button>
                 )}
               </div>
             </div>
@@ -220,27 +219,33 @@ export default function Library() {
       {/* Stats */}
       {tab === 'stats' && !openPlaylist && (
         prefs && prefs.totalPlays > 0 ? (
-          <div className="animate-in space-y-4">
-            <div className="rounded-2xl p-6 border border-white/[0.06]" style={{ background: 'linear-gradient(135deg, #1a0a2e 0%, #15102a 100%)' }}>
-              <p className="text-[10px] text-fuchsia-300/50 uppercase tracking-widest font-medium mb-2">Total Plays</p>
-              <p className="text-[42px] font-black text-transparent bg-clip-text leading-none" style={{ backgroundImage: 'linear-gradient(90deg, #fff 0%, #e879f9 60%, #a78bfa 100%)' }}>{prefs.totalPlays}</p>
+          <div className="animate-in space-y-3">
+            <div className="flex gap-3">
+              <div className="flex-1 rounded-xl p-4 border border-white/[0.06]" style={{ background: 'linear-gradient(135deg, #1a0a2e 0%, #15102a 100%)' }}>
+                <p className="text-[9px] text-fuchsia-300/50 uppercase tracking-wider font-medium">Total Plays</p>
+                <p className="text-[28px] font-black text-transparent bg-clip-text leading-none mt-1" style={{ backgroundImage: 'linear-gradient(90deg, #fff 0%, #e879f9 60%, #a78bfa 100%)' }}>{prefs.totalPlays}</p>
+              </div>
+              <div className="flex-1 rounded-xl p-4 border border-white/[0.06] bg-white/[0.02]">
+                <p className="text-[9px] text-white/30 uppercase tracking-wider font-medium">Artists</p>
+                <p className="text-[28px] font-black text-white leading-none mt-1">{prefs.topArtists?.length || 0}</p>
+              </div>
             </div>
             {prefs.topArtists?.length > 0 && (
-              <div className="rounded-2xl p-5 border border-white/[0.05] bg-white/[0.02]">
-                <div className="flex items-center gap-2 mb-4">
-                  <Trophy size={14} className="text-amber-400" />
-                  <p className="text-[13px] text-white font-bold">Top Artists</p>
+              <div className="rounded-xl p-4 border border-white/[0.05] bg-white/[0.02]">
+                <div className="flex items-center gap-2 mb-3">
+                  <Trophy size={12} className="text-amber-400" />
+                  <p className="text-[12px] text-white font-bold">Top Artists</p>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {prefs.topArtists.slice(0, 5).map((a, i) => {
                     const name = typeof a === 'string' ? a : a.name;
                     return (
-                      <div key={name || i} className="flex items-center gap-3">
-                        <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold ${
-                          i === 0 ? 'bg-gradient-to-br from-amber-500/20 to-yellow-500/10 text-amber-400' : i === 1 ? 'bg-white/[0.06] text-white/40' : i === 2 ? 'bg-orange-500/10 text-orange-400' : 'bg-white/[0.03] text-white/20'
+                      <div key={name || i} className="flex items-center gap-2.5">
+                        <span className={`w-5 h-5 rounded flex items-center justify-center text-[9px] font-bold ${
+                          i === 0 ? 'bg-amber-500/15 text-amber-400' : i === 1 ? 'bg-white/[0.06] text-white/40' : i === 2 ? 'bg-orange-500/10 text-orange-400' : 'bg-white/[0.03] text-white/20'
                         }`}>{i + 1}</span>
-                        <span className="text-[13px] text-white/80 font-medium flex-1">{name}</span>
-                        {i < 3 && <div className="w-16 h-1.5 rounded-full bg-white/[0.06] overflow-hidden"><div className={`h-full rounded-full ${i === 0 ? 'bg-amber-400 w-full' : i === 1 ? 'bg-white/30 w-3/4' : 'bg-orange-400 w-1/2'}`} /></div>}
+                        <span className="text-[12px] text-white/70 font-medium flex-1">{name}</span>
+                        {i < 3 && <div className="w-12 h-1 rounded-full bg-white/[0.06] overflow-hidden"><div className={`h-full rounded-full ${i === 0 ? 'bg-amber-400 w-full' : i === 1 ? 'bg-white/30 w-3/4' : 'bg-orange-400 w-1/2'}`} /></div>}
                       </div>
                     );
                   })}
