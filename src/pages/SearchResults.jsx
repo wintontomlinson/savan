@@ -65,7 +65,8 @@ export default function SearchResults() {
             onChange={e => setQuery(e.target.value)}
             onFocus={() => { if (query.length >= 2 && suggestions.length > 0) setShowSuggestions(true); }}
             placeholder="Search songs, artists, albums..."
-            className="w-full bg-[#1c1c1e] text-white text-[14px] font-medium pl-11 pr-11 py-3 rounded-full placeholder:text-white/30 placeholder:font-normal focus:outline-none focus:bg-[#232326] transition-all duration-300"
+            style={{ borderRadius: '9999px' }}
+            className="w-full bg-[#2a2a2d] text-white text-[14px] font-medium pl-11 pr-11 py-3 placeholder:text-white/30 placeholder:font-normal focus:outline-none focus:bg-[#333336] transition-all duration-300 border border-[#3a3a3d]"
             autoComplete="off"
             spellCheck="false"
           />
@@ -78,7 +79,7 @@ export default function SearchResults() {
 
           {/* Live Suggestions — inside form so it's positioned relative to input */}
           {showSuggestions && (
-            <div className="absolute left-0 right-0 top-[calc(100%+8px)] bg-[#1c1c1e] rounded-2xl border border-white/[0.06] shadow-2xl shadow-black/80 overflow-hidden z-50 animate-scale">
+            <div className="absolute left-0 right-0 top-[calc(100%+10px)] bg-[#1c1c1e] rounded-2xl border border-[#2a2a2d] shadow-2xl shadow-black/80 overflow-hidden z-50 animate-scale">
               {sugLoading && (
                 <div className="flex items-center gap-3 px-4 py-3.5">
                   <Loader2 size={14} className="text-rose-400 animate-spin" />
