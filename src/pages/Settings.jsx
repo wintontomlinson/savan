@@ -12,6 +12,10 @@ const EQ_PRESETS = [
   { name: 'Pop', gains: [-1,1,3,4,3,1,0,-1,-2,-2] },
   { name: 'Hip-Hop', gains: [5,4,1,3,-1,-1,2,0,1,3] },
   { name: 'EDM', gains: [4,3,1,0,-2,0,1,3,4,5] },
+  { name: 'Jazz', gains: [3,2,1,2,-1,-1,0,1,2,3] },
+  { name: 'Classical', gains: [4,3,2,1,0,0,0,2,3,4] },
+  { name: 'R&B', gains: [3,5,4,1,-1,0,2,3,2,1] },
+  { name: 'Acoustic', gains: [3,2,0,1,2,2,1,2,3,2] },
 ];
 
 const EQ_BANDS = ['31', '63', '125', '250', '500', '1K', '2K', '4K', '8K', '16K'];
@@ -95,6 +99,18 @@ export default function Settings() {
           </div>
           <input type="range" min="0" max="12" step="1" value={crossfade} onChange={e => handleCrossfade(parseInt(e.target.value))}
             className="w-full h-1.5 rounded-full appearance-none bg-white/[0.08] cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md" />
+        </div>
+      </Section>
+
+      {/* Audio Quality */}
+      <Section title="Quality">
+        <div className="divide-y divide-white/[0.04]">
+          <Row label="Streaming" desc="320kbps AAC (Maximum)">
+            <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-1 rounded-md">HD</span>
+          </Row>
+          <Row label="Download" desc="320kbps M4A">
+            <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-1 rounded-md">HD</span>
+          </Row>
         </div>
       </Section>
 

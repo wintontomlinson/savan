@@ -33,9 +33,9 @@ export default function Library() {
   const renamePlaylist = (id) => { if (!renameText.trim()) { setRenaming(null); return; } setPlaylists(p => p.map(pl => pl.id === id ? { ...pl, name: renameText.trim() } : pl)); setRenaming(null); };
 
   const tabs = [
-    { id: 'playlists', label: 'Playlists' },
-    { id: 'downloads', label: 'Downloads' },
-    { id: 'history', label: 'History' },
+    { id: 'playlists', label: 'Playlists', count: playlists.length },
+    { id: 'downloads', label: 'Downloads', count: downloadedFromHistory.length },
+    { id: 'history', label: 'History', count: history.length },
     { id: 'stats', label: 'Stats' },
   ];
 
@@ -66,10 +66,11 @@ export default function Library() {
         <div className="flex gap-1.5 mb-6 overflow-x-auto scroll-x">
           {tabs.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className={`px-4 py-2 rounded-full text-[12px] font-semibold whitespace-nowrap transition-all ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-semibold whitespace-nowrap transition-all ${
                 tab === t.id ? 'bg-white text-black' : 'bg-white/[0.04] text-white/40 hover:text-white/60'
               }`}>
               {t.label}
+              {t.count > 0 && <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${tab === t.id ? 'bg-black/10' : 'bg-white/[0.08]'}`}>{t.count}</span>}
             </button>
           ))}
         </div>
@@ -178,6 +179,13 @@ export default function Library() {
       {tab === 'history' && !openPlaylist && (
         history.length > 0 ? (
           <div className="animate-in">
+            <div className="flex items-center gap-3 mb-4">
+              <button onClick={() => { const s = [...history.slice(0, 30)].sort(() => Math.random() - 0.5); playSong(s[0], s); }}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white text-[12px] font-bold rounded-full shadow-md active:scale-95 transition-all">
+                <Shuffle size={12} /> Shuffle
+              </button>
+              <span className="text-[11px] text-white/25">{history.length} total</span>
+            </div>
             <div className="rounded-2xl border border-white/[0.04] overflow-hidden">
               {history.slice(0, 50).map((s, i) => <SongRow key={`${s.id}-${i}`} song={s} index={i} songList={history} />)}
             </div>

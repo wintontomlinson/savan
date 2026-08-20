@@ -286,23 +286,26 @@ export default function SearchResults() {
             <>
               {/* Top Result */}
               <div className="mb-5">
+                <p className="text-[10px] text-white/25 font-semibold uppercase tracking-wider mb-2 px-1">Best Match</p>
                 <button onClick={() => playSong(songs[0], songs)}
                   className="group flex items-center gap-4 p-4 bg-white/[0.03] hover:bg-white/[0.05] rounded-2xl border border-white/[0.04] hover:border-white/[0.08] w-full text-left transition-all duration-300 hover:shadow-lg hover:shadow-black/20 hover:-translate-y-0.5">
                   <img src={songs[0].thumbnail} alt="" className="w-16 h-16 rounded-xl object-cover shadow-xl ring-1 ring-white/[0.06] group-hover:scale-105 transition-transform duration-300" loading="lazy" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] text-rose-400/70 font-semibold uppercase tracking-wider mb-1">Best Match</p>
                     <p className="text-[17px] font-bold text-white truncate">{songs[0].title}</p>
                     <p className="text-[12px] text-white/35 truncate mt-0.5">{songs[0].artist}</p>
                   </div>
-                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-xl shrink-0 opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100 transition-all duration-300">
-                    <Play size={18} className="text-black ml-0.5" fill="black" />
+                  <div className="w-12 h-12 bg-gradient-to-r from-fuchsia-500 to-violet-500 rounded-full flex items-center justify-center shadow-xl shadow-fuchsia-500/20 shrink-0 opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100 transition-all duration-300">
+                    <Play size={18} className="text-white ml-0.5" fill="white" />
                   </div>
                 </button>
               </div>
 
-              {/* Songs List */}
-              <div className="rounded-2xl border border-white/[0.04] overflow-hidden">
-                {songs.slice(1).map((s, i) => <SongRow key={`${s.id}-${i}`} song={s} index={i + 1} songList={songs} />)}
+              {/* All Songs */}
+              <div>
+                <p className="text-[10px] text-white/25 font-semibold uppercase tracking-wider mb-2 px-1">All Results ({songs.length - 1})</p>
+                <div className="rounded-2xl border border-white/[0.04] overflow-hidden">
+                  {songs.slice(1).map((s, i) => <SongRow key={`${s.id}-${i}`} song={s} index={i + 1} songList={songs} />)}
+                </div>
               </div>
             </>
           )}
