@@ -1,4 +1,4 @@
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Mic2, ListMusic, Plus, Check, Download, Volume1, Volume2 } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Mic2, ListMusic, Plus, Check, Download, Volume2 } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { formatDuration } from '../data/mockData';
 import { getLyrics } from '../data/api';
@@ -139,7 +139,12 @@ export default function ExpandedPlayer() {
             <p className="text-[9px] text-white/35 uppercase tracking-[0.25em] font-medium">Now Playing</p>
             <p className="text-[11px] text-white/60 font-medium mt-0.5 max-w-[200px] mx-auto truncate">{currentSong.album || 'Library'}</p>
           </div>
-          <div className="w-9" />
+          <button onClick={() => setActivePanel(p => p === 'volume' ? null : 'volume')}
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 active:scale-90 border border-white/[0.05] ${
+              activePanel === 'volume' ? 'bg-white/10 text-white' : 'bg-white/[0.06] text-white/40'
+            }`}>
+            <Volume2 size={15} />
+          </button>
         </div>
 
         {/* Main Content Area — vertical on mobile, horizontal on desktop */}
@@ -300,38 +305,41 @@ export default function ExpandedPlayer() {
         </div>
       </div>
 
-      {/* Volume — right side vertical bar (app volume) */}
-      <div className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 w-[28px] h-[160px] sm:h-[200px] flex flex-col items-center py-3 z-10">
-        <Volume2 size={11} className="text-white/30 mb-2 shrink-0" />
-        <div ref={volumeRef} className="flex-1 w-[28px] flex items-center justify-center cursor-pointer relative touch-none"
-          onMouseDown={(e) => {
-            e.preventDefault();
-            const rect = volumeRef.current.getBoundingClientRect();
-            const pct = 1 - Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
-            setVolume(pct);
-            const onMove = (ev) => { const p = 1 - Math.max(0, Math.min(1, (ev.clientY - rect.top) / rect.height)); setVolume(p); };
-            const onEnd = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onEnd); };
-            document.addEventListener('mousemove', onMove);
-            document.addEventListener('mouseup', onEnd);
-          }}
-          onTouchStart={(e) => {
-            e.preventDefault();
-            const rect = volumeRef.current.getBoundingClientRect();
-            const pct = 1 - Math.max(0, Math.min(1, (e.touches[0].clientY - rect.top) / rect.height));
-            setVolume(pct);
-            const onMove = (ev) => { ev.preventDefault(); const p = 1 - Math.max(0, Math.min(1, (ev.touches[0].clientY - rect.top) / rect.height)); setVolume(p); };
-            const onEnd = () => { document.removeEventListener('touchmove', onMove); document.removeEventListener('touchend', onEnd); };
-            document.addEventListener('touchmove', onMove, { passive: false });
-            document.addEventListener('touchend', onEnd);
-          }}>
-          <div className="absolute inset-y-0 w-[3px] bg-white/[0.06] rounded-full left-1/2 -translate-x-1/2" />
-          <div className="absolute bottom-0 w-[3px] bg-white/50 rounded-full left-1/2 -translate-x-1/2 transition-[height] duration-150"
-            style={{ height: `${volume * 100}%` }} />
-          <div className="absolute w-[10px] h-[10px] bg-white rounded-full left-1/2 -translate-x-1/2 transition-[bottom] duration-150"
-            style={{ bottom: `calc(${volume * 100}% - 5px)` }} />
+      {/* Volume — premium right bar on click */}
+      {activePanel === 'volume' && (
+        <div className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 w-[40px] h-[200px] sm:h-[240px] flex flex-col items-center py-5 z-10 bg-white/[0.04] backdrop-blur-xl rounded-[20px] border border-white/[0.06]"
+          style={{ animation: 'scaleIn 0.3s cubic-bezier(0.22,1,0.36,1) both' }}>
+          <Volume2 size={13} className="text-white/50 mb-3 shrink-0" />
+          <div ref={volumeRef} className="flex-1 w-[40px] flex items-center justify-center cursor-pointer relative touch-none"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              const rect = volumeRef.current.getBoundingClientRect();
+              const pct = 1 - Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+              setVolume(pct);
+              const onMove = (ev) => { const p = 1 - Math.max(0, Math.min(1, (ev.clientY - rect.top) / rect.height)); setVolume(p); };
+              const onEnd = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onEnd); };
+              document.addEventListener('mousemove', onMove);
+              document.addEventListener('mouseup', onEnd);
+            }}
+            onTouchStart={(e) => {
+              e.preventDefault();
+              const rect = volumeRef.current.getBoundingClientRect();
+              const pct = 1 - Math.max(0, Math.min(1, (e.touches[0].clientY - rect.top) / rect.height));
+              setVolume(pct);
+              const onMove = (ev) => { ev.preventDefault(); const p = 1 - Math.max(0, Math.min(1, (ev.touches[0].clientY - rect.top) / rect.height)); setVolume(p); };
+              const onEnd = () => { document.removeEventListener('touchmove', onMove); document.removeEventListener('touchend', onEnd); };
+              document.addEventListener('touchmove', onMove, { passive: false });
+              document.addEventListener('touchend', onEnd);
+            }}>
+            <div className="absolute inset-y-0 w-[4px] bg-white/[0.08] rounded-full left-1/2 -translate-x-1/2" />
+            <div className="absolute bottom-0 w-[4px] bg-white rounded-full left-1/2 -translate-x-1/2 transition-[height] duration-150"
+              style={{ height: `${volume * 100}%` }} />
+            <div className="absolute w-[14px] h-[14px] bg-white rounded-full left-1/2 -translate-x-1/2 shadow-md transition-[bottom] duration-150"
+              style={{ bottom: `calc(${volume * 100}% - 7px)` }} />
+          </div>
+          <span className="text-[9px] text-white/40 font-bold mt-3 tabular-nums shrink-0">{Math.round(volume * 100)}</span>
         </div>
-        <Volume1 size={11} className="text-white/20 mt-2 shrink-0" />
-      </div>
+      )}
 
     </div>
   );
