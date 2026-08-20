@@ -13,7 +13,12 @@ export function addToHistory(song) {
   playedSet.add(song.id);
   const history = getHistory();
   const updated = [{ ...song, playedAt: Date.now() }, ...history.filter(s => s.id !== song.id)].slice(0, 100);
-  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(updated)); } catch {}
+  try { 
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+    // Track total plays count separately (history is capped at 100)
+    const total = parseInt(localStorage.getItem('ma_total_plays') || '0') + 1;
+    localStorage.setItem('ma_total_plays', total.toString());
+  } catch {}
 }
 
 export function isPlayed(id) {
@@ -116,7 +121,9 @@ function analyzePrefs() {
     .slice(0, 5)
     .map(([name]) => name);
 
-  return { topArtists, totalPlays: history.length };
+  const totalPlays = parseInt(localStorage.getItem('ma_total_plays') || '0') || history.length;
+
+  return { topArtists, totalPlays };
 }
 
 export { analyzePrefs as analyzePreferences };
