@@ -22,9 +22,9 @@ export default function AudioSettings() {
           <div className="w-10 h-1 bg-white/20 rounded-full" />
         </div>
 
-        <div className="px-5 pb-8">
+        <div className="px-4 sm:px-5 pb-6 sm:pb-8">
           {/* Header */}
-          <div className="flex items-center justify-between mb-6 pt-2">
+          <div className="flex items-center justify-between mb-4 sm:mb-6 pt-2">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-rose-500/15 flex items-center justify-center">
                 <Waves size={16} className="text-rose-400" />
@@ -37,23 +37,23 @@ export default function AudioSettings() {
           </div>
 
           {/* Crossfade */}
-          <div className="p-4 bg-[#111] rounded-2xl mb-3 border border-white/[0.04]">
+          <div className="p-3 sm:p-4 bg-[#111] rounded-2xl mb-3 border border-white/[0.04]">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-white/[0.04] flex items-center justify-center">
                   <Timer size={18} className="text-rose-400" />
                 </div>
                 <div>
-                  <p className="text-[14px] text-white font-semibold">Crossfade</p>
-                  <p className="text-[11px] text-[#666]">Smooth transition between songs</p>
+                  <p className="text-[12px] sm:text-[14px] text-white font-semibold">Crossfade</p>
+                  <p className="text-[9px] sm:text-[11px] text-[#666]">Smooth transition between songs</p>
                 </div>
               </div>
-              <span className="text-[15px] text-rose-400 font-bold tabular-nums">{crossfade}s</span>
+              <span className="text-[12px] sm:text-[15px] text-rose-400 font-bold tabular-nums">{crossfade}s</span>
             </div>
             <input type="range" min="0" max="12" step="1" value={crossfade}
               onChange={e => setCrossfade(parseInt(e.target.value))}
               className="w-full h-2.5 rounded-full appearance-none bg-[#1a1a1a] cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-rose-500 [&::-webkit-slider-thumb]:shadow-xl [&::-webkit-slider-thumb]:shadow-rose-500/30 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-rose-300" />
-            <div className="flex justify-between text-[10px] text-[#555] mt-2 px-1"><span>Off</span><span>6s</span><span>12s</span></div>
+            <div className="flex justify-between text-[9px] sm:text-[11px] text-[#555] mt-2 px-1"><span>Off</span><span>6s</span><span>12s</span></div>
           </div>
         </div>
       </div>
