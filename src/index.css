@@ -170,6 +170,8 @@ img[loading="lazy"][src] { opacity: 1; transform: scale(1); }
 /* ─── Smooth Focus Ring ─── */
 input:focus, button:focus-visible {
   outline: none;
+}
+button:focus-visible {
   box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.3);
   border-radius: inherit;
 }

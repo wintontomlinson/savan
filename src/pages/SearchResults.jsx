@@ -65,8 +65,7 @@ export default function SearchResults() {
             onChange={e => setQuery(e.target.value)}
             onFocus={() => { if (query.length >= 2 && suggestions.length > 0) setShowSuggestions(true); }}
             placeholder="Search songs, artists, albums..."
-            style={{ borderRadius: '9999px' }}
-            className="w-full bg-[#2a2a2d] text-white text-[14px] font-medium pl-11 pr-11 py-3 placeholder:text-white/30 placeholder:font-normal focus:outline-none focus:bg-[#333336] transition-all duration-300 border border-[#3a3a3d]"
+            className="w-full bg-[#1c1c1e] text-white text-[14px] font-medium pl-11 pr-11 py-3 rounded-full placeholder:text-white/30 placeholder:font-normal focus:outline-none transition-all duration-300 border border-white/[0.06] focus:border-white/[0.1] focus:bg-[#222225]"
             autoComplete="off"
             spellCheck="false"
           />
