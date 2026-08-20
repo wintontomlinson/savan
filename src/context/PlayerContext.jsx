@@ -175,16 +175,6 @@ export function PlayerProvider({ children }) {
     bassBoostRef.current = on;
     setBassBoostOn(on);
     if (on) setVocalModeState(false);
-    if (on) {
-      cancelFade();
-      const inactive = activeRef.current === 'A' ? audioB.current : audioA.current;
-      if (inactive) {
-        inactive.pause();
-        inactive.removeAttribute('src');
-        inactive.load();
-        inactive.volume = 0;
-      }
-    }
     if (!enhancedRef.current) {
       const ok = initEnhancement();
       if (!ok) return;
@@ -204,7 +194,10 @@ export function PlayerProvider({ children }) {
   const [vocalMode, setVocalModeState] = useState(false);
   const setVocalMode = useCallback((on) => {
     setVocalModeState(on);
-    if (on) setBassBoostOn(false);
+    if (on) {
+      bassBoostRef.current = false;
+      setBassBoostOn(false);
+    }
     if (!enhancedRef.current) {
       const ok = initEnhancement();
       if (!ok) return;
