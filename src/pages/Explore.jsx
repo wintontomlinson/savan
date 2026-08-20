@@ -97,37 +97,34 @@ export default function Explore() {
     playSong(shuffled[0], shuffled);
   };
 
+  const playDiscoveryMix = () => {
+    const uniqueSongs = [...new Map(Object.values(browseData).flat().map(song => [song.id, song])).values()];
+    if (uniqueSongs.length) shufflePlay(uniqueSongs);
+  };
+
   return (
     <div className="pb-8 pt-3">
-      <div className="mb-8 flex items-end justify-between border-b border-white/[0.07] pb-5">
+      <div className="mb-7 flex items-end justify-between">
         <div>
-          <h1 className="text-[26px] font-bold tracking-tight text-white sm:text-3xl">Explore</h1>
-          <p className="mt-1 text-[13px] text-white/45">New songs, artists and playlists from across music.</p>
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-rose-400">Discover</p>
+          <h1 className="text-[27px] font-bold tracking-tight text-white sm:text-3xl">Explore music</h1>
+          <p className="mt-1 text-[13px] text-white/45">Fresh sounds, familiar artists, no filler.</p>
         </div>
-        <button onClick={() => loadBrowse(BROWSE_SECTIONS[0], true)} className="flex shrink-0 items-center gap-2 rounded-full bg-rose-500 px-4 py-2.5 text-[11px] font-bold text-white transition-colors hover:bg-rose-400 active:scale-95">
-          <Play size={13} fill="currentColor" /> Play trending
+        <button onClick={playDiscoveryMix} className="flex shrink-0 items-center gap-2 rounded-full border border-white/[0.12] bg-white/[0.06] px-4 py-2.5 text-[11px] font-bold text-white transition-colors hover:bg-white/[0.1] active:scale-95">
+          <Shuffle size={13} /> Shuffle
         </button>
       </div>
 
-      <section className="mb-9">
+      <section className="mb-10">
         <div className="mb-4 flex items-end justify-between gap-4">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-rose-300/70">Find a feeling</p>
-            <h2 className="mt-1 text-xl font-bold tracking-tight text-white">Browse by mood</h2>
+            <h2 className="text-[17px] font-bold tracking-tight text-white">Start with a mood</h2>
+            <p className="mt-1 text-[11px] text-white/35">Tap a collection and we will build the queue.</p>
           </div>
-          <span className="hidden text-[11px] text-white/35 sm:block">Play a fresh mix from any collection</span>
         </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {BROWSE_SECTIONS.map((sec, index) => (
-            <button key={sec.id} onClick={() => loadBrowse(sec, true)}
-              className={`group relative min-h-[122px] overflow-hidden rounded-2xl border border-white/[0.07] bg-gradient-to-br ${sec.color} p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:border-white/[0.16] hover:shadow-xl hover:shadow-black/25 active:scale-[0.98]`}>
-              <span className="absolute right-3 top-3 text-[10px] font-bold text-white/25">0{index + 1}</span>
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/20 ring-1 ring-white/[0.08] backdrop-blur-sm">
-                <sec.icon size={18} className={sec.iconColor} />
-              </div>
-              <p className="mt-6 text-[13px] font-bold text-white">{sec.label}</p>
-              <ArrowUpRight size={15} className="absolute bottom-4 right-4 text-white/0 transition-all duration-300 group-hover:text-white/80" />
-            </button>
+            <CollectionTile key={sec.id} section={sec} song={browseData[sec.id]?.[0]} featured={index === 0} onClick={() => loadBrowse(sec, true)} />
           ))}
         </div>
       </section>
@@ -135,8 +132,8 @@ export default function Explore() {
       <section className="mb-10 animate-in" style={{ animationDelay: '0.05s' }}>
         <div className="mb-4 flex items-end justify-between">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-rose-300/70">Live from the music catalog</p>
-            <h2 className="mt-1 text-xl font-bold tracking-tight text-white">Top artists</h2>
+            <h2 className="text-[17px] font-bold tracking-tight text-white">Artists in rotation</h2>
+            <p className="mt-1 text-[11px] text-white/35">From the tracks playing across Explore.</p>
           </div>
           <span className="text-[11px] text-white/35">{artists.length} artists</span>
         </div>
@@ -150,10 +147,10 @@ export default function Explore() {
         </div>)}
       </section>
 
-      <div className="mb-5 flex items-end justify-between">
+      <div className="mb-5 flex items-end justify-between border-t border-white/[0.06] pt-7">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-rose-300/70">Ready when you are</p>
-          <h2 className="mt-1 text-xl font-bold tracking-tight text-white">Curated collections</h2>
+          <h2 className="text-[17px] font-bold tracking-tight text-white">Keep exploring</h2>
+          <p className="mt-1 text-[11px] text-white/35">Full collections, updated from the catalog.</p>
         </div>
       </div>
 
@@ -249,6 +246,28 @@ function ArtistCard({ artist, isActive, onClick }) {
       <p className={`text-[11px] font-semibold text-center leading-tight truncate w-20 sm:w-[90px] transition-colors duration-200 ${
         isActive ? 'text-rose-400' : 'text-white/70 group-hover:text-white'
       }`}>{artist.name}</p>
+    </button>
+  );
+}
+
+function CollectionTile({ section, song, featured, onClick }) {
+  return (
+    <button onClick={onClick} className={`group relative min-h-[132px] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#111] p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:border-white/[0.18] hover:shadow-2xl hover:shadow-black/30 active:scale-[0.98] ${featured ? 'col-span-2 sm:row-span-2 sm:min-h-[276px]' : ''}`}>
+      {song?.thumbnail && <img src={song.thumbnail} alt="" className="absolute inset-0 h-full w-full object-cover opacity-45 transition-transform duration-500 group-hover:scale-110" loading="lazy" />}
+      <div className={`absolute inset-0 bg-gradient-to-br ${section.color} ${featured ? 'via-black/25 to-black/85' : 'from-black/10 to-black/80'}`} />
+      <div className="relative flex h-full flex-col justify-between">
+        <div className="flex items-center justify-between">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/30 backdrop-blur-md ring-1 ring-white/[0.12]">
+            <section.icon size={18} className={section.iconColor} />
+          </div>
+          <ArrowUpRight size={16} className="text-white/45 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-white" />
+        </div>
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/50">{featured ? 'Featured mix' : 'Collection'}</p>
+          <p className={`${featured ? 'mt-1 text-[22px] sm:text-[25px]' : 'mt-1 text-[14px]'} font-bold tracking-tight text-white`}>{section.label}</p>
+          {featured && <p className="mt-1 text-[11px] text-white/55">A fresh queue from today&apos;s picks</p>}
+        </div>
+      </div>
     </button>
   );
 }
