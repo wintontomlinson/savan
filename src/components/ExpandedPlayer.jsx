@@ -139,70 +139,51 @@ export default function ExpandedPlayer() {
     <div className={`fixed inset-0 z-[100] flex flex-col bg-[#050505] ${closing ? 'animate-[slideDown_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards]' : 'player-expanded-enter'}`}
       onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       
-      {/* Background — dynamic color from album art */}
+      {/* Background — elegant album color wash */}
       <div className="absolute inset-0 overflow-hidden">
-        <img src={currentSong.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover blur-[150px] scale-[2] opacity-30" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-[#050505]/70 to-[#050505]" />
-        {/* Audio Visualizer Bars — behind everything */}
-        {isPlaying && !hasPanel && <AudioVisualizer />}
-        {/* Animated disco glow orbs */}
-        {isPlaying && (
-          <>
-            <div className="absolute top-[20%] left-[10%] w-[200px] h-[200px] bg-rose-500/[0.08] rounded-full blur-[80px] animate-float" />
-            <div className="absolute bottom-[30%] right-[5%] w-[180px] h-[180px] bg-purple-500/[0.06] rounded-full blur-[80px] animate-float" style={{ animationDelay: '1.5s' }} />
-            <div className="absolute top-[50%] right-[20%] w-[120px] h-[120px] bg-blue-500/[0.05] rounded-full blur-[60px] animate-float" style={{ animationDelay: '3s' }} />
-          </>
-        )}
+        <img src={currentSong.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover blur-[100px] scale-[1.8] opacity-20 saturate-150" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-[#050505]/80 to-[#050505]" />
       </div>
 
       <div className="relative flex-1 flex flex-col min-h-0">
         
         {/* Top Bar */}
         <div className="flex items-center justify-between px-4 sm:px-5 pt-3 sm:pt-4 pb-1 sm:pb-2 shrink-0">
-          <button onClick={handleClose} className="w-9 h-9 rounded-full bg-white/[0.08] backdrop-blur-md flex items-center justify-center active:scale-90 transition-all duration-200 border border-white/[0.06]">
-            <ChevronDown size={20} className="text-white/90" />
+          <button onClick={handleClose} className="w-9 h-9 rounded-full bg-white/[0.06] backdrop-blur-md flex items-center justify-center active:scale-90 transition-all duration-200 border border-white/[0.05]">
+            <ChevronDown size={20} className="text-white/80" />
           </button>
           <div className="text-center flex-1 mx-4">
-            <p className="text-[9px] text-white/40 uppercase tracking-[0.25em] font-medium">Now Playing</p>
-            <p className="text-[11px] text-white/70 font-medium mt-0.5 max-w-[200px] mx-auto truncate">{currentSong.album || 'Library'}</p>
+            <p className="text-[9px] text-white/35 uppercase tracking-[0.25em] font-medium">Now Playing</p>
+            <p className="text-[11px] text-white/60 font-medium mt-0.5 max-w-[200px] mx-auto truncate">{currentSong.album || 'Library'}</p>
           </div>
           <button onClick={() => togglePanel('volume')}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 backdrop-blur-md border border-white/[0.06] ${
-              activePanel === 'volume' ? 'bg-white/15 text-white' : 'bg-white/[0.08] text-white/50 hover:text-white/80'
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 backdrop-blur-md border border-white/[0.05] ${
+              activePanel === 'volume' ? 'bg-white/12 text-white' : 'bg-white/[0.06] text-white/50 hover:text-white/70'
             }`}>
             <Volume2 size={16} />
           </button>
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col items-center justify-center px-5 sm:px-10 gap-2 min-h-0 overflow-hidden">
+        <div className="flex-1 flex flex-col items-center justify-center px-5 sm:px-10 gap-3 min-h-0 overflow-hidden">
           
-          {/* Album Art — vinyl/disco style */}
+          {/* Album Art — premium square with rounded corners */}
           <div className={`relative transition-all duration-600 ease-[cubic-bezier(0.16,1,0.3,1)] shrink-0 ${
-            hasPanel ? 'w-[70px] h-[70px] sm:w-[90px] sm:h-[90px]' : 'w-[200px] h-[200px] sm:w-[250px] sm:h-[250px] md:w-[280px] md:h-[280px]'
+            hasPanel ? 'w-[70px] h-[70px] sm:w-[90px] sm:h-[90px]' : 'w-[200px] h-[200px] sm:w-[260px] sm:h-[260px] md:w-[280px] md:h-[280px]'
           }`}>
-            {/* Vinyl disc behind album art */}
-            {!hasPanel && isPlaying && (
-              <div className="absolute inset-[-15%] rounded-full bg-gradient-to-br from-[#1a1a1a] via-[#111] to-[#0a0a0a] border border-white/[0.05] animate-[spin_8s_linear_infinite]">
-                <div className="absolute inset-[35%] rounded-full border border-white/[0.08]" />
-                <div className="absolute inset-[45%] rounded-full bg-[#080808] border border-white/[0.06]" />
-              </div>
-            )}
-            {/* Shadow */}
+            {/* Elevated shadow */}
             {!hasPanel && (
-              <div className="absolute inset-2 rounded-full bg-black/70 blur-[25px] -z-10" />
+              <div className="absolute inset-3 rounded-[28px] bg-black/80 blur-[30px] translate-y-4 -z-10" />
             )}
-            {/* Album art image */}
-            <div className={`relative w-full h-full rounded-full overflow-hidden ring-2 ring-white/[0.08] transition-all duration-600 ${
-              isPlaying ? 'shadow-2xl shadow-rose-500/10 animate-[spin_20s_linear_infinite]' : 'shadow-xl shadow-black/60'
+            {/* Art */}
+            <div className={`w-full h-full rounded-[24px] overflow-hidden transition-all duration-500 ${
+              isPlaying ? 'scale-100 ring-1 ring-white/[0.08]' : 'scale-[0.96] ring-1 ring-white/[0.05]'
             }`}>
               <img src={currentSong.thumbnail} alt="" className="w-full h-full object-cover" />
-              {/* Center hole */}
-              <div className="absolute inset-[42%] rounded-full bg-[#0a0a0a] ring-2 ring-white/[0.1] shadow-inner" />
             </div>
-            {/* Glow ring when playing */}
+            {/* Subtle ambient glow */}
             {isPlaying && !hasPanel && (
-              <div className="absolute -inset-4 rounded-full bg-gradient-to-r from-rose-500/[0.12] via-purple-500/[0.08] to-rose-500/[0.12] blur-2xl playing-pulse -z-10" />
+              <div className="absolute -inset-6 rounded-[36px] opacity-50 -z-10" style={{ background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.03) 0%, transparent 70%)' }} />
             )}
           </div>
 
@@ -299,25 +280,21 @@ export default function ExpandedPlayer() {
           {/* Main Playback Controls */}
           <div className="flex items-center justify-between max-w-[260px] sm:max-w-[280px] mx-auto mb-3 sm:mb-5">
             <button onClick={toggleShuffle} className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-200 active:scale-85 ${
-              shuffleMode ? 'text-rose-400 bg-rose-500/10' : 'text-white/30 hover:text-white/60'
+              shuffleMode ? 'text-white bg-white/[0.08]' : 'text-white/30 hover:text-white/60'
             }`}>
               <Shuffle size={16} />
             </button>
-            <button onClick={handlePrev} className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white active:scale-85 transition-all duration-150 hover:bg-white/[0.06]">
-              <SkipBack size={24} fill="white" />
+            <button onClick={handlePrev} className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white/90 active:scale-85 transition-all duration-150 hover:bg-white/[0.04]">
+              <SkipBack size={24} fill="currentColor" />
             </button>
-            <button onClick={togglePlay} className={`w-[62px] h-[62px] sm:w-[72px] sm:h-[72px] rounded-full flex items-center justify-center active:scale-90 transition-all duration-200 hover:scale-[1.03] ${
-              isPlaying 
-                ? 'bg-white shadow-[0_0_30px_rgba(255,255,255,0.2),0_0_60px_rgba(225,29,72,0.1)]' 
-                : 'bg-white shadow-[0_8px_30px_rgba(255,255,255,0.15)]'
-            }`}>
-              {isPlaying ? <Pause size={26} className="text-black" fill="black" /> : <Play size={26} className="text-black ml-1" fill="black" />}
+            <button onClick={togglePlay} className="w-[60px] h-[60px] sm:w-[68px] sm:h-[68px] bg-white rounded-full flex items-center justify-center active:scale-90 transition-all duration-200 shadow-[0_4px_20px_rgba(255,255,255,0.1)]">
+              {isPlaying ? <Pause size={24} className="text-black" fill="black" /> : <Play size={24} className="text-black ml-0.5" fill="black" />}
             </button>
-            <button onClick={handleNext} className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white active:scale-85 transition-all duration-150 hover:bg-white/[0.06]">
-              <SkipForward size={24} fill="white" />
+            <button onClick={handleNext} className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white/90 active:scale-85 transition-all duration-150 hover:bg-white/[0.04]">
+              <SkipForward size={24} fill="currentColor" />
             </button>
             <button onClick={cycleRepeat} className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-200 active:scale-85 ${
-              repeatMode !== 'none' ? 'text-rose-400 bg-rose-500/10' : 'text-white/30 hover:text-white/60'
+              repeatMode !== 'none' ? 'text-white bg-white/[0.08]' : 'text-white/30 hover:text-white/60'
             }`}>
               {repeatMode === 'one' ? <Repeat1 size={16} /> : <Repeat size={16} />}
             </button>
@@ -494,22 +471,4 @@ function PlainLyrics({ text, currentTime, duration }) {
 }
 
 
-
-// Audio Visualizer — animated bars that simulate music reaction
-function AudioVisualizer() {
-  return (
-    <div className="absolute bottom-0 left-0 right-0 h-[40%] flex items-end justify-center gap-[3px] px-4 opacity-40 pointer-events-none">
-      {Array.from({ length: 32 }).map((_, i) => (
-        <div
-          key={i}
-          className="flex-1 max-w-[8px] rounded-t-full bg-gradient-to-t from-rose-500/60 to-purple-500/30"
-          style={{
-            animation: `visualizerBar ${0.8 + Math.random() * 0.8}s ease-in-out infinite alternate`,
-            animationDelay: `${i * 0.05}s`,
-            height: `${15 + Math.random() * 40}%`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
+// End of file
