@@ -24,6 +24,16 @@ export default function ExpandedPlayer() {
     setActivePanel(prev => prev === panel ? null : panel);
   }, []);
 
+  // Auto-hide volume after 3s of no interaction
+  const volumeTimerRef = useRef(null);
+  useEffect(() => {
+    if (activePanel === 'volume') {
+      if (volumeTimerRef.current) clearTimeout(volumeTimerRef.current);
+      volumeTimerRef.current = setTimeout(() => setActivePanel(null), 3000);
+    }
+    return () => { if (volumeTimerRef.current) clearTimeout(volumeTimerRef.current); };
+  }, [activePanel, volume]);
+
   // Close all panels
   const closePanels = useCallback(() => {
     setActivePanel(null);
@@ -329,42 +339,44 @@ export default function ExpandedPlayer() {
         </div>
       </div>
 
-      {/* Volume — smooth side slider */}
+      {/* Volume — auto-hide side bar */}
       {activePanel === 'volume' && (
-        <div className="absolute right-5 sm:right-6 top-1/2 -translate-y-1/2 w-[28px] h-[180px] sm:h-[220px] flex flex-col items-center py-3 z-10"
+        <div className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 w-[36px] h-[220px] sm:h-[280px] flex flex-col items-center py-4 z-10"
           style={{ animation: 'scaleIn 0.3s cubic-bezier(0.22,1,0.36,1) both' }}>
           
-          <Volume2 size={11} className="text-white/30 mb-2.5 shrink-0" />
+          <Volume2 size={13} className="text-white/40 mb-3 shrink-0" />
 
-          <div ref={volumeRef} className="flex-1 w-[28px] flex items-center justify-center cursor-pointer relative touch-none"
+          <div ref={volumeRef} className="flex-1 w-[36px] flex items-center justify-center cursor-pointer relative touch-none"
             onMouseDown={(e) => {
               e.preventDefault();
+              if (volumeTimerRef.current) clearTimeout(volumeTimerRef.current);
               const rect = volumeRef.current.getBoundingClientRect();
               const pct = 1 - Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
               setVolume(pct);
               const onMove = (ev) => { const p = 1 - Math.max(0, Math.min(1, (ev.clientY - rect.top) / rect.height)); setVolume(p); };
-              const onEnd = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onEnd); };
+              const onEnd = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onEnd); volumeTimerRef.current = setTimeout(() => setActivePanel(null), 3000); };
               document.addEventListener('mousemove', onMove);
               document.addEventListener('mouseup', onEnd);
             }}
             onTouchStart={(e) => {
               e.preventDefault();
+              if (volumeTimerRef.current) clearTimeout(volumeTimerRef.current);
               const rect = volumeRef.current.getBoundingClientRect();
               const pct = 1 - Math.max(0, Math.min(1, (e.touches[0].clientY - rect.top) / rect.height));
               setVolume(pct);
               const onMove = (ev) => { ev.preventDefault(); const p = 1 - Math.max(0, Math.min(1, (ev.touches[0].clientY - rect.top) / rect.height)); setVolume(p); };
-              const onEnd = () => { document.removeEventListener('touchmove', onMove); document.removeEventListener('touchend', onEnd); };
+              const onEnd = () => { document.removeEventListener('touchmove', onMove); document.removeEventListener('touchend', onEnd); volumeTimerRef.current = setTimeout(() => setActivePanel(null), 3000); };
               document.addEventListener('touchmove', onMove, { passive: false });
               document.addEventListener('touchend', onEnd);
             }}>
-            <div className="absolute inset-y-0 w-[2px] bg-white/[0.06] rounded-full left-1/2 -translate-x-1/2" />
-            <div className="absolute bottom-0 w-[2px] bg-white/50 rounded-full left-1/2 -translate-x-1/2 transition-[height] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]"
+            <div className="absolute inset-y-0 w-[4px] bg-white/[0.08] rounded-full left-1/2 -translate-x-1/2" />
+            <div className="absolute bottom-0 w-[4px] bg-white rounded-full left-1/2 -translate-x-1/2 transition-[height] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]"
               style={{ height: `${volume * 100}%` }} />
-            <div className="absolute w-[10px] h-[10px] bg-white rounded-full left-1/2 -translate-x-1/2 shadow-sm transition-[bottom] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]"
-              style={{ bottom: `calc(${volume * 100}% - 5px)` }} />
+            <div className="absolute w-[14px] h-[14px] bg-white rounded-full left-1/2 -translate-x-1/2 shadow-md transition-[bottom] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]"
+              style={{ bottom: `calc(${volume * 100}% - 7px)` }} />
           </div>
 
-          <span className="text-[8px] text-white/25 font-medium mt-2.5 tabular-nums shrink-0">{Math.round(volume * 100)}</span>
+          <span className="text-[10px] text-white/40 font-bold mt-3 tabular-nums shrink-0">{Math.round(volume * 100)}</span>
         </div>
       )}
     </div>
