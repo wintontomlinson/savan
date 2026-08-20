@@ -242,61 +242,61 @@ export default function ExpandedPlayer() {
         </div>
 
         {/* Bottom Controls */}
-        <div className="shrink-0 px-5 sm:px-8 pb-3 sm:pb-5 pt-0">
+        <div className="shrink-0 px-5 sm:px-8 pb-4 sm:pb-6 pt-1">
           
           {/* Song Info Row */}
-          <div className="flex items-center justify-between mb-2 sm:mb-4 max-w-sm mx-auto">
+          <div className="flex items-center justify-between mb-3 sm:mb-4 max-w-sm mx-auto">
             <div className="min-w-0 flex-1 mr-3">
-              <h1 className="text-[17px] sm:text-[22px] font-bold text-white truncate leading-tight tracking-tight">{currentSong.title}</h1>
-              <p className="text-[12px] sm:text-[13px] text-white/40 truncate mt-0.5">{currentSong.artist}</p>
+              <h1 className="text-[18px] sm:text-[22px] font-bold text-white truncate leading-tight">{currentSong.title}</h1>
+              <p className="text-[13px] text-white/45 truncate mt-1">{currentSong.artist}</p>
             </div>
             <button onClick={() => toggleLike(currentSong.id)} 
-              className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all duration-250 active:scale-85 ${
-                liked ? 'text-rose-500 bg-rose-500/[0.12]' : 'text-white/20 bg-white/[0.04] hover:bg-white/[0.08] hover:text-white/40'
+              className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-250 active:scale-85 ${
+                liked ? 'text-rose-500 bg-rose-500/[0.1]' : 'text-white/25 hover:text-white/50'
               }`}>
-              <Heart size={20} fill={liked ? 'currentColor' : 'none'} strokeWidth={liked ? 0 : 1.5} />
+              <Heart size={22} fill={liked ? 'currentColor' : 'none'} strokeWidth={liked ? 0 : 1.5} />
             </button>
           </div>
 
           {/* Progress Bar */}
-          <div className="max-w-sm mx-auto mb-3 sm:mb-5">
+          <div className="max-w-sm mx-auto mb-4 sm:mb-5">
             <div ref={progressRef}
-              className="player-progress-track w-full h-[5px] bg-white/[0.08] rounded-full group"
+              className="player-progress-track w-full h-[4px] bg-white/[0.1] rounded-full group"
               onMouseDown={handleSeekStart}
               onTouchStart={handleSeekStart}>
-              <div className={`h-full rounded-full relative transition-[width] duration-100 ease-linear ${isDragging ? 'bg-rose-400' : 'bg-white'}`}
+              <div className={`h-full rounded-full relative transition-[width] duration-100 ease-linear ${isDragging ? 'bg-white' : 'bg-white/80'}`}
                 style={{ width: `${displayProgress * 100}%` }}>
-                <div className={`absolute right-0 top-1/2 -translate-y-1/2 w-[16px] h-[16px] bg-white rounded-full shadow-lg shadow-black/40 transition-all duration-150 ${
+                <div className={`absolute right-0 top-1/2 -translate-y-1/2 w-[14px] h-[14px] bg-white rounded-full shadow-md transition-all duration-150 ${
                   isDragging ? 'scale-[1.3] opacity-100' : 'scale-100 opacity-0 group-hover:opacity-100'
                 }`} />
               </div>
             </div>
             <div className="flex justify-between mt-2 text-[10px] text-white/30 tabular-nums font-medium">
               <span>{formatDuration(displayTime)}</span>
-              <span>-{formatDuration(Math.max(0, duration - displayTime))}</span>
+              <span>{formatDuration(duration)}</span>
             </div>
           </div>
 
           {/* Main Playback Controls */}
-          <div className="flex items-center justify-between max-w-[260px] sm:max-w-[280px] mx-auto mb-3 sm:mb-5">
-            <button onClick={toggleShuffle} className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-200 active:scale-85 ${
-              shuffleMode ? 'text-white bg-white/[0.08]' : 'text-white/30 hover:text-white/60'
+          <div className="flex items-center justify-between max-w-[280px] sm:max-w-[300px] mx-auto mb-4 sm:mb-5">
+            <button onClick={toggleShuffle} className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 active:scale-85 ${
+              shuffleMode ? 'text-white' : 'text-white/30 hover:text-white/60'
             }`}>
-              <Shuffle size={16} />
+              <Shuffle size={18} />
             </button>
-            <button onClick={handlePrev} className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white/90 active:scale-85 transition-all duration-150 hover:bg-white/[0.04]">
-              <SkipBack size={24} fill="currentColor" />
+            <button onClick={handlePrev} className="w-12 h-12 rounded-full flex items-center justify-center text-white active:scale-85 transition-all duration-150">
+              <SkipBack size={26} fill="white" />
             </button>
-            <button onClick={togglePlay} className="w-[60px] h-[60px] sm:w-[68px] sm:h-[68px] bg-white rounded-full flex items-center justify-center active:scale-90 transition-all duration-200 shadow-[0_4px_20px_rgba(255,255,255,0.1)]">
-              {isPlaying ? <Pause size={24} className="text-black" fill="black" /> : <Play size={24} className="text-black ml-0.5" fill="black" />}
+            <button onClick={togglePlay} className="w-16 h-16 sm:w-[72px] sm:h-[72px] bg-white rounded-full flex items-center justify-center active:scale-90 transition-all duration-200 shadow-[0_4px_24px_rgba(255,255,255,0.12)]">
+              {isPlaying ? <Pause size={28} className="text-black" fill="black" /> : <Play size={28} className="text-black ml-1" fill="black" />}
             </button>
-            <button onClick={handleNext} className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white/90 active:scale-85 transition-all duration-150 hover:bg-white/[0.04]">
-              <SkipForward size={24} fill="currentColor" />
+            <button onClick={handleNext} className="w-12 h-12 rounded-full flex items-center justify-center text-white active:scale-85 transition-all duration-150">
+              <SkipForward size={26} fill="white" />
             </button>
-            <button onClick={cycleRepeat} className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-200 active:scale-85 ${
-              repeatMode !== 'none' ? 'text-white bg-white/[0.08]' : 'text-white/30 hover:text-white/60'
+            <button onClick={cycleRepeat} className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 active:scale-85 ${
+              repeatMode !== 'none' ? 'text-white' : 'text-white/30 hover:text-white/60'
             }`}>
-              {repeatMode === 'one' ? <Repeat1 size={16} /> : <Repeat size={16} />}
+              {repeatMode === 'one' ? <Repeat1 size={18} /> : <Repeat size={18} />}
             </button>
           </div>
 
