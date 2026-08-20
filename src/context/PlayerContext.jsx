@@ -53,6 +53,7 @@ export function PlayerProvider({ children }) {
   // Audio Enhancement (EQ + Volume Boost)
   const audioCtxRef = useRef(null);
   const gainRef = useRef(null);
+  const compressorRef = useRef(null);
   const eqFiltersRef = useRef([]);
   const enhancedRef = useRef(false);
   const [boostLevel, setBoostLevel] = useState(100);
@@ -73,6 +74,12 @@ export function PlayerProvider({ children }) {
       // Create gain node (for volume boost up to 200%)
       gainRef.current = audioCtxRef.current.createGain();
       gainRef.current.gain.value = boostLevel / 100;
+      compressorRef.current = audioCtxRef.current.createDynamicsCompressor();
+      compressorRef.current.threshold.value = -18;
+      compressorRef.current.knee.value = 18;
+      compressorRef.current.ratio.value = 8;
+      compressorRef.current.attack.value = 0.003;
+      compressorRef.current.release.value = 0.25;
       
       // Create 10-band EQ (professional studio frequencies)
       const freqs = [31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
@@ -87,7 +94,7 @@ export function PlayerProvider({ children }) {
         return filter;
       });
       
-      // Connect chain: source → eq filters → gain → destination
+      // Connect chain: source → eq filters → compressor → gain → destination
       const sourceA = audioCtxRef.current.createMediaElementSource(audioA.current);
       const sourceB = audioCtxRef.current.createMediaElementSource(audioB.current);
       
@@ -98,7 +105,8 @@ export function PlayerProvider({ children }) {
         prevNode.connect(eqFiltersRef.current[i]);
         prevNode = eqFiltersRef.current[i];
       }
-      prevNode.connect(gainRef.current);
+      prevNode.connect(compressorRef.current);
+      compressorRef.current.connect(gainRef.current);
       gainRef.current.connect(audioCtxRef.current.destination);
       
       // Resume AudioContext
@@ -178,9 +186,12 @@ export function PlayerProvider({ children }) {
       if (!ok) return;
     }
     if (eqFiltersRef.current.length >= 3) {
-      eqFiltersRef.current[0].gain.value = on ? 8 : 0;  // 31Hz +8dB
-      eqFiltersRef.current[1].gain.value = on ? 6 : 0;  // 63Hz +6dB
-      eqFiltersRef.current[2].gain.value = on ? 3 : 0;  // 125Hz +3dB
+      const gains = on ? [4, 2.5, 1.5] : [0, 0, 0];
+      const now = audioCtxRef.current?.currentTime || 0;
+      eqFiltersRef.current.slice(0, 3).forEach((filter, index) => {
+        filter.gain.cancelScheduledValues(now);
+        filter.gain.setTargetAtTime(gains[index], now, 0.08);
+      });
     }
   }, [initEnhancement]);
 
