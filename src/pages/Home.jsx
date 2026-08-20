@@ -69,8 +69,10 @@ export default function Home() {
         <div className="flex gap-2 scroll-x pb-2">
           {MOODS.map(m => (
             <button key={m.label} onClick={() => loadMood(m)}
-              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full shrink-0 transition-all btn-press ${
-                activeMood === m.label ? 'bg-white text-black font-semibold' : 'bg-[#1a1a1a] text-white'
+              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full shrink-0 transition-all duration-300 btn-press ${
+                activeMood === m.label 
+                  ? 'bg-gradient-to-r from-rose-500 to-rose-600 text-white font-semibold shadow-lg shadow-rose-500/20' 
+                  : 'bg-white/[0.04] text-white/70 border border-white/[0.05] hover:bg-white/[0.07] hover:border-white/[0.1]'
               }`}>
               <span className="text-[14px]">{m.icon}</span>
               <span className="text-[13px] font-medium">{m.label}</span>
@@ -97,19 +99,19 @@ export default function Home() {
 
       {/* Hero */}
       <section className="mb-7 animate-in" style={{ animationDelay: '0.03s' }}>
-        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-rose-600/15 via-[#0e0e0e] to-purple-900/10 p-6 sm:p-8 border border-white/[0.04]">
+        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-rose-600/15 via-[#0e0e0e] to-purple-900/10 p-6 sm:p-8 border border-white/[0.04] hover-glow transition-all duration-500">
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles size={14} className="text-rose-400" />
+              <Sparkles size={14} className="text-rose-400 animate-float" style={{ animationDuration: '3s' }} />
               <span className="text-[11px] text-rose-400 font-medium uppercase tracking-wider">For You</span>
             </div>
-            <h1 className="text-[22px] sm:text-[28px] font-bold text-white mb-1 tracking-tight">{getGreeting()}</h1>
-            <p className="text-[13px] text-[#999]">
+            <h1 className="text-[24px] sm:text-[30px] font-bold text-white mb-1.5 tracking-tight">{getGreeting()}</h1>
+            <p className="text-[13px] text-white/40">
               {prefs ? `${prefs.totalPlays} songs played • Top: ${prefs.topArtists.slice(0,2).join(', ')}` : 'Start listening to get personalized recommendations'}
             </p>
           </div>
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-rose-500/[0.08] rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-16 -left-10 w-48 h-48 bg-purple-500/[0.06] rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-rose-500/[0.1] rounded-full blur-3xl pointer-events-none animate-float" />
+          <div className="absolute -bottom-16 -left-10 w-48 h-48 bg-purple-500/[0.08] rounded-full blur-3xl pointer-events-none animate-float" style={{ animationDelay: '2s' }} />
         </div>
       </section>
 
