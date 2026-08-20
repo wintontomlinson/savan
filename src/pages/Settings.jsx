@@ -212,6 +212,38 @@ export default function Settings() {
         </SettingRow>
       </Section>
 
+      {/* Import Playlist */}
+      <Section title="Import Playlist">
+        <div className="px-4 py-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-xl bg-white/[0.05] flex items-center justify-center">
+              <span className="text-[16px]">📥</span>
+            </div>
+            <div>
+              <p className="text-[13px] text-white font-medium">Import from other apps</p>
+              <p className="text-[11px] text-[#555]">YouTube, Spotify, Apple Music</p>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-3 px-3 py-3 bg-white/[0.03] rounded-xl border border-white/[0.04]">
+              <span className="text-[14px]">▶️</span>
+              <span className="text-[12px] text-white/60 flex-1">YouTube Music</span>
+              <span className="text-[9px] text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full font-semibold">Coming Soon</span>
+            </div>
+            <div className="flex items-center gap-3 px-3 py-3 bg-white/[0.03] rounded-xl border border-white/[0.04]">
+              <span className="text-[14px]">🟢</span>
+              <span className="text-[12px] text-white/60 flex-1">Spotify</span>
+              <span className="text-[9px] text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full font-semibold">Coming Soon</span>
+            </div>
+            <div className="flex items-center gap-3 px-3 py-3 bg-white/[0.03] rounded-xl border border-white/[0.04]">
+              <span className="text-[14px]">🍎</span>
+              <span className="text-[12px] text-white/60 flex-1">Apple Music</span>
+              <span className="text-[9px] text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full font-semibold">Coming Soon</span>
+            </div>
+          </div>
+        </div>
+      </Section>
+
       {/* About */}
       <Section title="About">
         <SettingRow icon={Info} label="Music Area" desc="Free, ad-free music streaming">
