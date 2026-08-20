@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Loader2, Play, X, Shuffle, ChevronRight, Disc3, TrendingUp, ListMusic, Mic, Users, Radio, Flame, Heart, Music } from 'lucide-react';
+import { Loader2, Play, X, Shuffle, Disc3, TrendingUp, ListMusic, Mic, Users, Radio, Flame, Heart, Music } from 'lucide-react';
 import { searchSongs, getPlaylistById } from '../data/api';
 import { usePlayer } from '../context/PlayerContext';
 import SongRow from '../components/SongRow';
@@ -7,16 +7,16 @@ import SongCard from '../components/SongCard';
 import HorizontalScroll from '../components/HorizontalScroll';
 
 const GENRES = [
-  { id: 'trending', label: 'Trending', playlistId: '1219706044', searchQuery: 'latest hindi hits trending', color: 'from-fuchsia-600 via-pink-500 to-rose-500', icon: Flame },
-  { id: 'dance', label: 'Dance', playlistId: '1219706999', searchQuery: 'bollywood dance party', color: 'from-amber-500 via-orange-500 to-yellow-500', icon: Disc3 },
-  { id: 'retro', label: '90s Hits', playlistId: '1167751266', searchQuery: '90s bollywood classic', color: 'from-emerald-500 via-teal-400 to-cyan-400', icon: Radio },
-  { id: 'english', label: 'English', playlistId: '303128179', searchQuery: 'english pop trending', color: 'from-blue-500 via-indigo-400 to-violet-400', icon: Users },
-  { id: 'lofi', label: 'Lo-Fi', playlistId: '1079336813', searchQuery: 'lofi chill hindi', color: 'from-violet-600 via-purple-500 to-fuchsia-400', icon: Music },
-  { id: 'hiphop', label: 'Hip-Hop', playlistId: '1265128247', searchQuery: 'indian hip hop rap', color: 'from-indigo-600 via-blue-500 to-cyan-400', icon: Mic },
-  { id: 'sad', label: 'Sad', playlistId: '802336660', searchQuery: 'sad hindi heartbreak', color: 'from-slate-600 via-gray-500 to-zinc-400', icon: Heart },
-  { id: 'workout', label: 'Workout', playlistId: '156710699', searchQuery: 'workout gym hindi', color: 'from-red-600 via-orange-500 to-amber-400', icon: TrendingUp },
-  { id: 'punjabi', label: 'Punjabi', playlistId: '4144832', searchQuery: 'punjabi hits latest', color: 'from-pink-600 via-fuchsia-500 to-purple-400', icon: Disc3 },
-  { id: 'sufi', label: 'Sufi', playlistId: '1262711873', searchQuery: 'sufi qawwali', color: 'from-teal-600 via-emerald-400 to-green-300', icon: Radio },
+  { id: 'trending', label: 'Trending', playlistId: '1219706044', searchQuery: 'latest hindi hits trending', gradient: 'from-fuchsia-600 via-pink-500 to-rose-400', icon: '🔥' },
+  { id: 'dance', label: 'Dance', playlistId: '1219706999', searchQuery: 'bollywood dance party', gradient: 'from-amber-500 via-orange-400 to-yellow-400', icon: '💃' },
+  { id: 'retro', label: '90s', playlistId: '1167751266', searchQuery: '90s bollywood classic', gradient: 'from-emerald-500 via-teal-400 to-cyan-300', icon: '📻' },
+  { id: 'english', label: 'English', playlistId: '303128179', searchQuery: 'english pop trending', gradient: 'from-blue-500 via-indigo-400 to-violet-400', icon: '🌍' },
+  { id: 'lofi', label: 'Lo-Fi', playlistId: '1079336813', searchQuery: 'lofi chill hindi', gradient: 'from-violet-600 via-purple-500 to-fuchsia-400', icon: '🎧' },
+  { id: 'hiphop', label: 'Hip-Hop', playlistId: '1265128247', searchQuery: 'indian hip hop rap', gradient: 'from-indigo-600 via-blue-500 to-sky-400', icon: '🎤' },
+  { id: 'sad', label: 'Sad', playlistId: '802336660', searchQuery: 'sad hindi heartbreak', gradient: 'from-slate-600 via-gray-500 to-zinc-400', icon: '💔' },
+  { id: 'workout', label: 'Workout', playlistId: '156710699', searchQuery: 'workout gym hindi', gradient: 'from-red-600 via-orange-500 to-amber-400', icon: '💪' },
+  { id: 'punjabi', label: 'Punjabi', playlistId: '4144832', searchQuery: 'punjabi hits latest', gradient: 'from-pink-600 via-fuchsia-500 to-purple-400', icon: '🎵' },
+  { id: 'sufi', label: 'Sufi', playlistId: '1262711873', searchQuery: 'sufi qawwali', gradient: 'from-teal-600 via-emerald-400 to-green-300', icon: '🌀' },
 ];
 
 const ARTISTS = [
@@ -82,7 +82,7 @@ export default function Explore() {
     setBrowseLoading(p => ({ ...p, [section.id]: false }));
   };
 
-  useEffect(() => { GENRES.forEach(g => loadBrowse(g)); }, []);
+  useEffect(() => { GENRES.slice(0, 4).forEach(g => loadBrowse(g)); }, []);
 
   useEffect(() => {
     if (songs.length > 0 && songsRef.current) songsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -91,37 +91,23 @@ export default function Explore() {
   return (
     <div className="pb-6 pt-3">
       {/* Title */}
-      <section className="mb-7 animate-in">
-        <div className="relative overflow-hidden rounded-2xl p-5 sm:p-6 border border-white/[0.08]" style={{ background: 'linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 35%, #1a1145 65%, #0d0620 100%)' }}>
-          <div className="absolute top-[-30%] left-[10%] w-28 h-28 bg-fuchsia-500/[0.12] rounded-full blur-[50px] animate-pulse" style={{ animationDuration: '4s' }} />
-          <div className="absolute bottom-[-20%] right-[15%] w-24 h-24 bg-violet-400/[0.1] rounded-full blur-[40px] animate-pulse" style={{ animationDuration: '3s', animationDelay: '1.5s' }} />
-          <div className="relative">
-            <h1 className="text-[26px] sm:text-[30px] font-black text-transparent bg-clip-text tracking-tight" style={{ backgroundImage: 'linear-gradient(90deg, #fff 0%, #e879f9 50%, #a78bfa 100%)' }}>Explore</h1>
-            <p className="text-[12px] text-white/30 mt-1 font-medium">Discover your next obsession</p>
-          </div>
-        </div>
-      </section>
+      <h1 className="text-[26px] font-bold text-white tracking-tight mb-5 animate-in">Explore</h1>
 
-      {/* Genre Cards */}
-      <section className="mb-8 animate-in" style={{ animationDelay: '0.05s' }}>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+      {/* Genre Pills - Horizontal Scroll */}
+      <section className="mb-7 animate-in" style={{ animationDelay: '0.03s' }}>
+        <div className="flex gap-2 scroll-x pb-2">
           {GENRES.map((g, i) => (
             <button key={g.id} onClick={() => playGenre(g)}
-              style={{ animationDelay: `${i * 40}ms` }}
-              className={`relative overflow-hidden rounded-2xl p-4 sm:p-5 text-left bg-gradient-to-br ${g.color} transition-all duration-300 active:scale-[0.93] hover:scale-[1.04] hover:shadow-2xl hover:shadow-black/40 group animate-in border border-white/[0.1]`}>
-              {/* Inner glow */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/[0.05]" />
-              {/* Shine sweep */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.08] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-              <g.icon size={22} className="relative text-white/90 mb-2.5 group-hover:scale-125 group-hover:rotate-12 transition-all duration-400 drop-shadow-lg" />
-              <p className="relative text-[13px] font-bold text-white drop-shadow-sm">{g.label}</p>
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-full shrink-0 bg-gradient-to-r ${g.gradient} text-white text-[12px] font-bold shadow-md hover:shadow-lg hover:scale-[1.05] active:scale-[0.95] transition-all duration-300 border border-white/[0.15]`}>
+              <span className="text-[13px]">{g.icon}</span>
+              {g.label}
             </button>
           ))}
         </div>
       </section>
 
-      {/* Curated Playlists */}
-      {GENRES.slice(0, 6).map(sec => {
+      {/* Curated Playlists - Only top 4 */}
+      {GENRES.slice(0, 4).map(sec => {
         const data = browseData[sec.id];
         const isLoading = browseLoading[sec.id];
         if (!data && !isLoading) return null;
@@ -140,28 +126,24 @@ export default function Explore() {
       {activeArtist && (
         <div ref={songsRef} className="mb-8 animate-scale">
           {loading ? (
-            <div className="flex justify-center py-12"><Loader2 size={20} className="text-fuchsia-400/50 animate-spin" /></div>
+            <div className="flex justify-center py-12"><Loader2 size={20} className="text-white/25 animate-spin" /></div>
           ) : songs.length > 0 && (
             <div>
-              <div className="flex items-center justify-between mb-4 p-4 rounded-2xl border border-white/[0.06]" style={{ background: 'linear-gradient(135deg, #1a0a2e 0%, #15102a 100%)' }}>
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <img src={ARTISTS.find(a => a.name === activeArtist)?.img} alt="" className="w-14 h-14 rounded-full object-cover ring-2 ring-fuchsia-400/30 shadow-xl shadow-fuchsia-500/10" />
+                  <img src={ARTISTS.find(a => a.name === activeArtist)?.img} alt="" className="w-12 h-12 rounded-full object-cover ring-2 ring-fuchsia-400/40 shadow-lg" />
                   <div>
-                    <h2 className="text-[17px] font-bold text-white">{activeArtist}</h2>
+                    <h2 className="text-[16px] font-bold text-white">{activeArtist}</h2>
                     <p className="text-[11px] text-white/30">{songs.length} songs</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => { const s = [...songs].sort(() => Math.random() - 0.5); playSong(s[0], s); }}
-                    className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center hover:bg-white/[0.1] active:scale-90 transition-all">
-                    <Shuffle size={14} className="text-white/60" />
-                  </button>
                   <button onClick={() => playSong(songs[0], songs)}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white rounded-full text-[12px] font-bold shadow-lg shadow-fuchsia-500/20 hover:shadow-fuchsia-500/30 hover:scale-[1.03] active:scale-95 transition-all">
-                    <Play size={13} fill="white" /> Play
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white rounded-full text-[12px] font-bold shadow-lg shadow-fuchsia-500/20 hover:scale-[1.03] active:scale-95 transition-all">
+                    <Play size={12} fill="white" /> Play
                   </button>
                   <button onClick={() => { setActiveArtist(null); setSongs([]); }}
-                    className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center hover:bg-white/[0.1] active:scale-90 transition-all">
+                    className="w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center hover:bg-white/[0.1] active:scale-90 transition-all">
                     <X size={14} className="text-white/40" />
                   </button>
                 </div>
@@ -174,31 +156,26 @@ export default function Explore() {
         </div>
       )}
 
-      {/* Artists by Category */}
-      <div className="space-y-8 mt-4">
+      {/* Artists */}
+      <div className="space-y-7 mt-2">
         {CATEGORIES.map((cat, ci) => {
           const artists = ARTISTS.filter(a => a.cat === cat);
           return (
-            <section key={cat} className="animate-in" style={{ animationDelay: `${ci * 0.05}s` }}>
-              <h2 className="text-[16px] font-bold text-white mb-4">{cat}</h2>
-              <div className="artist-grid">
-                {artists.map((a, i) => (
+            <section key={cat} className="animate-in" style={{ animationDelay: `${ci * 0.04}s` }}>
+              <h2 className="text-[15px] font-bold text-white mb-3">{cat}</h2>
+              <div className="flex gap-4 scroll-x pb-1">
+                {artists.map(a => (
                   <button key={a.name} onClick={() => loadArtist(a)}
-                    className="flex flex-col items-center gap-2 group active:scale-[0.92] transition-all duration-300">
-                    <div className={`relative w-full aspect-square rounded-full overflow-hidden shadow-lg transition-all duration-300 ${
+                    className="flex flex-col items-center gap-2 shrink-0 group active:scale-[0.93] transition-all duration-300">
+                    <div className={`w-[72px] h-[72px] sm:w-20 sm:h-20 rounded-full overflow-hidden transition-all duration-300 ${
                       activeArtist === a.name
-                        ? 'ring-2 ring-fuchsia-400 shadow-xl shadow-fuchsia-500/20 scale-105'
-                        : 'ring-1 ring-white/[0.06] group-hover:ring-fuchsia-400/30 group-hover:shadow-xl group-hover:shadow-fuchsia-500/10 group-hover:scale-105'
+                        ? 'ring-[3px] ring-fuchsia-400 shadow-xl shadow-fuchsia-500/20 scale-105'
+                        : 'ring-1 ring-white/[0.08] group-hover:ring-fuchsia-400/40 group-hover:shadow-lg group-hover:scale-105'
                     }`}>
-                      <img src={a.img} alt={a.name} className="w-full h-full object-cover group-hover:scale-110 group-hover:brightness-75 transition-all duration-500" loading="lazy" />
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-fuchsia-500 to-violet-500 flex items-center justify-center shadow-2xl shadow-fuchsia-500/30 scale-50 group-hover:scale-100 transition-transform duration-400">
-                          <Play size={14} className="text-white ml-0.5" fill="white" />
-                        </div>
-                      </div>
+                      <img src={a.img} alt={a.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
                     </div>
-                    <p className={`text-[11px] font-medium text-center truncate w-full transition-colors duration-200 ${
-                      activeArtist === a.name ? 'text-fuchsia-300' : 'text-white/50 group-hover:text-white/90'
+                    <p className={`text-[10px] sm:text-[11px] font-medium text-center w-[72px] sm:w-20 truncate transition-colors ${
+                      activeArtist === a.name ? 'text-fuchsia-300' : 'text-white/45 group-hover:text-white/80'
                     }`}>{a.name}</p>
                   </button>
                 ))}
