@@ -162,24 +162,27 @@ export function PlayerProvider({ children }) {
   const [bassBoostOn, setBassBoostOn] = useState(false);
   const setBassBoost = useCallback((on) => {
     setBassBoostOn(on);
+    if (on) setVocalModeState(false);
     if (!enhancedRef.current) {
       const ok = initEnhancement();
       if (!ok) return;
     }
-    if (eqFiltersRef.current.length >= 3) {
-      const gains = on ? [2, 1, 0.5] : [0, 0, 0];
-      const now = audioCtxRef.current?.currentTime || 0;
-      eqFiltersRef.current.slice(0, 3).forEach((filter, index) => {
+    const gains = Array(10).fill(0);
+    if (on) gains.splice(0, 3, 2, 1, 0.5);
+    const now = audioCtxRef.current?.currentTime || 0;
+    eqFiltersRef.current.forEach((filter, index) => {
+      if (filter) {
         filter.gain.cancelScheduledValues(now);
         filter.gain.setTargetAtTime(gains[index], now, 0.08);
-      });
-    }
+      }
+    });
   }, [initEnhancement]);
 
   // Vocal Mode — boosts mids (vocals), cuts bass/treble (instruments)
   const [vocalMode, setVocalModeState] = useState(false);
   const setVocalMode = useCallback((on) => {
     setVocalModeState(on);
+    if (on) setBassBoostOn(false);
     if (!enhancedRef.current) {
       const ok = initEnhancement();
       if (!ok) return;
@@ -187,7 +190,13 @@ export function PlayerProvider({ children }) {
     // Vocal frequencies: 1kHz-4kHz boosted, bass/treble cut
     // EQ bands: [31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000]
     const vocalGains = on ? [-4, -3, -2, 1, 3, 5, 5, 3, -1, -3] : [0,0,0,0,0,0,0,0,0,0];
-    eqFiltersRef.current.forEach((f, i) => { if (f) f.gain.value = vocalGains[i]; });
+    const now = audioCtxRef.current?.currentTime || 0;
+    eqFiltersRef.current.forEach((filter, index) => {
+      if (filter) {
+        filter.gain.cancelScheduledValues(now);
+        filter.gain.setTargetAtTime(vocalGains[index], now, 0.08);
+      }
+    });
   }, [initEnhancement]);
 
   const historyStack = useRef([]);

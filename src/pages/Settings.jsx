@@ -52,10 +52,10 @@ export default function Settings() {
       <Section title="Effects">
         <div className="divide-y divide-white/[0.04]">
           <Row label="Bass Boost" desc="Enhanced low frequencies">
-            <Toggle on={bassBoostOn} onChange={v => { setBassBoost(v); if (v) setVocalMode(false); }} />
+            <Toggle on={bassBoostOn} onChange={setBassBoost} />
           </Row>
           <Row label="Vocal Mode" desc="Clearer vocals">
-            <Toggle on={vocalMode} onChange={v => { setVocalMode(v); if (v) setBassBoost(false); }} />
+            <Toggle on={vocalMode} onChange={setVocalMode} />
           </Row>
         </div>
       </Section>
