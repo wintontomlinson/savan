@@ -21,7 +21,7 @@ const EQ_PRESETS = [
 const EQ_BANDS = ['31', '63', '125', '250', '500', '1K', '2K', '4K', '8K', '16K'];
 
 export default function Settings() {
-  const { volume, setVolume, boostLevel, setVolumeBoost, bassBoostOn, setBassBoost, resetAudio, applyEqPreset, setEqBand, showToast } = usePlayer();
+  const { volume, setVolume, boostLevel, setVolumeBoost, bassBoostOn, setBassBoost, vocalMode, setVocalMode, resetAudio, applyEqPreset, setEqBand, showToast } = usePlayer();
   const [crossfade, setCrossfade] = useState(() => parseInt(localStorage.getItem('crossfade_dur') || '5'));
   const [notifications, setNotifications] = useState(true);
   const [activePreset, setActivePreset] = useState('Flat');
@@ -105,7 +105,23 @@ export default function Settings() {
               <p className="text-[11px] text-[#555]">Extra low-end punch</p>
             </div>
           </div>
-          <Toggle on={bassBoostOn} onChange={(v) => { setBassBoost(v); showToast(v ? 'Bass Boost ON' : 'Bass Boost OFF'); }} />
+          <Toggle on={bassBoostOn} onChange={(v) => { setBassBoost(v); if (v) setVocalMode(false); }} />
+        </div>
+      </Section>
+
+      {/* Vocal Mode */}
+      <Section title="Vocal Mode">
+        <div className="flex items-center justify-between px-4 py-4">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${vocalMode ? 'bg-violet-500/20' : 'bg-white/[0.05]'}`}>
+              <span className="text-[18px]">🎤</span>
+            </div>
+            <div>
+              <p className="text-[13px] text-white font-medium">Vocal Mode</p>
+              <p className="text-[11px] text-[#555]">Vocals clear, less instruments</p>
+            </div>
+          </div>
+          <Toggle on={vocalMode} onChange={(v) => { setVocalMode(v); if (v) setBassBoost(false); }} />
         </div>
       </Section>
 

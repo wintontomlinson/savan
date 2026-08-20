@@ -210,6 +210,20 @@ export function PlayerProvider({ children }) {
     }
   }, [initEnhancement]);
 
+  // Vocal Mode — boosts mids (vocals), cuts bass/treble (instruments)
+  const [vocalMode, setVocalModeState] = useState(false);
+  const setVocalMode = useCallback((on) => {
+    setVocalModeState(on);
+    if (!enhancedRef.current) {
+      const ok = initEnhancement();
+      if (!ok) return;
+    }
+    // Vocal frequencies: 1kHz-4kHz boosted, bass/treble cut
+    // EQ bands: [31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000]
+    const vocalGains = on ? [-4, -3, -2, 1, 3, 5, 5, 3, -1, -3] : [0,0,0,0,0,0,0,0,0,0];
+    eqFiltersRef.current.forEach((f, i) => { if (f) f.gain.value = vocalGains[i]; });
+  }, [initEnhancement]);
+
   const historyStack = useRef([]);
 
   const cur = () => activeRef.current === 'A' ? audioA.current : audioB.current;
@@ -575,5 +589,5 @@ export function PlayerProvider({ children }) {
     setDownloadedSongs(p => { if (p.includes(songId)) return p.filter(id => id !== songId); return [...p, songId]; });
   }, []);
 
-  return <Ctx.Provider value={{ currentSong, queue, upNext, isPlaying, volume, boostLevel, bassBoostOn, currentTime, duration, shuffleMode, repeatMode, isExpanded, likedSongs, downloadedSongs, toasts, playSong, togglePlay, playNext, playPrev, seekTo, setVolume, setVolumeBoost, setBassBoost, resetAudio, setEqBand, applyEqPreset, toggleShuffle, cycleRepeat, addToQueue, removeFromQueue, clearQueue, toggleLike, toggleDownload, setExpanded, showToast, dismissToast }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ currentSong, queue, upNext, isPlaying, volume, boostLevel, bassBoostOn, vocalMode, currentTime, duration, shuffleMode, repeatMode, isExpanded, likedSongs, downloadedSongs, toasts, playSong, togglePlay, playNext, playPrev, seekTo, setVolume, setVolumeBoost, setBassBoost, setVocalMode, resetAudio, setEqBand, applyEqPreset, toggleShuffle, cycleRepeat, addToQueue, removeFromQueue, clearQueue, toggleLike, toggleDownload, setExpanded, showToast, dismissToast }}>{children}</Ctx.Provider>;
 }
