@@ -74,30 +74,24 @@ function bestImage(images) {
   return images[images.length - 1]?.url || images[0]?.url;
 }
 
-function getAudioByQuality(urls, quality) {
+function getAudioByQuality(urls) {
   if (!urls?.length) return '';
-  const match = urls.find(u => u.quality === quality);
-  if (match?.url) return match.url;
   return [...urls]
     .filter(item => item?.url)
     .sort((a, b) => parseInt(b.quality, 10) - parseInt(a.quality, 10))[0]?.url || '';
 }
 
 export function getQuality() {
-  try {
-    const quality = localStorage.getItem('audio_quality');
-    return ['320kbps', '160kbps', '96kbps', '48kbps'].includes(quality) ? quality : '320kbps';
-  } catch { return '320kbps'; }
+  return '320kbps';
 }
 
 export function setQuality(q) {
-  if (!['320kbps', '160kbps', '96kbps', '48kbps'].includes(q)) return;
-  try { localStorage.setItem('audio_quality', q); } catch {}
+  if (q !== '320kbps') return;
+  try { localStorage.setItem('audio_quality', '320kbps'); } catch {}
 }
 
 function mapSong(s) {
   if (!s) return null;
-  const quality = getQuality();
   return {
     id: s.id,
     title: cleanText(s.name),
@@ -107,7 +101,7 @@ function mapSong(s) {
     albumId: s.album?.id || '',
     duration: s.duration || 0,
     thumbnail: bestImage(s.image),
-    audio: getAudioByQuality(s.downloadUrl, quality),
+    audio: getAudioByQuality(s.downloadUrl),
     audioAll: s.downloadUrl || [],
     plays: s.playCount || 0,
     language: s.language || '',
