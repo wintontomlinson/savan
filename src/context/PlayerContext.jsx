@@ -52,6 +52,7 @@ export function PlayerProvider({ children }) {
 
   // Audio Enhancement (EQ + Volume Boost)
   const audioCtxRef = useRef(null);
+  const preampRef = useRef(null);
   const gainRef = useRef(null);
   const compressorRef = useRef(null);
   const eqFiltersRef = useRef([]);
@@ -71,7 +72,8 @@ export function PlayerProvider({ children }) {
       // crossOrigin is already set at creation time, no reload needed
       audioCtxRef.current = new AC();
       
-      // Create gain node (for volume boost up to 200%)
+      preampRef.current = audioCtxRef.current.createGain();
+      preampRef.current.gain.value = 0.7;
       gainRef.current = audioCtxRef.current.createGain();
       gainRef.current.gain.value = boostLevel / 100;
       compressorRef.current = audioCtxRef.current.createDynamicsCompressor();
@@ -94,13 +96,14 @@ export function PlayerProvider({ children }) {
         return filter;
       });
       
-      // Connect chain: source → eq filters → compressor → gain → destination
+      // Leave headroom before EQ so boosted low frequencies cannot clip.
       const sourceA = audioCtxRef.current.createMediaElementSource(audioA.current);
       const sourceB = audioCtxRef.current.createMediaElementSource(audioB.current);
       
       let prevNode = eqFiltersRef.current[0];
-      sourceA.connect(prevNode);
-      sourceB.connect(prevNode);
+      sourceA.connect(preampRef.current);
+      sourceB.connect(preampRef.current);
+      preampRef.current.connect(prevNode);
       for (let i = 1; i < eqFiltersRef.current.length; i++) {
         prevNode.connect(eqFiltersRef.current[i]);
         prevNode = eqFiltersRef.current[i];
@@ -122,37 +125,15 @@ export function PlayerProvider({ children }) {
 
   // Set volume boost (0-200%)
   const setVolumeBoost = useCallback((pct) => {
-    setBoostLevel(pct);
-    
-    if (pct > 100) {
-      // Need AudioContext for boost beyond 100%
-      if (!enhancedRef.current) {
-        const ok = initEnhancement();
-        if (!ok) {
-          // Fallback — just max out audio.volume
-          const a = activeRef.current === 'A' ? audioA.current : audioB.current;
-          if (a) a.volume = 1;
-          volumeRef.current = 1;
-          _setVolume(1);
-          return;
-        }
-      }
-      // audio.volume stays at 1, gain amplifies
-      const a = activeRef.current === 'A' ? audioA.current : audioB.current;
-      if (a) a.volume = 1;
-      volumeRef.current = 1;
-      _setVolume(1);
-      if (gainRef.current) gainRef.current.gain.value = pct / 100;
-    } else {
-      // 0-100% range
-      const val = pct / 100;
-      _setVolume(val);
-      volumeRef.current = val;
-      const a = activeRef.current === 'A' ? audioA.current : audioB.current;
-      if (a) a.volume = val;
-      if (gainRef.current) gainRef.current.gain.value = 1;
-    }
-  }, [initEnhancement]);
+    const safePct = Math.max(0, Math.min(100, pct));
+    const val = safePct / 100;
+    setBoostLevel(safePct);
+    _setVolume(val);
+    volumeRef.current = val;
+    const a = activeRef.current === 'A' ? audioA.current : audioB.current;
+    if (a) a.volume = val;
+    if (gainRef.current) gainRef.current.gain.value = 1;
+  }, []);
 
   // Set EQ band (0-4, gain in dB)
   const setEqBand = useCallback((bandIndex, gainDb) => {
@@ -186,7 +167,7 @@ export function PlayerProvider({ children }) {
       if (!ok) return;
     }
     if (eqFiltersRef.current.length >= 3) {
-      const gains = on ? [4, 2.5, 1.5] : [0, 0, 0];
+      const gains = on ? [2, 1, 0.5] : [0, 0, 0];
       const now = audioCtxRef.current?.currentTime || 0;
       eqFiltersRef.current.slice(0, 3).forEach((filter, index) => {
         filter.gain.cancelScheduledValues(now);
