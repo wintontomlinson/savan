@@ -8,7 +8,7 @@ export default function SongCard({ song }) {
 
   return (
     <div className="group flex-shrink-0 w-[130px] sm:w-[150px] md:w-[160px] cursor-pointer" onClick={() => playSong(song)}>
-      <div className={`relative aspect-square rounded-2xl overflow-hidden mb-2.5 bg-[#111] hover-glow transition-all duration-300 ${isActive ? 'ring-2 ring-rose-500/30' : 'ring-1 ring-white/[0.04]'}`}>
+      <div className={`relative aspect-square rounded-2xl overflow-hidden mb-2.5 bg-[#111] hover-glow transition-all duration-300 ${isActive ? 'ring-2 ring-fuchsia-500/30' : 'ring-1 ring-white/[0.04]'}`}>
         <img src={song.thumbnail} alt="" className="w-full h-full object-cover transition-all duration-500 group-hover:scale-[1.08] group-hover:brightness-[0.65]" loading="lazy" />
         
         {/* Gradient overlay on hover */}
@@ -29,7 +29,7 @@ export default function SongCard({ song }) {
         )}
       </div>
 
-      <p className={`text-[12px] sm:text-[13px] font-semibold truncate leading-tight transition-colors duration-200 ${isActive ? 'text-rose-400' : 'text-white/90 group-hover:text-white'}`}>{song.title}</p>
+      <p className={`text-[12px] sm:text-[13px] font-semibold truncate leading-tight transition-colors duration-200 ${isActive ? 'text-fuchsia-400' : 'text-white/90 group-hover:text-white'}`}>{song.title}</p>
       <p className="text-[10px] sm:text-[11px] text-white/35 truncate mt-1">{song.artist}</p>
     </div>
   );

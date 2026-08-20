@@ -17,7 +17,7 @@ export default function Sidebar() {
     <aside className="hidden md:flex flex-col w-[72px] lg:w-[240px] h-full bg-[#030303] border-r border-white/[0.04] fixed left-0 top-0 z-20">
       {/* Brand */}
       <div className="px-4 lg:px-5 py-5 flex items-center gap-2.5">
-        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#ff2d55] to-[#af52de] flex items-center justify-center shadow-lg shadow-[#ff2d55]/25 relative overflow-hidden animate-breathe">
+        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-fuchsia-500 to-violet-500 flex items-center justify-center shadow-lg shadow-fuchsia-500/25 relative overflow-hidden animate-breathe">
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="relative">
             <path d="M9 18V5l12-2v13" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -40,8 +40,8 @@ export default function Sidebar() {
           }>
             {({ isActive }) => (
               <>
-                {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[20px] bg-gradient-to-b from-rose-400 to-rose-600 rounded-r-full" />}
-                <item.icon size={20} strokeWidth={isActive ? 2.2 : 1.5} className={`transition-all duration-300 ${isActive ? 'text-rose-400' : 'group-hover:text-white/80'}`} />
+                {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[20px] bg-gradient-to-b from-fuchsia-400 to-violet-500 rounded-r-full" />}
+                <item.icon size={20} strokeWidth={isActive ? 2.2 : 1.5} className={`transition-all duration-300 ${isActive ? 'text-fuchsia-400' : 'group-hover:text-white/80'}`} />
                 <span className="hidden lg:block">{item.label}</span>
               </>
             )}
@@ -54,18 +54,18 @@ export default function Sidebar() {
         <div className="px-2 lg:px-3 pb-4 mt-auto">
           <div onClick={() => setExpanded(true)} className="p-2.5 lg:p-3 bg-gradient-to-br from-white/[0.04] to-white/[0.01] rounded-2xl border border-white/[0.05] cursor-pointer hover:bg-white/[0.06] transition-all duration-300 group">
             <div className="flex items-center gap-2.5">
-              <div className={`w-10 h-10 rounded-xl overflow-hidden shrink-0 ring-1 ring-white/[0.08] transition-all duration-300 ${isPlaying ? 'shadow-lg shadow-rose-500/20 group-hover:scale-105' : ''}`}>
+              <div className={`w-10 h-10 rounded-xl overflow-hidden shrink-0 ring-1 ring-white/[0.08] transition-all duration-300 ${isPlaying ? 'shadow-lg shadow-fuchsia-500/20 group-hover:scale-105' : ''}`}>
                 <img src={currentSong.thumbnail} alt="" className="w-full h-full object-cover" />
               </div>
               <div className="hidden lg:block min-w-0 flex-1">
-                <p className="text-[11px] font-semibold text-white truncate group-hover:text-rose-300 transition-colors">{currentSong.title}</p>
+                <p className="text-[11px] font-semibold text-white truncate group-hover:text-fuchsia-300 transition-colors">{currentSong.title}</p>
                 <p className="text-[10px] text-white/30 truncate">{currentSong.artist}</p>
               </div>
             </div>
             {isPlaying && (
               <div className="hidden lg:flex items-center gap-1.5 mt-2.5 px-0.5">
-                <Disc3 size={11} className="text-rose-400 animate-[spin_3s_linear_infinite]" />
-                <span className="text-[9px] text-rose-400/80 font-medium">Playing</span>
+                <Disc3 size={11} className="text-fuchsia-400 animate-[spin_3s_linear_infinite]" />
+                <span className="text-[9px] text-fuchsia-400/80 font-medium">Playing</span>
               </div>
             )}
           </div>

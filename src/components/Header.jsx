@@ -7,7 +7,7 @@ export default function Header() {
       <div className="max-w-[1400px] mx-auto w-full flex items-center justify-between">
         {/* Logo — mobile only */}
         <div className="flex items-center gap-2.5 md:hidden">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#ff2d55] to-[#af52de] flex items-center justify-center shadow-md shadow-[#ff2d55]/15 relative overflow-hidden">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-fuchsia-500 to-violet-500 flex items-center justify-center shadow-md shadow-fuchsia-500/15 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="relative">
               <path d="M9 18V5l12-2v13" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>

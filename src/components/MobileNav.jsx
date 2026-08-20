@@ -24,7 +24,7 @@ export default function MobileNav() {
                 <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-300 ${
                   isActive ? 'bg-gradient-to-b from-rose-500/15 to-transparent scale-110' : 'hover:bg-white/[0.04]'
                 }`}>
-                  <i.icon size={20} strokeWidth={isActive ? 2.2 : 1.5} className={`transition-all duration-300 ${isActive ? 'text-rose-400' : ''}`} />
+                  <i.icon size={20} strokeWidth={isActive ? 2.2 : 1.5} className={`transition-all duration-300 ${isActive ? 'text-fuchsia-400' : ''}`} />
                 </div>
                 {isActive && <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-rose-400 rounded-full" />}
               </div>
