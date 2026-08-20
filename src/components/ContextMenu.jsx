@@ -1,13 +1,13 @@
 import{useState,useRef,useEffect}from'react';
 import{useNavigate}from'react-router-dom';
-import{MoreVertical,Play,ListPlus,Heart,Disc3,User2,Share2}from'lucide-react';
+import{MoreVertical,Play,ListPlus,Heart,Disc3,User2,Share2,Download}from'lucide-react';
 import{usePlayer}from'../context/PlayerContext';
 
 export default function ContextMenu({song,className=''}){
   const[open,setOpen]=useState(false);
   const ref=useRef(null);
   const nav=useNavigate();
-  const{addToQueue,toggleLike,likedSongs,playSong,showToast}=usePlayer();
+  const{addToQueue,toggleLike,likedSongs,playSong,showToast,downloadToDevice}=usePlayer();
   const liked=likedSongs.includes(song.id);
 
   useEffect(()=>{const h=e=>{if(ref.current&&!ref.current.contains(e.target))setOpen(false);};document.addEventListener('mousedown',h);return()=>document.removeEventListener('mousedown',h);},[]);
@@ -15,6 +15,7 @@ export default function ContextMenu({song,className=''}){
   const items=[
     {icon:Play,label:'Play now',action:()=>playSong(song)},
     {icon:ListPlus,label:'Add to queue',action:()=>addToQueue(song)},
+    {icon:Download,label:'Download',action:()=>downloadToDevice(song)},
     {icon:Heart,label:liked?'Remove from Liked':'Add to Liked',action:()=>toggleLike(song.id)},
     {icon:Disc3,label:'Go to album',action:()=>nav(`/search?q=${encodeURIComponent(song.album||song.title)}`)},
     {icon:User2,label:'Go to artist',action:()=>nav(`/search?q=${encodeURIComponent(song.artist?.split(',')[0]?.trim()||song.artist)}`)},

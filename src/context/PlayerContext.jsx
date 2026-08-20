@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 import { addToHistory, getNextSongs, resetPlayed } from '../data/algorithm';
-import { refreshStreamUrl } from '../data/api';
+import { refreshStreamUrl, downloadSong } from '../data/api';
 
 const Ctx = createContext();
 export const usePlayer = () => useContext(Ctx);
@@ -588,11 +588,29 @@ export function PlayerProvider({ children }) {
       if (!exists) {
         saved.unshift(song);
         localStorage.setItem('ma_downloaded_songs', JSON.stringify(saved.slice(0, 200)));
+        // Trigger actual file download to device
+        downloadToDevice(song);
       } else {
         localStorage.setItem('ma_downloaded_songs', JSON.stringify(saved.filter(s => s.id !== songId)));
       }
     }
   }, []);
 
-  return <Ctx.Provider value={{ currentSong, queue, upNext, isPlaying, volume, boostLevel, bassBoostOn, vocalMode, currentTime, duration, shuffleMode, repeatMode, isExpanded, likedSongs, downloadedSongs, toasts, playSong, togglePlay, playNext, playPrev, seekTo, setVolume, setVolumeBoost, setBassBoost, setVocalMode, resetAudio, setEqBand, applyEqPreset, toggleShuffle, cycleRepeat, addToQueue, removeFromQueue, clearQueue, toggleLike, toggleDownload, setExpanded, showToast, dismissToast }}>{children}</Ctx.Provider>;
+  // Download song file to device
+  const downloadToDevice = useCallback(async (song) => {
+    if (!song) return;
+    showToast(`Downloading "${song.title}"...`, 'info');
+    try {
+      const success = await downloadSong(song);
+      if (success) {
+        showToast(`Downloaded "${song.title}" ✓`, 'info');
+      } else {
+        showToast('Download failed — try again', 'info');
+      }
+    } catch {
+      showToast('Download failed — try again', 'info');
+    }
+  }, [showToast]);
+
+  return <Ctx.Provider value={{ currentSong, queue, upNext, isPlaying, volume, boostLevel, bassBoostOn, vocalMode, currentTime, duration, shuffleMode, repeatMode, isExpanded, likedSongs, downloadedSongs, toasts, playSong, togglePlay, playNext, playPrev, seekTo, setVolume, setVolumeBoost, setBassBoost, setVocalMode, resetAudio, setEqBand, applyEqPreset, toggleShuffle, cycleRepeat, addToQueue, removeFromQueue, clearQueue, toggleLike, toggleDownload, downloadToDevice, setExpanded, showToast, dismissToast }}>{children}</Ctx.Provider>;
 }
