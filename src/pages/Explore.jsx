@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Loader2, Play, X, Shuffle, ChevronRight, Disc3, TrendingUp, ListMusic, Mic, Users, Radio } from 'lucide-react';
+import { Loader2, Play, X, Shuffle, Disc3, TrendingUp, ListMusic, Mic, Users, Radio } from 'lucide-react';
 import { searchSongs, getPlaylistById } from '../data/api';
 import { usePlayer } from '../context/PlayerContext';
 import SongRow from '../components/SongRow';
@@ -76,7 +76,6 @@ export default function Explore() {
   const [activeArtist, setActiveArtist] = useState(null);
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [expanded, setExpandedCats] = useState({});
   const [browseData, setBrowseData] = useState({});
   const [browseLoading, setBrowseLoading] = useState({});
   const { playSong, currentSong } = usePlayer();
@@ -130,10 +129,6 @@ export default function Explore() {
   const shufflePlay = (list) => {
     const shuffled = [...list].sort(() => Math.random() - 0.5);
     playSong(shuffled[0], shuffled);
-  };
-
-  const toggleExpand = (cat) => {
-    setExpandedCats(prev => ({ ...prev, [cat]: !prev[cat] }));
   };
 
   return (
@@ -218,22 +213,12 @@ export default function Explore() {
       <div className="space-y-8">
         {CATEGORIES.map(cat => {
           const artists = ARTISTS.filter(a => a.cat === cat);
-          const isExpanded = expanded[cat];
-          const visible = isExpanded ? artists : artists.slice(0, 8);
 
           return (
             <section key={cat} className="animate-in">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-[16px] sm:text-[18px] font-bold text-white">{cat}</h2>
-                {artists.length > 8 && (
-                  <button onClick={() => toggleExpand(cat)} className="flex items-center gap-1 text-[12px] text-white/40 hover:text-white/70 transition-colors duration-200 btn-press">
-                    <span>{isExpanded ? 'Show less' : 'See all'}</span>
-                    <ChevronRight size={14} className={`transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} />
-                  </button>
-                )}
-              </div>
-              <div className="artist-grid">
-                {visible.map(a => (
+              <h2 className="text-[16px] sm:text-[18px] font-bold text-white mb-4">{cat}</h2>
+              <div className="flex gap-4 scroll-x pb-2">
+                {artists.map(a => (
                   <ArtistCard key={a.name} artist={a} isActive={activeArtist === a.name} onClick={() => loadArtist(a)} />
                 ))}
               </div>
@@ -247,13 +232,13 @@ export default function Explore() {
 
 function ArtistCard({ artist, isActive, onClick }) {
   return (
-    <button onClick={onClick} className="flex flex-col items-center gap-2 group transition-all duration-300 active:scale-[0.93]">
-      <div className="relative w-full aspect-square">
+    <button onClick={onClick} className="flex flex-col items-center gap-2 shrink-0 group transition-all duration-300 active:scale-[0.93]">
+      <div className="relative w-20 h-20 sm:w-[90px] sm:h-[90px]">
         {isActive && <div className="absolute -inset-1 rounded-full bg-gradient-to-b from-rose-500/30 to-rose-600/10 blur-md" />}
         <div className={`relative w-full h-full rounded-full overflow-hidden transition-all duration-300 ${
           isActive
             ? 'ring-2 ring-rose-400 shadow-xl shadow-rose-500/25'
-            : 'ring-1 ring-white/[0.08] shadow-lg shadow-black/40 group-hover:ring-white/[0.15] group-hover:shadow-xl group-hover:shadow-black/60'
+            : 'ring-1 ring-white/[0.08] shadow-lg shadow-black/40 group-hover:ring-white/[0.15] group-hover:shadow-xl'
         }`}>
           <img src={artist.img} alt={artist.name}
             className={`w-full h-full object-cover transition-all duration-300 ${
@@ -265,17 +250,17 @@ function ArtistCard({ artist, isActive, onClick }) {
           <div className={`absolute inset-0 flex items-center justify-center transition-all duration-250 ${
             isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           }`}>
-            <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-xl transition-all duration-250 ${
+            <div className={`w-9 h-9 rounded-full flex items-center justify-center shadow-xl transition-all duration-250 ${
               isActive 
                 ? 'bg-rose-500 scale-100 shadow-rose-500/30' 
-                : 'bg-white/90 scale-75 group-hover:scale-100 shadow-black/30'
+                : 'bg-white/90 scale-75 group-hover:scale-100'
             }`}>
               <Play size={14} className={isActive ? 'text-white ml-0.5' : 'text-black ml-0.5'} fill={isActive ? 'white' : 'black'} />
             </div>
           </div>
         </div>
       </div>
-      <p className={`text-[11px] sm:text-[12px] font-semibold text-center leading-tight truncate w-full px-0.5 transition-colors duration-200 ${
+      <p className={`text-[11px] font-semibold text-center leading-tight truncate w-20 sm:w-[90px] transition-colors duration-200 ${
         isActive ? 'text-rose-400' : 'text-white/70 group-hover:text-white'
       }`}>{artist.name}</p>
     </button>
