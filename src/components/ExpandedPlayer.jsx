@@ -139,7 +139,7 @@ export default function ExpandedPlayer() {
             <p className="text-[9px] text-white/35 uppercase tracking-[0.25em] font-medium">Now Playing</p>
             <p className="text-[11px] text-white/60 font-medium mt-0.5 max-w-[200px] mx-auto truncate">{currentSong.album || 'Library'}</p>
           </div>
-          <SleepTimer />
+          <div className="w-9" />
         </div>
 
         {/* Main Content Area — vertical on mobile, horizontal on desktop */}
@@ -323,6 +323,7 @@ export default function ExpandedPlayer() {
             <ActionPill icon={Mic2} label="Lyrics" active={activePanel === 'lyrics'} onClick={() => togglePanel('lyrics')} />
             <ActionPill icon={ListMusic} label="Queue" active={activePanel === 'queue'} onClick={() => togglePanel('queue')} badge={queue.length > 0 ? queue.length : null} />
             <ActionPill icon={downloaded ? Check : Download} label={downloaded ? 'Saved' : 'Download'} active={downloaded} onClick={() => toggleDownload(currentSong.id)} />
+            <SleepTimer />
           </div>
         </div>
       </div>
