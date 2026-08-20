@@ -174,12 +174,12 @@ export default function ExpandedPlayer() {
           </button>
         </div>
 
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col items-center justify-center px-5 sm:px-10 gap-3 min-h-0 overflow-hidden">
+        {/* Main Content Area — vertical on mobile, horizontal on desktop */}
+        <div className="flex-1 flex flex-col lg:flex-row items-center justify-center px-5 sm:px-10 lg:px-16 gap-3 lg:gap-12 min-h-0 overflow-hidden max-w-[900px] mx-auto w-full">
           
           {/* Album Art — premium with effects */}
           <div className={`relative transition-all duration-600 ease-[cubic-bezier(0.16,1,0.3,1)] shrink-0 ${
-            hasPanel ? 'w-[70px] h-[70px] sm:w-[90px] sm:h-[90px]' : 'w-[200px] h-[200px] sm:w-[260px] sm:h-[260px] md:w-[280px] md:h-[280px]'
+            hasPanel ? 'w-[70px] h-[70px] sm:w-[90px] sm:h-[90px]' : 'w-[200px] h-[200px] sm:w-[260px] sm:h-[260px] lg:w-[320px] lg:h-[320px]'
           }`}>
             {/* Rotating outer glow ring */}
             {isPlaying && !hasPanel && (
@@ -260,8 +260,8 @@ export default function ExpandedPlayer() {
           )}
         </div>
 
-        {/* Bottom Controls */}
-        <div className="shrink-0 px-5 sm:px-8 pb-4 sm:pb-6 pt-1">
+        {/* Bottom Controls — on desktop these sit to the right of art */}
+        <div className="shrink-0 lg:flex-1 px-5 sm:px-8 lg:px-0 pb-4 sm:pb-6 pt-1 lg:pt-0 lg:flex lg:flex-col lg:justify-center">
           
           {/* Song Info Row */}
           <div className="flex items-center justify-between mb-3 sm:mb-4 max-w-sm mx-auto">
