@@ -116,21 +116,29 @@ export default function Explore() {
       {['Punjabi', 'Bollywood', 'English', 'Hip-Hop', 'Legends'].map((cat, ci) => {
         const catArtists = ARTISTS.filter(a => a.cat === cat);
         return (
-          <section key={cat} className="mb-6 animate-in" style={{ animationDelay: `${(ci + 1) * 0.04}s` }}>
-            <h2 className="text-[14px] font-bold text-white mb-3">{cat}</h2>
-            <div className="flex gap-4 scroll-x pb-1">
+          <section key={cat} className="mb-7 animate-in" style={{ animationDelay: `${(ci + 1) * 0.04}s` }}>
+            <h2 className="text-[15px] font-bold text-white mb-4">{cat}</h2>
+            <div className="artist-grid">
               {catArtists.map(a => (
                 <button key={a.name} onClick={() => loadArtist(a)}
-                  className="flex flex-col items-center gap-2 shrink-0 group active:scale-[0.92] transition-all duration-300">
-                  <div className={`w-[70px] h-[70px] sm:w-20 sm:h-20 rounded-full overflow-hidden transition-all duration-300 shadow-lg ${
+                  className="flex flex-col items-center gap-2 group active:scale-[0.92] transition-all duration-300">
+                  <div className={`relative w-full aspect-square rounded-full overflow-hidden transition-all duration-300 shadow-lg ${
                     activeArtist === a.name
-                      ? 'ring-[3px] ring-fuchsia-400 shadow-fuchsia-500/20 scale-110'
-                      : 'ring-1 ring-white/[0.08] group-hover:ring-fuchsia-400/30 group-hover:shadow-xl group-hover:scale-105'
+                      ? 'ring-2 ring-rose-400 shadow-xl shadow-rose-500/20 scale-105'
+                      : 'ring-1 ring-white/[0.06] group-hover:ring-white/[0.15] group-hover:shadow-xl group-hover:scale-105'
                   }`}>
-                    <img src={a.img} alt={a.name} className="w-full h-full object-cover group-hover:scale-110 group-hover:brightness-90 transition-all duration-500" loading="lazy" />
+                    <img src={a.img} alt={a.name} className="w-full h-full object-cover group-hover:scale-110 group-hover:brightness-75 transition-all duration-500" loading="lazy" />
+                    <div className={`absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent transition-opacity duration-300 ${activeArtist === a.name ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
+                    <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${activeArtist === a.name ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 ${
+                        activeArtist === a.name ? 'bg-rose-500 scale-100' : 'bg-white/90 scale-75 group-hover:scale-100'
+                      }`}>
+                        <Play size={14} className={activeArtist === a.name ? 'text-white ml-0.5' : 'text-black ml-0.5'} fill={activeArtist === a.name ? 'white' : 'black'} />
+                      </div>
+                    </div>
                   </div>
-                  <p className={`text-[10px] sm:text-[11px] font-medium text-center w-[70px] sm:w-20 truncate transition-colors ${
-                    activeArtist === a.name ? 'text-fuchsia-300 font-semibold' : 'text-white/50 group-hover:text-white/80'
+                  <p className={`text-[11px] font-medium text-center truncate w-full transition-colors duration-200 ${
+                    activeArtist === a.name ? 'text-rose-400' : 'text-white/60 group-hover:text-white'
                   }`}>{a.name}</p>
                 </button>
               ))}
