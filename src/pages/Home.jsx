@@ -59,52 +59,25 @@ export default function Home() {
     <div className="pb-6 pt-3">
       {/* Hero Greeting */}
       <section className="mb-7 animate-in">
-        <div className="relative overflow-hidden rounded-[28px] p-8 sm:p-10 border border-white/[0.06]" style={{ background: 'linear-gradient(160deg, #18122B 0%, #1D1340 30%, #0F172A 60%, #0C0C14 100%)' }}>
+        <div className="relative overflow-hidden rounded-2xl p-5 sm:p-6 border border-white/[0.06]" style={{ background: 'linear-gradient(145deg, #16122a 0%, #1a1035 35%, #0e0d18 100%)' }}>
           {/* Ambient glow */}
-          <div className="absolute top-[-40%] right-[-20%] w-[70%] h-[70%] rounded-full blur-[120px] animate-float" style={{ background: 'radial-gradient(circle, rgba(236,72,153,0.08) 0%, transparent 70%)' }} />
-          <div className="absolute bottom-[-30%] left-[-15%] w-[55%] h-[55%] rounded-full blur-[100px] animate-float" style={{ animationDelay: '3s', background: 'radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%)' }} />
-          <div className="absolute top-[20%] right-[20%] w-[25%] h-[25%] rounded-full blur-[60px]" style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.04) 0%, transparent 70%)' }} />
+          <div className="absolute top-[-50%] right-[-30%] w-[60%] h-[80%] rounded-full blur-[80px]" style={{ background: 'radial-gradient(circle, rgba(236,72,153,0.06) 0%, transparent 70%)' }} />
+          <div className="absolute bottom-[-40%] left-[-20%] w-[50%] h-[60%] rounded-full blur-[70px]" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.05) 0%, transparent 70%)' }} />
           
-          {/* Decorative line */}
-          <div className="absolute top-0 left-8 sm:left-10 w-[1px] h-16 bg-gradient-to-b from-rose-400/30 to-transparent" />
-          
-          <div className="relative">
-            {/* Greeting text */}
-            <p className="text-[11px] text-white/30 font-medium uppercase tracking-[0.2em] mb-3">Welcome Back</p>
-            <h1 className="text-[32px] sm:text-[42px] font-bold tracking-tight leading-[1.05]">
-              <span className="text-white">{getGreeting()}</span>
-            </h1>
-            
-            {/* Stats line */}
-            {prefs ? (
-              <div className="flex items-center gap-3 mt-5">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.05] border border-white/[0.06]">
-                  <div className="w-2 h-2 rounded-full bg-rose-400/80" />
-                  <span className="text-[11px] text-white/45 font-medium">{prefs.totalPlays} plays</span>
-                </div>
-                {prefs.topArtists?.[0] && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.05] border border-white/[0.06]">
-                    <div className="w-2 h-2 rounded-full bg-violet-400/80" />
-                    <span className="text-[11px] text-white/45 font-medium">{typeof prefs.topArtists[0] === 'string' ? prefs.topArtists[0] : prefs.topArtists[0].name}</span>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <p className="text-[13px] text-white/25 mt-4">Discover music made for you</p>
-            )}
-
-            {/* Actions */}
+          <div className="relative flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              <h1 className="text-[22px] sm:text-[26px] font-bold text-white tracking-tight">{getGreeting()}</h1>
+              {prefs ? (
+                <p className="text-[11px] text-white/30 mt-1.5">{prefs.totalPlays} plays{prefs.topArtists?.[0] && <> &middot; {typeof prefs.topArtists[0] === 'string' ? prefs.topArtists[0] : prefs.topArtists[0].name}</>}</p>
+              ) : (
+                <p className="text-[11px] text-white/25 mt-1.5">Your music, your vibe</p>
+              )}
+            </div>
             {history.length > 0 && (
-              <div className="flex items-center gap-3 mt-7">
-                <button onClick={() => { const s = [...history.slice(0, 20)].sort(() => Math.random() - 0.5); playSong(s[0], s); }}
-                  className="group inline-flex items-center gap-2.5 px-6 py-3 bg-white text-black text-[13px] font-bold rounded-full shadow-lg shadow-white/[0.08] hover:shadow-white/[0.15] hover:scale-[1.04] active:scale-[0.97] transition-all duration-300">
-                  <Shuffle size={14} className="group-hover:rotate-180 transition-transform duration-500" /> Shuffle
-                </button>
-                <button onClick={() => playSong(history[0], history.slice(0, 20))}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-white/[0.07] text-white/80 text-[13px] font-medium rounded-full border border-white/[0.08] hover:bg-white/[0.12] hover:text-white hover:border-white/[0.15] active:scale-[0.97] transition-all duration-300 backdrop-blur-sm">
-                  <Play size={13} fill="currentColor" /> Continue
-                </button>
-              </div>
+              <button onClick={() => { const s = [...history.slice(0, 20)].sort(() => Math.random() - 0.5); playSong(s[0], s); }}
+                className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-white text-black text-[12px] font-bold rounded-full shadow-lg shadow-white/[0.08] hover:shadow-white/[0.15] hover:scale-[1.04] active:scale-[0.96] transition-all duration-300">
+                <Shuffle size={13} /> Shuffle
+              </button>
             )}
           </div>
         </div>
