@@ -84,8 +84,8 @@ export default function Home() {
           <div className="mt-3 animate-in">
             <div className="flex items-center justify-between mb-2">
               <p className="text-[13px] text-white font-medium">{activeMood} vibes</p>
-              <button onClick={() => playSong(moodSongs[0], moodSongs)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full text-[11px] text-black font-semibold btn-press">
-                <Play size={10} fill="black" /> Play All
+              <button onClick={() => playSong(moodSongs[0], moodSongs)} className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-rose-500 to-rose-600 rounded-full text-[11px] text-white font-bold btn-press shadow-lg shadow-rose-500/25 hover:shadow-rose-500/40 hover:scale-[1.02] transition-all duration-300">
+                <Play size={11} fill="white" /> Play All
               </button>
             </div>
             <div className="flex gap-3 scroll-x pb-1 stagger">

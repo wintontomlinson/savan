@@ -187,8 +187,8 @@ export default function SearchResults() {
                   Clear
                 </button>
                 <button onClick={() => playSong(songs[0], songs)}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-white text-black text-[12px] font-semibold rounded-full btn-press shadow-lg shadow-white/10 hover:shadow-white/20 transition-shadow">
-                  <Play size={12} fill="black" /> Play All
+                  className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-rose-500 to-rose-600 text-white text-[12px] font-bold rounded-full btn-press shadow-lg shadow-rose-500/25 hover:shadow-rose-500/40 hover:scale-[1.02] transition-all duration-300">
+                  <Play size={13} fill="white" /> Play All
                 </button>
               </div>
             )}

@@ -193,8 +193,8 @@ export default function Explore() {
                   <button onClick={() => shufflePlay(songs)} className="w-9 h-9 rounded-full bg-white/[0.08] flex items-center justify-center btn-press hover:bg-white/[0.12] transition-colors">
                     <Shuffle size={14} className="text-white" />
                   </button>
-                  <button onClick={() => playSong(songs[0], songs)} className="flex items-center gap-1.5 px-4 py-2.5 bg-white rounded-full text-[12px] text-black font-bold btn-press shadow-md hover:shadow-lg transition-shadow">
-                    <Play size={12} fill="black" /> Play All
+                  <button onClick={() => playSong(songs[0], songs)} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-rose-500 to-rose-600 rounded-full text-[12px] text-white font-bold btn-press shadow-lg shadow-rose-500/25 hover:shadow-rose-500/40 hover:scale-[1.02] transition-all duration-300">
+                    <Play size={13} fill="white" /> Play All
                   </button>
                   <button onClick={() => { setActiveArtist(null); setSongs([]); }} className="w-9 h-9 rounded-full bg-white/[0.08] flex items-center justify-center btn-press hover:bg-white/[0.12] transition-colors">
                     <X size={14} className="text-white/60" />
