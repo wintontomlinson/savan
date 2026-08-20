@@ -329,11 +329,18 @@ export default function ExpandedPlayer() {
         </div>
       </div>
 
-      {/* Volume — Right Side Bar */}
+      {/* Volume — Premium Right Panel */}
       {activePanel === 'volume' && (
-        <div className="absolute right-0 top-0 bottom-0 w-[60px] flex flex-col items-center justify-center py-20 bg-black/40 backdrop-blur-xl border-l border-white/[0.06] animate-scale z-10">
-          <Volume2 size={14} className="text-white/50 mb-3" />
-          <div ref={volumeRef} className="flex-1 w-[40px] flex items-center justify-center cursor-pointer relative touch-none"
+        <div className="absolute right-0 top-0 bottom-0 w-[72px] flex flex-col items-center justify-center py-16 bg-[#0a0a0a]/80 backdrop-blur-2xl border-l border-white/[0.05] z-10"
+          style={{ animation: 'fadeIn 0.3s cubic-bezier(0.22,1,0.36,1) both' }}>
+          
+          {/* Max icon */}
+          <button onClick={() => setVolume(1)} className="mb-4 active:scale-90 transition-transform">
+            <Volume2 size={16} className={`transition-colors duration-200 ${volume >= 0.9 ? 'text-white' : 'text-white/30'}`} />
+          </button>
+
+          {/* Slider */}
+          <div ref={volumeRef} className="flex-1 w-[50px] flex items-center justify-center cursor-pointer relative touch-none"
             onMouseDown={(e) => {
               e.preventDefault();
               const rect = volumeRef.current.getBoundingClientRect();
@@ -354,17 +361,32 @@ export default function ExpandedPlayer() {
               document.addEventListener('touchmove', onMove, { passive: false });
               document.addEventListener('touchend', onEnd);
             }}>
-            {/* Vertical track */}
-            <div className="absolute inset-y-0 w-[4px] bg-white/[0.08] rounded-full left-1/2 -translate-x-1/2" />
-            {/* Filled */}
-            <div className="absolute bottom-0 w-[4px] bg-white/70 rounded-full left-1/2 -translate-x-1/2 transition-[height] duration-75"
+            
+            {/* Track bg */}
+            <div className="absolute inset-y-0 w-[6px] bg-white/[0.06] rounded-full left-1/2 -translate-x-1/2" />
+            
+            {/* Filled gradient */}
+            <div className="absolute bottom-0 w-[6px] rounded-full left-1/2 -translate-x-1/2 transition-[height] duration-100 bg-gradient-to-t from-rose-500 to-white/80"
               style={{ height: `${volume * 100}%` }} />
+            
+            {/* Glow behind fill */}
+            <div className="absolute bottom-0 w-[16px] rounded-full left-1/2 -translate-x-1/2 blur-[6px] opacity-40 bg-gradient-to-t from-rose-500 to-transparent transition-[height] duration-100"
+              style={{ height: `${volume * 100}%` }} />
+            
             {/* Thumb */}
-            <div className="absolute w-[16px] h-[16px] bg-white rounded-full shadow-lg left-1/2 -translate-x-1/2 transition-[bottom] duration-75"
-              style={{ bottom: `calc(${volume * 100}% - 8px)` }} />
+            <div className="absolute w-[18px] h-[18px] bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.3)] left-1/2 -translate-x-1/2 transition-[bottom] duration-100"
+              style={{ bottom: `calc(${volume * 100}% - 9px)` }} />
           </div>
-          <span className="text-[10px] text-white/50 font-bold mt-3 tabular-nums">{Math.round(volume * 100)}</span>
-          <VolumeX size={14} className="text-white/30 mt-2" />
+
+          {/* Percentage */}
+          <div className="mt-4 w-10 h-10 rounded-full bg-white/[0.06] flex items-center justify-center">
+            <span className="text-[11px] text-white font-bold tabular-nums">{Math.round(volume * 100)}</span>
+          </div>
+
+          {/* Mute icon */}
+          <button onClick={() => setVolume(0)} className="mt-3 active:scale-90 transition-transform">
+            <VolumeX size={14} className={`transition-colors duration-200 ${volume === 0 ? 'text-white' : 'text-white/30'}`} />
+          </button>
         </div>
       )}
     </div>
