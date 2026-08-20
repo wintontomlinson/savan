@@ -1,20 +1,22 @@
 import { useState, useMemo } from 'react';
-import { Heart, Clock, BarChart3, Music, Trophy, Flame } from 'lucide-react';
+import { Heart, Clock, BarChart3, Music, Trophy, Flame, Download } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { getHistory, analyzePreferences } from '../data/algorithm';
 import SongRow from '../components/SongRow';
 
 export default function Library() {
-  const { likedSongs } = usePlayer();
+  const { likedSongs, downloadedSongs } = usePlayer();
   const [tab, setTab] = useState('history');
   const history = useMemo(() => getHistory(), []);
   const prefs = useMemo(() => analyzePreferences(), []);
 
   const likedFromHistory = history.filter(s => likedSongs.includes(s.id));
+  const downloadedFromHistory = history.filter(s => downloadedSongs.includes(s.id));
 
   const tabs = [
     { id: 'history', label: 'History', icon: Clock },
     { id: 'liked', label: 'Liked', icon: Heart, count: likedFromHistory.length },
+    { id: 'downloads', label: 'Downloads', icon: Download, count: downloadedFromHistory.length },
     { id: 'stats', label: 'Stats', icon: BarChart3 },
   ];
 
@@ -65,6 +67,19 @@ export default function Library() {
           </div>
         ) : (
           <EmptyState icon={Heart} text="No liked songs yet" sub="Tap ❤️ on songs to save them here" />
+        )
+      )}
+
+      {/* Downloads */}
+      {tab === 'downloads' && (
+        downloadedFromHistory.length > 0 ? (
+          <div className="animate-in">
+            <div className="bg-[#0e0e0e] rounded-2xl overflow-hidden border border-white/[0.04]">
+              {downloadedFromHistory.map((s, i) => <SongRow key={s.id} song={s} index={i} songList={downloadedFromHistory} />)}
+            </div>
+          </div>
+        ) : (
+          <EmptyState icon={Download} text="No downloads yet" sub="Tap download on songs to save them here" />
         )
       )}
 

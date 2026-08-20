@@ -47,7 +47,7 @@ export default function MiniPlayer() {
   const progress = isDragging ? dragProgress * 100 : (duration > 0 ? (currentTime / duration) * 100 : 0);
 
   return (
-    <div className="fixed bottom-[52px] md:bottom-0 left-0 md:left-[72px] lg:left-[240px] right-0 z-40 animate-mini-enter"
+    <div className="fixed bottom-[56px] md:bottom-0 left-0 md:left-[72px] lg:left-[240px] right-0 z-40 animate-mini-enter"
       onTouchStart={e => { touchY.current = e.touches[0].clientY; }}
       onTouchEnd={e => { if (touchY.current - e.changedTouches[0].clientY > 50) setExpanded(true); }}>
       
