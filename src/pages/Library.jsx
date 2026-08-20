@@ -13,8 +13,8 @@ export default function Library() {
   const history = useMemo(() => getHistory(), []);
   const prefs = useMemo(() => analyzePreferences(), []);
 
-  const likedFromHistory = history.filter(s => likedSongs.includes(s.id));
-  const downloadedFromHistory = history.filter(s => downloadedSongs.includes(s.id));
+  const likedFromHistory = useMemo(() => { try { return JSON.parse(localStorage.getItem('ma_liked_songs')) || []; } catch { return []; } }, [likedSongs]);
+  const downloadedFromHistory = useMemo(() => { try { return JSON.parse(localStorage.getItem('ma_downloaded_songs')) || []; } catch { return []; } }, [downloadedSongs]);
 
   // Save playlists
   useEffect(() => { try { localStorage.setItem('ma_playlists', JSON.stringify(playlists)); } catch {} }, [playlists]);

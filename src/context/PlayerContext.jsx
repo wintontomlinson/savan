@@ -600,14 +600,42 @@ export function PlayerProvider({ children }) {
   const removeFromQueue = useCallback(idx => setQueue(p => p.filter((_, i) => i !== idx)), []);
   const clearQueue = useCallback(() => { setQueue([]); showToast('Queue cleared'); }, [showToast]);
   const toggleLike = useCallback(songId => {
-    setLikedSongs(p => { if (p.includes(songId)) { showToast('Removed'); return p.filter(id => id !== songId); } showToast('Liked ❤️', 'success'); return [...p, songId]; });
-  }, [showToast]);
+    setLikedSongs(p => { 
+      if (p.includes(songId)) return p.filter(id => id !== songId); 
+      return [...p, songId]; 
+    });
+    // Save full song object to liked playlist
+    const song = currentSongRef.current;
+    if (song && song.id === songId) {
+      const saved = JSON.parse(localStorage.getItem('ma_liked_songs') || '[]');
+      const exists = saved.find(s => s.id === songId);
+      if (!exists) {
+        saved.unshift(song);
+        localStorage.setItem('ma_liked_songs', JSON.stringify(saved.slice(0, 200)));
+      } else {
+        // Remove if unliking
+        localStorage.setItem('ma_liked_songs', JSON.stringify(saved.filter(s => s.id !== songId)));
+      }
+    }
+  }, []);
 
   // Downloads — separate from Likes (online saved list)
   const [downloadedSongs, setDownloadedSongs] = useState(() => { try { return JSON.parse(localStorage.getItem('downloads')) || []; } catch { return []; } });
   useEffect(() => { try { localStorage.setItem('downloads', JSON.stringify(downloadedSongs)); } catch {} }, [downloadedSongs]);
   const toggleDownload = useCallback(songId => {
     setDownloadedSongs(p => { if (p.includes(songId)) return p.filter(id => id !== songId); return [...p, songId]; });
+    // Save full song object
+    const song = currentSongRef.current;
+    if (song && song.id === songId) {
+      const saved = JSON.parse(localStorage.getItem('ma_downloaded_songs') || '[]');
+      const exists = saved.find(s => s.id === songId);
+      if (!exists) {
+        saved.unshift(song);
+        localStorage.setItem('ma_downloaded_songs', JSON.stringify(saved.slice(0, 200)));
+      } else {
+        localStorage.setItem('ma_downloaded_songs', JSON.stringify(saved.filter(s => s.id !== songId)));
+      }
+    }
   }, []);
 
   return <Ctx.Provider value={{ currentSong, queue, upNext, isPlaying, volume, boostLevel, bassBoostOn, vocalMode, currentTime, duration, shuffleMode, repeatMode, isExpanded, likedSongs, downloadedSongs, toasts, playSong, togglePlay, playNext, playPrev, seekTo, setVolume, setVolumeBoost, setBassBoost, setVocalMode, resetAudio, setEqBand, applyEqPreset, toggleShuffle, cycleRepeat, addToQueue, removeFromQueue, clearQueue, toggleLike, toggleDownload, setExpanded, showToast, dismissToast }}>{children}</Ctx.Provider>;
