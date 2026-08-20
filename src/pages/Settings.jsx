@@ -24,8 +24,8 @@ export default function Settings() {
   const { volume, setVolume, boostLevel, setVolumeBoost, bassBoostOn, setBassBoost, vocalMode, setVocalMode, resetAudio, applyEqPreset, setEqBand, showToast } = usePlayer();
   const [crossfade, setCrossfade] = useState(() => parseInt(localStorage.getItem('crossfade_dur') || '5'));
   const [notifications, setNotifications] = useState(true);
-  const [activePreset, setActivePreset] = useState('Flat');
-  const [eqValues, setEqValues] = useState([0,0,0,0,0,0,0,0,0,0]);
+  const [activePreset, setActivePreset] = useState(() => { try { return localStorage.getItem('ma_eq_preset') || 'Flat'; } catch { return 'Flat'; } });
+  const [eqValues, setEqValues] = useState(() => { try { return JSON.parse(localStorage.getItem('ma_eq_values')) || [0,0,0,0,0,0,0,0,0,0]; } catch { return [0,0,0,0,0,0,0,0,0,0]; } });
 
   const handleCrossfade = (val) => {
     setCrossfade(val);
@@ -36,7 +36,7 @@ export default function Settings() {
     setActivePreset(preset.name);
     setEqValues(preset.gains);
     applyEqPreset(preset.gains);
-    showToast(`EQ: ${preset.name}`);
+    try { localStorage.setItem('ma_eq_preset', preset.name); localStorage.setItem('ma_eq_values', JSON.stringify(preset.gains)); } catch {}
   };
 
   const handleBand = (i, val) => {
@@ -45,6 +45,7 @@ export default function Settings() {
     setEqValues(newVals);
     setEqBand(i, val);
     setActivePreset('Custom');
+    try { localStorage.setItem('ma_eq_preset', 'Custom'); localStorage.setItem('ma_eq_values', JSON.stringify(newVals)); } catch {}
   };
 
   const handleBoost = (val) => {
