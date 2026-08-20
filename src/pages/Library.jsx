@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Clock, BarChart3, Download, Plus, ListMusic, Play, Trash2, Pencil, Check, X, Heart, Shuffle, Trophy, Music, Headphones, Disc3 } from 'lucide-react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { Clock, BarChart3, Download, Plus, ListMusic, Play, Trash2, Pencil, Check, X, Heart, Shuffle, Trophy, Music, Headphones, Disc3, MoreVertical } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { getHistory, analyzePreferences } from '../data/algorithm';
 import SongRow from '../components/SongRow';
@@ -154,24 +154,12 @@ export default function Library() {
                   </>
                 )}
               </div>
-              <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-all">
-                {pl.songs.length > 0 && (
-                  <button onClick={e => { e.stopPropagation(); const s = [...pl.songs].sort(() => Math.random() - 0.5); playSong(s[0], s); }}
-                    className="w-9 h-9 rounded-full bg-gradient-to-r from-fuchsia-500 to-violet-500 flex items-center justify-center shadow-md shadow-fuchsia-500/20 active:scale-90 transition-all">
-                    <Play size={12} className="text-white ml-0.5" fill="white" />
-                  </button>
-                )}
-                {pl.id !== '__liked__' && (
-                  <>
-                    <button onClick={e => { e.stopPropagation(); setRenaming(pl.id); setRenameText(pl.name); }} className="w-8 h-8 rounded-full flex items-center justify-center text-white/20 hover:text-white/60 hover:bg-white/[0.06] active:scale-90 transition-all">
-                      <Pencil size={11} />
-                    </button>
-                    <button onClick={e => { e.stopPropagation(); deletePlaylist(pl.id); }} className="w-8 h-8 rounded-full flex items-center justify-center text-white/20 hover:text-red-400 hover:bg-red-500/10 active:scale-90 transition-all">
-                      <Trash2 size={12} />
-                    </button>
-                  </>
-                )}
-              </div>
+              {pl.id !== '__liked__' && renaming !== pl.id && (
+                <PlaylistMenu
+                  onRename={e => { e.stopPropagation(); setRenaming(pl.id); setRenameText(pl.name); }}
+                  onDelete={e => { e.stopPropagation(); deletePlaylist(pl.id); }}
+                />
+              )}
             </div>
           ))}
           {playlists.length <= 1 && (
@@ -293,6 +281,37 @@ function EmptyBox({ icon: Icon, title, desc }) {
       </div>
       <p className="text-[14px] text-white/50 font-medium">{title}</p>
       <p className="text-[11px] text-white/20 mt-1.5 max-w-[240px] mx-auto leading-relaxed">{desc}</p>
+    </div>
+  );
+}
+
+
+function PlaylistMenu({ onRename, onDelete }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative" onClick={e => e.stopPropagation()}>
+      <button onClick={() => setOpen(!open)} className="w-8 h-8 rounded-full flex items-center justify-center text-white/25 hover:text-white/60 hover:bg-white/[0.06] active:scale-90 transition-all">
+        <MoreVertical size={14} />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 w-36 bg-[#1a1a1d] rounded-xl border border-white/[0.08] shadow-2xl shadow-black/60 overflow-hidden z-50 animate-scale">
+          <button onClick={e => { onRename(e); setOpen(false); }} className="flex items-center gap-2.5 w-full px-4 py-3 text-[12px] text-white/70 hover:bg-white/[0.05] transition-colors">
+            <Pencil size={12} className="text-white/40" /> Rename
+          </button>
+          <button onClick={e => { onDelete(e); setOpen(false); }} className="flex items-center gap-2.5 w-full px-4 py-3 text-[12px] text-red-400 hover:bg-red-500/5 transition-colors border-t border-white/[0.04]">
+            <Trash2 size={12} /> Delete
+          </button>
+        </div>
+      )}
     </div>
   );
 }
