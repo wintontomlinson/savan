@@ -136,13 +136,20 @@ export default function ExpandedPlayer() {
   const hasPanel = activePanel !== null;
 
   return (
-    <div className={`fixed inset-0 z-[100] flex flex-col bg-[#050505] ${closing ? 'animate-[slideDown_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards]' : 'player-expanded-enter'}`}
+    <div className={`fixed inset-0 z-[100] flex flex-col bg-[#030303] ${closing ? 'animate-[slideDown_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards]' : 'player-expanded-enter'}`}
       onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       
-      {/* Background — elegant album color wash */}
+      {/* Background — animated color wash */}
       <div className="absolute inset-0 overflow-hidden">
-        <img src={currentSong.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover blur-[100px] scale-[1.8] opacity-20 saturate-150" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-[#050505]/80 to-[#050505]" />
+        <img src={currentSong.thumbnail} alt="" className={`absolute inset-0 w-full h-full object-cover blur-[100px] scale-[2] saturate-150 transition-opacity duration-1000 ${isPlaying ? 'opacity-25' : 'opacity-10'}`} />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-[#030303]/75 to-[#030303]" />
+        {/* Animated gradient orbs */}
+        {isPlaying && (
+          <>
+            <div className="absolute top-[15%] left-[-10%] w-[300px] h-[300px] bg-rose-600/[0.07] rounded-full blur-[100px] animate-float" />
+            <div className="absolute bottom-[20%] right-[-10%] w-[250px] h-[250px] bg-violet-600/[0.06] rounded-full blur-[100px] animate-float" style={{ animationDelay: '2s', animationDuration: '5s' }} />
+          </>
+        )}
       </div>
 
       <div className="relative flex-1 flex flex-col min-h-0">
@@ -167,23 +174,27 @@ export default function ExpandedPlayer() {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col items-center justify-center px-5 sm:px-10 gap-3 min-h-0 overflow-hidden">
           
-          {/* Album Art — premium square with rounded corners */}
+          {/* Album Art — with animated ring */}
           <div className={`relative transition-all duration-600 ease-[cubic-bezier(0.16,1,0.3,1)] shrink-0 ${
             hasPanel ? 'w-[70px] h-[70px] sm:w-[90px] sm:h-[90px]' : 'w-[200px] h-[200px] sm:w-[260px] sm:h-[260px] md:w-[280px] md:h-[280px]'
           }`}>
-            {/* Elevated shadow */}
+            {/* Animated pulsing ring */}
+            {isPlaying && !hasPanel && (
+              <div className="absolute -inset-3 rounded-[28px] border border-white/[0.06] animate-breathe" />
+            )}
+            {/* Shadow */}
             {!hasPanel && (
-              <div className="absolute inset-3 rounded-[28px] bg-black/80 blur-[30px] translate-y-4 -z-10" />
+              <div className={`absolute inset-4 rounded-[24px] blur-[30px] -z-10 transition-all duration-700 ${isPlaying ? 'bg-black/70 translate-y-5 scale-95' : 'bg-black/50 translate-y-2'}`} />
             )}
             {/* Art */}
-            <div className={`w-full h-full rounded-[24px] overflow-hidden transition-all duration-500 ${
-              isPlaying ? 'scale-100 ring-1 ring-white/[0.08]' : 'scale-[0.96] ring-1 ring-white/[0.05]'
+            <div className={`w-full h-full rounded-[24px] overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+              isPlaying ? 'scale-100 ring-1 ring-white/[0.1] shadow-2xl' : 'scale-[0.94] ring-1 ring-white/[0.05] shadow-lg'
             }`}>
-              <img src={currentSong.thumbnail} alt="" className="w-full h-full object-cover" />
+              <img src={currentSong.thumbnail} alt="" className={`w-full h-full object-cover transition-all duration-700 ${isPlaying ? 'scale-100' : 'scale-[1.05] brightness-75'}`} />
             </div>
-            {/* Subtle ambient glow */}
+            {/* Ambient color glow */}
             {isPlaying && !hasPanel && (
-              <div className="absolute -inset-6 rounded-[36px] opacity-50 -z-10" style={{ background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.03) 0%, transparent 70%)' }} />
+              <div className="absolute -inset-8 rounded-[40px] -z-10 playing-pulse" style={{ background: 'radial-gradient(ellipse at center, rgba(225,29,72,0.06) 0%, transparent 60%)' }} />
             )}
           </div>
 
