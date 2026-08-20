@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 
 export default function Header() {
   return (
-    <header className="sticky top-0 z-40 h-14 flex items-center px-4 sm:px-6 lg:px-8 xl:px-10 bg-[#080808]/95 backdrop-blur-xl border-b border-white/[0.04]">
+    <header className="sticky top-0 z-40 h-14 flex items-center px-4 sm:px-6 lg:px-8 xl:px-10 bg-[#080808]/95 backdrop-blur-2xl border-b border-white/[0.04] transition-all duration-300">
       <div className="max-w-[1400px] mx-auto w-full flex items-center justify-between">
         {/* Logo — mobile only */}
         <div className="flex items-center gap-2 md:hidden">

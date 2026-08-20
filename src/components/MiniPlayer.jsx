@@ -62,7 +62,7 @@ export default function MiniPlayer() {
       </div>
 
       {/* Content */}
-      <div className="flex items-center h-[64px] px-3 sm:px-4 md:px-6 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/[0.04]">
+      <div className="flex items-center h-[64px] px-3 sm:px-4 md:px-6 bg-[#0a0a0a]/95 backdrop-blur-2xl border-t border-white/[0.04]">
         
         {/* Song Info — tap to expand */}
         <div className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer active:opacity-80 transition-opacity" onClick={() => setExpanded(true)}>

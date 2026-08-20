@@ -122,14 +122,11 @@ export default function Home() {
           <div className="grid grid-cols-2 gap-2.5">
             {quickPicks.map(s => (
               <button key={s.id} onClick={() => playSong(s)}
-                className="group flex items-center gap-3 bg-[#111] hover:bg-[#161616] rounded-xl p-2.5 transition-all duration-200 border border-white/[0.03] hover:border-white/[0.06] btn-press text-left">
-                <img src={s.thumbnail} alt="" className="w-12 h-12 rounded-lg object-cover shrink-0" loading="lazy" />
+                className="group flex items-center gap-3 bg-[#111] hover:bg-[#161616] rounded-2xl p-3 transition-all duration-300 border border-white/[0.03] hover:border-white/[0.06] hover:shadow-lg hover:shadow-black/20 btn-press text-left">
+                <img src={s.thumbnail} alt="" className="w-11 h-11 rounded-xl object-cover shrink-0 ring-1 ring-white/[0.05] transition-transform duration-300 group-hover:scale-105" loading="lazy" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[12px] font-medium text-white truncate">{s.title}</p>
-                  <p className="text-[10px] text-[#666] truncate">{s.artist}</p>
-                </div>
-                <div className="w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                  <Play size={11} className="text-white ml-0.5" fill="white" />
+                  <p className="text-[12px] font-semibold text-white leading-tight line-clamp-2">{s.title}</p>
+                  <p className="text-[10px] text-white/35 truncate mt-0.5">{s.artist}</p>
                 </div>
               </button>
             ))}
