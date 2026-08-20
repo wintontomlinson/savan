@@ -88,33 +88,6 @@ export default function ExpandedPlayer() {
     document.addEventListener('touchend', onEnd);
   }, [duration, seekTo]);
 
-  // Volume drag — improved with larger touch area
-  const handleVolumeStart = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const rect = volumeRef.current.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    setVolume(pct);
-
-    const onMove = (ev) => {
-      ev.preventDefault();
-      const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
-      const p = Math.max(0, Math.min(1, (cx - rect.left) / rect.width));
-      setVolume(p);
-    };
-    const onEnd = () => {
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onEnd);
-      document.removeEventListener('touchmove', onMove);
-      document.removeEventListener('touchend', onEnd);
-    };
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onEnd);
-    document.addEventListener('touchmove', onMove, { passive: false });
-    document.addEventListener('touchend', onEnd);
-  }, [setVolume]);
-
   // Play next — auto-close panels
   const handleNext = useCallback(() => {
     closePanels();
