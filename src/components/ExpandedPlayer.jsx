@@ -311,50 +311,6 @@ export default function ExpandedPlayer() {
             </button>
           </div>
 
-          {/* Volume Slider — full-width, easy to use */}
-          {activePanel === 'volume' && (
-            <div className="max-w-[300px] mx-auto mb-4 animate-scale">
-              {/* Volume level display */}
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[11px] text-white/40 font-medium">Volume</span>
-                <span className="text-[14px] text-white font-bold tabular-nums">{Math.round(volume * 100)}%</span>
-              </div>
-              {/* Slider track — large touch area */}
-              <div className="flex items-center gap-3">
-                <button onClick={() => setVolume(0)} className="shrink-0 w-8 h-8 rounded-full bg-white/[0.05] flex items-center justify-center active:scale-90 transition-all hover:bg-white/[0.1]">
-                  <VolumeX size={14} className={volume === 0 ? 'text-white' : 'text-white/30'} />
-                </button>
-                <div ref={volumeRef} className="flex-1 h-[40px] flex items-center cursor-pointer relative touch-none"
-                  onMouseDown={handleVolumeStart} onTouchStart={handleVolumeStart}>
-                  {/* Background track */}
-                  <div className="absolute inset-x-0 h-[6px] bg-white/[0.08] rounded-full top-1/2 -translate-y-1/2" />
-                  {/* Filled track */}
-                  <div className="absolute left-0 h-[6px] bg-gradient-to-r from-white/60 to-white/80 rounded-full top-1/2 -translate-y-1/2 transition-[width] duration-75" 
-                    style={{ width: `${volume * 100}%` }} />
-                  {/* Thumb — big and easy to grab */}
-                  <div className="absolute top-1/2 -translate-y-1/2 w-[20px] h-[20px] bg-white rounded-full shadow-lg shadow-black/30 transition-all duration-75 active:scale-110" 
-                    style={{ left: `calc(${volume * 100}% - 10px)` }} />
-                </div>
-                <button onClick={() => setVolume(1)} className="shrink-0 w-8 h-8 rounded-full bg-white/[0.05] flex items-center justify-center active:scale-90 transition-all hover:bg-white/[0.1]">
-                  <Volume2 size={14} className={volume >= 0.95 ? 'text-white' : 'text-white/30'} />
-                </button>
-              </div>
-              {/* Quick volume presets */}
-              <div className="flex items-center justify-between mt-3 gap-2">
-                {[25, 50, 75, 100].map(pct => (
-                  <button key={pct} onClick={() => setVolume(pct / 100)}
-                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-semibold transition-all duration-150 active:scale-95 ${
-                      Math.round(volume * 100) === pct 
-                        ? 'bg-white/[0.12] text-white border border-white/[0.1]' 
-                        : 'bg-white/[0.04] text-white/30 hover:bg-white/[0.07] hover:text-white/50'
-                    }`}>
-                    {pct}%
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Action Bar */}
           <div className="flex items-center justify-center gap-2.5 max-w-sm mx-auto">
             <ActionPill icon={Mic2} label="Lyrics" active={activePanel === 'lyrics'} onClick={() => togglePanel('lyrics')} />
@@ -364,6 +320,45 @@ export default function ExpandedPlayer() {
           </div>
         </div>
       </div>
+
+      {/* Volume — Right Side Bar */}
+      {activePanel === 'volume' && (
+        <div className="absolute right-0 top-0 bottom-0 w-[60px] flex flex-col items-center justify-center py-20 bg-black/40 backdrop-blur-xl border-l border-white/[0.06] animate-scale z-10">
+          <Volume2 size={14} className="text-white/50 mb-3" />
+          <div ref={volumeRef} className="flex-1 w-[40px] flex items-center justify-center cursor-pointer relative touch-none"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              const rect = volumeRef.current.getBoundingClientRect();
+              const pct = 1 - Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+              setVolume(pct);
+              const onMove = (ev) => { const p = 1 - Math.max(0, Math.min(1, (ev.clientY - rect.top) / rect.height)); setVolume(p); };
+              const onEnd = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onEnd); };
+              document.addEventListener('mousemove', onMove);
+              document.addEventListener('mouseup', onEnd);
+            }}
+            onTouchStart={(e) => {
+              e.preventDefault();
+              const rect = volumeRef.current.getBoundingClientRect();
+              const pct = 1 - Math.max(0, Math.min(1, (e.touches[0].clientY - rect.top) / rect.height));
+              setVolume(pct);
+              const onMove = (ev) => { ev.preventDefault(); const p = 1 - Math.max(0, Math.min(1, (ev.touches[0].clientY - rect.top) / rect.height)); setVolume(p); };
+              const onEnd = () => { document.removeEventListener('touchmove', onMove); document.removeEventListener('touchend', onEnd); };
+              document.addEventListener('touchmove', onMove, { passive: false });
+              document.addEventListener('touchend', onEnd);
+            }}>
+            {/* Vertical track */}
+            <div className="absolute inset-y-0 w-[4px] bg-white/[0.08] rounded-full left-1/2 -translate-x-1/2" />
+            {/* Filled */}
+            <div className="absolute bottom-0 w-[4px] bg-white/70 rounded-full left-1/2 -translate-x-1/2 transition-[height] duration-75"
+              style={{ height: `${volume * 100}%` }} />
+            {/* Thumb */}
+            <div className="absolute w-[16px] h-[16px] bg-white rounded-full shadow-lg left-1/2 -translate-x-1/2 transition-[bottom] duration-75"
+              style={{ bottom: `calc(${volume * 100}% - 8px)` }} />
+          </div>
+          <span className="text-[10px] text-white/50 font-bold mt-3 tabular-nums">{Math.round(volume * 100)}</span>
+          <VolumeX size={14} className="text-white/30 mt-2" />
+        </div>
+      )}
     </div>
   );
 }
