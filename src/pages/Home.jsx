@@ -58,17 +58,49 @@ export default function Home() {
   return (
     <div className="pb-6 pt-3">
       {/* Hero Greeting */}
-      <section className="mb-6 animate-in">
-        <div className="relative overflow-hidden rounded-3xl p-6 sm:p-7 bg-gradient-to-br from-[#1a1020] via-[#120e1a] to-[#0a0a0f] border border-white/[0.04]">
-          <div className="absolute top-0 right-0 w-52 h-52 bg-rose-500/[0.06] rounded-full blur-[80px] animate-float" />
-          <div className="absolute -bottom-10 -left-10 w-44 h-44 bg-violet-500/[0.05] rounded-full blur-[60px] animate-float" style={{ animationDelay: '2s' }} />
+      <section className="mb-7 animate-in">
+        <div className="relative overflow-hidden rounded-3xl p-7 sm:p-9 bg-gradient-to-br from-[#1c1028] via-[#15101f] to-[#0d0a14] border border-white/[0.05]">
+          {/* Animated background orbs */}
+          <div className="absolute top-[-30px] right-[-20px] w-56 h-56 bg-rose-500/[0.08] rounded-full blur-[90px] animate-float" />
+          <div className="absolute bottom-[-40px] left-[-30px] w-48 h-48 bg-violet-500/[0.07] rounded-full blur-[70px] animate-float" style={{ animationDelay: '2s' }} />
+          <div className="absolute top-[50%] left-[50%] w-32 h-32 bg-blue-500/[0.04] rounded-full blur-[50px] animate-float" style={{ animationDelay: '4s' }} />
+          
+          {/* Subtle grid pattern */}
+          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+          
           <div className="relative">
-            <div className="flex items-center gap-1.5 mb-2">
-              <Sparkles size={13} className="text-rose-400 animate-pulse" style={{ animationDuration: '3s' }} />
-              <span className="text-[10px] text-rose-400/70 font-semibold uppercase tracking-widest">For You</span>
+            {/* Badge */}
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.06] border border-white/[0.06] mb-4 backdrop-blur-sm">
+              <Sparkles size={11} className="text-rose-400 animate-pulse" style={{ animationDuration: '2.5s' }} />
+              <span className="text-[10px] text-white/50 font-semibold uppercase tracking-widest">Personalized</span>
             </div>
-            <h1 className="text-[26px] sm:text-[32px] font-bold text-white tracking-tight">{getGreeting()}</h1>
-            {prefs && <p className="text-[12px] text-white/30 mt-2">{prefs.totalPlays} songs played &middot; Top: {prefs.topArtists?.slice(0,2).join(', ')}</p>}
+            
+            {/* Greeting */}
+            <h1 className="text-[28px] sm:text-[36px] font-bold text-white tracking-tight leading-tight">{getGreeting()}</h1>
+            
+            {/* Stats */}
+            {prefs && (
+              <div className="flex items-center gap-4 mt-4">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
+                  <span className="text-[12px] text-white/40">{prefs.totalPlays} plays</span>
+                </div>
+                {prefs.topArtists?.[0] && (
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-violet-400" />
+                    <span className="text-[12px] text-white/40">Loving {typeof prefs.topArtists[0] === 'string' ? prefs.topArtists[0] : prefs.topArtists[0].name}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Quick action */}
+            {history.length > 0 && (
+              <button onClick={() => { const s = [...history.slice(0, 20)].sort(() => Math.random() - 0.5); playSong(s[0], s); }}
+                className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 bg-white text-black text-[12px] font-bold rounded-full shadow-lg shadow-white/10 hover:shadow-xl hover:scale-[1.03] active:scale-95 transition-all duration-300">
+                <Shuffle size={13} /> Surprise Me
+              </button>
+            )}
           </div>
         </div>
       </section>
