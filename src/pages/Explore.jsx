@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Loader2, Play, X, Shuffle, ChevronRight, Disc3, TrendingUp, ListMusic, Mic, Users, Radio, Sparkles, Music } from 'lucide-react';
+import { Loader2, Play, X, Shuffle, ChevronRight, Disc3, TrendingUp, ListMusic, Mic, Users, Radio } from 'lucide-react';
 import { searchSongs, getPlaylistById } from '../data/api';
 import { usePlayer } from '../context/PlayerContext';
 import SongRow from '../components/SongRow';
@@ -7,16 +7,16 @@ import SongCard from '../components/SongCard';
 import HorizontalScroll from '../components/HorizontalScroll';
 
 const BROWSE_SECTIONS = [
-  { id: 'trending', label: 'Trending Now', icon: TrendingUp, playlistId: '1219706044', searchQuery: 'latest hindi hits 2024 trending', color: 'from-rose-500/20 to-pink-600/10', iconColor: 'text-rose-400' },
-  { id: 'dance', label: 'Dance Hits', icon: Disc3, playlistId: '1219706999', searchQuery: 'bollywood dance party songs', color: 'from-amber-500/20 to-orange-600/10', iconColor: 'text-amber-400' },
-  { id: 'retro', label: '90s Bollywood', icon: Radio, playlistId: '1167751266', searchQuery: '90s bollywood songs classic hindi', color: 'from-emerald-500/20 to-green-600/10', iconColor: 'text-emerald-400' },
-  { id: 'english', label: 'English Pop', icon: Users, playlistId: '303128179', searchQuery: 'english pop songs trending 2024', color: 'from-blue-500/20 to-cyan-600/10', iconColor: 'text-blue-400' },
-  { id: 'lofi', label: 'Lo-Fi Chill', icon: ListMusic, playlistId: '1079336813', searchQuery: 'lofi hindi chill relax', color: 'from-purple-500/20 to-violet-600/10', iconColor: 'text-purple-400' },
-  { id: 'hiphop', label: 'Hip-Hop', icon: Mic, playlistId: '1265128247', searchQuery: 'indian hip hop rap songs', color: 'from-indigo-500/20 to-purple-600/10', iconColor: 'text-indigo-400' },
-  { id: 'sad', label: 'Sad Songs', icon: ListMusic, playlistId: '802336660', searchQuery: 'sad hindi songs heartbreak', color: 'from-sky-500/20 to-blue-600/10', iconColor: 'text-sky-400' },
-  { id: 'workout', label: 'Workout', icon: TrendingUp, playlistId: '156710699', searchQuery: 'workout gym motivation hindi songs', color: 'from-orange-500/20 to-red-600/10', iconColor: 'text-orange-400' },
-  { id: 'sufi', label: 'Sufi', icon: Radio, playlistId: '1262711873', searchQuery: 'sufi songs qawwali hindi', color: 'from-teal-500/20 to-emerald-600/10', iconColor: 'text-teal-400' },
-  { id: 'punjabi', label: 'Punjabi Hits', icon: Disc3, playlistId: '4144832', searchQuery: 'punjabi songs latest hits', color: 'from-pink-500/20 to-rose-600/10', iconColor: 'text-pink-400' },
+  { id: 'trending', label: 'Trending Now', icon: TrendingUp, playlistId: '1219706044', searchQuery: 'latest hindi hits 2024 trending', color: 'from-rose-500/20 to-pink-600/5' },
+  { id: 'dance', label: 'Dance Hits', icon: Disc3, playlistId: '1219706999', searchQuery: 'bollywood dance party songs', color: 'from-amber-500/20 to-orange-600/5' },
+  { id: 'retro', label: '90s Bollywood', icon: Radio, playlistId: '1167751266', searchQuery: '90s bollywood songs classic hindi', color: 'from-emerald-500/20 to-green-600/5' },
+  { id: 'english', label: 'English Pop', icon: Users, playlistId: '303128179', searchQuery: 'english pop songs trending 2024', color: 'from-blue-500/20 to-cyan-600/5' },
+  { id: 'lofi', label: 'Lo-Fi Chill', icon: ListMusic, playlistId: '1079336813', searchQuery: 'lofi hindi chill relax', color: 'from-purple-500/20 to-violet-600/5' },
+  { id: 'hiphop', label: 'Hip-Hop', icon: Mic, playlistId: '1265128247', searchQuery: 'indian hip hop rap songs', color: 'from-indigo-500/20 to-purple-600/5' },
+  { id: 'sad', label: 'Sad Songs', icon: ListMusic, playlistId: '802336660', searchQuery: 'sad hindi songs heartbreak', color: 'from-sky-500/20 to-blue-600/5' },
+  { id: 'workout', label: 'Workout', icon: TrendingUp, playlistId: '156710699', searchQuery: 'workout gym motivation hindi songs', color: 'from-orange-500/20 to-red-600/5' },
+  { id: 'sufi', label: 'Sufi', icon: Radio, playlistId: '1262711873', searchQuery: 'sufi songs qawwali hindi', color: 'from-teal-500/20 to-emerald-600/5' },
+  { id: 'punjabi', label: 'Punjabi Hits', icon: Disc3, playlistId: '4144832', searchQuery: 'punjabi songs latest hits', color: 'from-pink-500/20 to-rose-600/5' },
 ];
 
 const ARTISTS = [
@@ -28,37 +28,22 @@ const ARTISTS = [
   { name: 'Guru Randhawa', img: 'https://c.saavncdn.com/artists/Guru_Randhawa_004_20250701125845_500x500.jpg', cat: 'Punjabi' },
   { name: 'Harrdy Sandhu', img: 'https://c.saavncdn.com/artists/Hardy_Sandhu_001_20190913112018_500x500.jpg', cat: 'Punjabi' },
   { name: 'B Praak', img: 'https://c.saavncdn.com/artists/B_Praak_001_20191118112005_500x500.jpg', cat: 'Punjabi' },
-  { name: 'Ammy Virk', img: 'https://c.saavncdn.com/artists/Ammy_Virk_005_20241101070506_500x500.jpg', cat: 'Punjabi' },
-  { name: 'Bohemia', img: 'https://c.saavncdn.com/artists/Bohemia_500x500.jpg', cat: 'Punjabi' },
-  { name: 'Garry Sandhu', img: 'https://c.saavncdn.com/artists/Garry_Sandhu_500x500.jpg', cat: 'Punjabi' },
-  { name: 'Jasmine Sandlas', img: 'https://c.saavncdn.com/artists/Jasmine_Sandlas_002_20240314115630_500x500.jpg', cat: 'Punjabi' },
-  { name: 'Mankirt Aulakh', img: 'https://c.saavncdn.com/artists/Mankirt_Aulakh_500x500.jpg', cat: 'Punjabi' },
   { name: 'Arijit Singh', img: 'https://c.saavncdn.com/artists/Arijit_Singh_004_20241118063717_500x500.jpg', cat: 'Bollywood' },
   { name: 'Shreya Ghoshal', img: 'https://c.saavncdn.com/artists/Shreya_Ghoshal_007_20241101074144_500x500.jpg', cat: 'Bollywood' },
   { name: 'Jubin Nautiyal', img: 'https://c.saavncdn.com/artists/Jubin_Nautiyal_003_20231130204020_500x500.jpg', cat: 'Bollywood' },
   { name: 'Vishal Mishra', img: 'https://c.saavncdn.com/artists/Vishal_Mishra_005_20251120085316_500x500.jpg', cat: 'Bollywood' },
   { name: 'Neha Kakkar', img: 'https://c.saavncdn.com/artists/Neha_Kakkar_007_20241212115832_500x500.jpg', cat: 'Bollywood' },
   { name: 'Atif Aslam', img: 'https://c.saavncdn.com/artists/Atif_Aslam_500x500.jpg', cat: 'Bollywood' },
-  { name: 'Darshan Raval', img: 'https://c.saavncdn.com/artists/Darshan_Raval_006_20250807060352_500x500.jpg', cat: 'Bollywood' },
   { name: 'A.R. Rahman', img: 'https://c.saavncdn.com/artists/AR_Rahman_002_20210120084455_500x500.jpg', cat: 'Bollywood' },
   { name: 'Pritam', img: 'https://c.saavncdn.com/artists/Pritam_Chakraborty-20170711073326_500x500.jpg', cat: 'Bollywood' },
-  { name: 'Armaan Malik', img: 'https://c.saavncdn.com/artists/Armaan_Malik_006_20260813132832_500x500.jpg', cat: 'Bollywood' },
-  { name: 'Sonu Nigam', img: 'https://c.saavncdn.com/artists/Sonu_Nigam_500x500.jpg', cat: 'Bollywood' },
-  { name: 'Sunidhi Chauhan', img: 'https://c.saavncdn.com/artists/Sunidhi_Chauhan_500x500.jpg', cat: 'Bollywood' },
   { name: 'The Weeknd', img: 'https://c.saavncdn.com/artists/The_Weeknd_002_20241003071400_500x500.jpg', cat: 'English' },
   { name: 'Drake', img: 'https://c.saavncdn.com/artists/Drake_006_20260520062317_500x500.jpg', cat: 'English' },
   { name: 'Taylor Swift', img: 'https://c.saavncdn.com/artists/Taylor_Swift_003_20200226074119_500x500.jpg', cat: 'English' },
   { name: 'Ed Sheeran', img: 'https://c.saavncdn.com/artists/Ed_Sheeran_002_20250625073038_500x500.jpg', cat: 'English' },
   { name: 'Dua Lipa', img: 'https://c.saavncdn.com/artists/Dua_Lipa_004_20231120090922_500x500.jpg', cat: 'English' },
-  { name: 'Justin Bieber', img: 'https://c.saavncdn.com/artists/Justin_Bieber_005_20201127112218_500x500.jpg', cat: 'English' },
   { name: 'Eminem', img: 'https://c.saavncdn.com/artists/Eminem_003_20240403152835_500x500.jpg', cat: 'English' },
   { name: 'Billie Eilish', img: 'https://c.saavncdn.com/artists/Billie_Eilish_20190211151539_500x500.jpg', cat: 'English' },
   { name: 'Bruno Mars', img: 'https://c.saavncdn.com/artists/Bruno_Mars_500x500.jpg', cat: 'English' },
-  { name: 'Selena Gomez', img: 'https://c.saavncdn.com/artists/Selena_Gomez_003_20231023065157_500x500.jpg', cat: 'English' },
-  { name: 'Charlie Puth', img: 'https://c.saavncdn.com/artists/Charlie_Puth_003_20231023065325_500x500.jpg', cat: 'English' },
-  { name: 'Post Malone', img: 'https://c.saavncdn.com/artists/Post_Malone_004_20190911070147_500x500.jpg', cat: 'English' },
-  { name: 'Imagine Dragons', img: 'https://c.saavncdn.com/artists/Imagine_Dragons_500x500.jpg', cat: 'English' },
-  { name: 'Marshmello', img: 'https://c.saavncdn.com/artists/Marshmello_500x500.jpg', cat: 'English' },
   { name: 'Badshah', img: 'https://c.saavncdn.com/artists/Badshah_006_20241118064015_500x500.jpg', cat: 'Hip-Hop' },
   { name: 'Honey Singh', img: 'https://c.saavncdn.com/artists/Yo_Yo_Honey_Singh_004_20260811095253_500x500.jpg', cat: 'Hip-Hop' },
   { name: 'Divine', img: 'https://c.saavncdn.com/artists/DIVINE_006_20250911071442_500x500.jpg', cat: 'Hip-Hop' },
@@ -66,7 +51,6 @@ const ARTISTS = [
   { name: 'Kishore Kumar', img: 'https://c.saavncdn.com/artists/Kishore_Kumar_500x500.jpg', cat: 'Legends' },
   { name: 'Lata Mangeshkar', img: 'https://c.saavncdn.com/artists/Lata_Mangeshkar_004_20230623105323_500x500.jpg', cat: 'Legends' },
   { name: 'Mohammed Rafi', img: 'https://c.saavncdn.com/artists/Mohammed_Rafi_500x500.jpg', cat: 'Legends' },
-  { name: 'Mukesh', img: 'https://c.saavncdn.com/artists/Mukesh_500x500.jpg', cat: 'Legends' },
 ];
 
 const CATEGORIES = ['Punjabi', 'Bollywood', 'English', 'Hip-Hop', 'Legends'];
@@ -75,7 +59,6 @@ export default function Explore() {
   const [activeArtist, setActiveArtist] = useState(null);
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [expanded, setExpandedCats] = useState({});
   const [browseData, setBrowseData] = useState({});
   const [browseLoading, setBrowseLoading] = useState({});
   const { playSong, currentSong } = usePlayer();
@@ -94,9 +77,7 @@ export default function Explore() {
     if (shouldPlay) {
       const fresh = await searchSongs(section.searchQuery, 30) || [];
       if (fresh.length > 0) {
-        const filtered = fresh.filter(s => s.id !== (currentSong?.id || ''));
-        const toPlay = filtered.length > 0 ? filtered : fresh;
-        const shuffled = [...toPlay].sort(() => Math.random() - 0.5);
+        const shuffled = [...fresh].sort(() => Math.random() - 0.5);
         playSong(shuffled[0], shuffled);
       }
       return;
@@ -108,107 +89,74 @@ export default function Explore() {
     setBrowseLoading(p => ({ ...p, [section.id]: false }));
   };
 
-  useEffect(() => {
-    BROWSE_SECTIONS.forEach(sec => loadBrowse(sec, false));
-  }, []);
+  useEffect(() => { BROWSE_SECTIONS.forEach(sec => loadBrowse(sec, false)); }, []);
 
   useEffect(() => {
-    if (songs.length > 0 && songsRef.current) {
-      songsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    if (songs.length > 0 && songsRef.current) songsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [songs]);
 
-  const shufflePlay = (list) => {
-    const shuffled = [...list].sort(() => Math.random() - 0.5);
-    playSong(shuffled[0], shuffled);
-  };
-
-  const toggleExpand = (cat) => {
-    setExpandedCats(prev => ({ ...prev, [cat]: !prev[cat] }));
-  };
-
   return (
-    <div className="pb-6 pt-2">
-      {/* Header */}
+    <div className="pb-6 pt-3">
+      {/* Title */}
       <div className="mb-6">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500/20 to-purple-500/10 flex items-center justify-center border border-rose-500/10">
-            <Sparkles size={16} className="text-rose-400" />
-          </div>
-          <div>
-            <h1 className="text-[24px] font-bold text-white tracking-tight">Explore</h1>
-            <p className="text-[12px] text-white/35">Discover new music you&apos;ll love</p>
-          </div>
-        </div>
+        <h1 className="text-[26px] font-bold text-white tracking-tight">Explore</h1>
+        <p className="text-[12px] text-white/35 mt-0.5">Discover new music</p>
       </div>
 
-      {/* Browse Categories */}
+      {/* Genre Grid */}
       <section className="mb-8">
-        <p className="text-[11px] text-white/30 font-semibold uppercase tracking-wider mb-3 px-1">Quick Play</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
           {BROWSE_SECTIONS.map(sec => (
             <button key={sec.id} onClick={() => loadBrowse(sec, true)}
-              className={`relative overflow-hidden rounded-2xl p-4 text-left transition-all duration-200 active:scale-[0.97] border border-white/[0.04] hover:border-white/[0.08] bg-gradient-to-br ${sec.color} group`}>
-              <sec.icon size={18} className={`${sec.iconColor} mb-2`} />
+              className={`relative rounded-2xl p-4 text-left transition-all duration-200 active:scale-[0.97] border border-white/[0.04] hover:border-white/[0.08] bg-gradient-to-br ${sec.color}`}>
+              <sec.icon size={18} className="text-white/50 mb-2" />
               <p className="text-[12px] font-semibold text-white">{sec.label}</p>
-              <div className="absolute right-3 bottom-3 w-7 h-7 rounded-full bg-white/[0.08] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <Play size={10} className="text-white ml-0.5" fill="white" />
-              </div>
             </button>
           ))}
         </div>
       </section>
 
-      {/* Browse Section Results */}
+      {/* Curated Playlists */}
       {BROWSE_SECTIONS.map(sec => {
         const data = browseData[sec.id];
         const isLoading = browseLoading[sec.id];
         if (!data && !isLoading) return null;
         return (
-          <section key={sec.id} className="mb-7 animate-in">
+          <section key={sec.id} className="mb-6">
             {isLoading ? (
-              <div className="flex justify-center py-6">
-                <Loader2 size={18} className="text-white/30 animate-spin" />
-              </div>
+              <div className="flex justify-center py-6"><Loader2 size={16} className="text-white/20 animate-spin" /></div>
             ) : data && data.length > 0 && (
-              <HorizontalScroll title={sec.label}>
-                {data.map(s => <SongCard key={s.id} song={s} />)}
-              </HorizontalScroll>
+              <HorizontalScroll title={sec.label}>{data.map(s => <SongCard key={s.id} song={s} />)}</HorizontalScroll>
             )}
           </section>
         );
       })}
 
-      {/* Artist Songs Panel */}
+      {/* Artist Songs */}
       {activeArtist && (
-        <div ref={songsRef} className="mb-8 animate-scale">
+        <div ref={songsRef} className="mb-8 animate-in">
           {loading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 size={22} className="text-white/40 animate-spin" />
-            </div>
+            <div className="flex justify-center py-12"><Loader2 size={20} className="text-white/30 animate-spin" /></div>
           ) : songs.length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3 min-w-0">
-                  <img src={ARTISTS.find(a => a.name === activeArtist)?.img} alt="" className="w-14 h-14 rounded-full object-cover ring-2 ring-white/10 shrink-0 shadow-lg" />
-                  <div className="min-w-0">
-                    <h2 className="text-[18px] font-bold text-white truncate">{activeArtist}</h2>
-                    <p className="text-[11px] text-white/35">{songs.length} songs</p>
+                <div className="flex items-center gap-3">
+                  <img src={ARTISTS.find(a => a.name === activeArtist)?.img} alt="" className="w-12 h-12 rounded-full object-cover ring-1 ring-white/10 shadow-lg" />
+                  <div>
+                    <h2 className="text-[17px] font-bold text-white">{activeArtist}</h2>
+                    <p className="text-[11px] text-white/30">{songs.length} songs</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button onClick={() => shufflePlay(songs)} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center hover:bg-white/[0.1] transition-colors active:scale-90">
-                    <Shuffle size={14} className="text-white/70" />
+                <div className="flex items-center gap-2">
+                  <button onClick={() => playSong(songs[0], songs)} className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-full text-[12px] font-bold shadow-md active:scale-95 transition-all">
+                    <Play size={12} fill="black" /> Play
                   </button>
-                  <button onClick={() => playSong(songs[0], songs)} className="flex items-center gap-2 px-5 py-2.5 bg-white text-black rounded-full text-[12px] font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all active:scale-95">
-                    <Play size={13} fill="black" /> Play All
-                  </button>
-                  <button onClick={() => { setActiveArtist(null); setSongs([]); }} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center hover:bg-white/[0.1] transition-colors active:scale-90">
+                  <button onClick={() => { setActiveArtist(null); setSongs([]); }} className="w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center hover:bg-white/[0.1] active:scale-90">
                     <X size={14} className="text-white/50" />
                   </button>
                 </div>
               </div>
-              <div className="rounded-2xl overflow-hidden border border-white/[0.04]">
+              <div className="rounded-2xl border border-white/[0.04] overflow-hidden">
                 {songs.map((s, i) => <SongRow key={s.id} song={s} index={i} songList={songs} />)}
               </div>
             </div>
@@ -216,27 +164,28 @@ export default function Explore() {
         </div>
       )}
 
-      {/* Artists by Category */}
+      {/* Artists */}
       <div className="space-y-8">
         {CATEGORIES.map(cat => {
           const artists = ARTISTS.filter(a => a.cat === cat);
-          const isExpanded = expanded[cat];
-          const visible = isExpanded ? artists : artists.slice(0, 8);
-
           return (
-            <section key={cat} className="animate-in">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-[16px] sm:text-[18px] font-bold text-white">{cat}</h2>
-                {artists.length > 8 && (
-                  <button onClick={() => toggleExpand(cat)} className="flex items-center gap-1 text-[12px] text-white/35 hover:text-white/60 transition-colors duration-200 active:scale-95">
-                    <span>{isExpanded ? 'Show less' : 'See all'}</span>
-                    <ChevronRight size={14} className={`transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} />
-                  </button>
-                )}
-              </div>
+            <section key={cat}>
+              <h2 className="text-[16px] font-bold text-white mb-4">{cat}</h2>
               <div className="artist-grid">
-                {visible.map(a => (
-                  <ArtistCard key={a.name} artist={a} isActive={activeArtist === a.name} onClick={() => loadArtist(a)} />
+                {artists.map(a => (
+                  <button key={a.name} onClick={() => loadArtist(a)} className="flex flex-col items-center gap-2 group active:scale-[0.93] transition-all">
+                    <div className={`relative w-full aspect-square rounded-full overflow-hidden transition-all duration-300 ${
+                      activeArtist === a.name ? 'ring-2 ring-white shadow-xl' : 'ring-1 ring-white/[0.06] group-hover:ring-white/[0.12]'
+                    }`}>
+                      <img src={a.img} alt={a.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center">
+                        <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100 transition-all shadow-lg">
+                          <Play size={13} className="text-black ml-0.5" fill="black" />
+                        </div>
+                      </div>
+                    </div>
+                    <p className={`text-[11px] font-medium text-center truncate w-full ${activeArtist === a.name ? 'text-white' : 'text-white/50 group-hover:text-white/80'} transition-colors`}>{a.name}</p>
+                  </button>
                 ))}
               </div>
             </section>
@@ -244,42 +193,5 @@ export default function Explore() {
         })}
       </div>
     </div>
-  );
-}
-
-function ArtistCard({ artist, isActive, onClick }) {
-  return (
-    <button onClick={onClick} className="flex flex-col items-center gap-2.5 group transition-all duration-300 active:scale-[0.93]">
-      <div className="relative w-full aspect-square">
-        {isActive && <div className="absolute -inset-1 rounded-full bg-gradient-to-b from-rose-500/25 to-rose-600/5 blur-md" />}
-        <div className={`relative w-full h-full rounded-full overflow-hidden transition-all duration-300 ${
-          isActive
-            ? 'ring-2 ring-rose-400/80 shadow-xl shadow-rose-500/20'
-            : 'ring-1 ring-white/[0.06] shadow-lg shadow-black/40 group-hover:ring-white/[0.12] group-hover:shadow-xl'
-        }`}>
-          <img src={artist.img} alt={artist.name}
-            className={`w-full h-full object-cover transition-all duration-300 ${
-              isActive ? 'scale-110 brightness-90' : 'group-hover:scale-110 group-hover:brightness-75'
-            }`} loading="lazy" />
-          <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent transition-opacity duration-300 ${
-            isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-          }`} />
-          <div className={`absolute inset-0 flex items-center justify-center transition-all duration-250 ${
-            isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-          }`}>
-            <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-xl transition-all duration-250 ${
-              isActive 
-                ? 'bg-white scale-100' 
-                : 'bg-white/90 scale-75 group-hover:scale-100'
-            }`}>
-              <Play size={14} className="text-black ml-0.5" fill="black" />
-            </div>
-          </div>
-        </div>
-      </div>
-      <p className={`text-[11px] sm:text-[12px] font-semibold text-center leading-tight truncate w-full px-0.5 transition-colors duration-200 ${
-        isActive ? 'text-rose-400' : 'text-white/60 group-hover:text-white'
-      }`}>{artist.name}</p>
-    </button>
   );
 }
