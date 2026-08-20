@@ -12,7 +12,7 @@ import Explore from './pages/Explore';
 import Library from './pages/Library';
 import SearchResults from './pages/SearchResults';
 import Settings from './pages/Settings';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 function ScrollToTop() {
   const { pathname } = useLocation();

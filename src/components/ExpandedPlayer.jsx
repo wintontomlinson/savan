@@ -1,4 +1,4 @@
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Mic2, ListMusic, Plus, Check, Download, Volume2 } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ChevronDown, Mic2, ListMusic, Check, Download, Volume2 } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { formatDuration } from '../data/mockData';
 import { getLyrics } from '../data/api';
@@ -6,7 +6,7 @@ import SleepTimer from './SleepTimer';
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 
 export default function ExpandedPlayer() {
-  const { currentSong, isPlaying, togglePlay, playNext, playPrev, currentTime, duration, seekTo, shuffleMode, toggleShuffle, repeatMode, cycleRepeat, toggleLike, likedSongs, downloadedSongs, toggleDownload, isExpanded, setExpanded, showToast, queue, volume, setVolume, playSong } = usePlayer();
+  const { currentSong, isPlaying, togglePlay, playNext, playPrev, currentTime, duration, seekTo, shuffleMode, toggleShuffle, repeatMode, cycleRepeat, toggleLike, likedSongs, downloadedSongs, toggleDownload, isExpanded, setExpanded, queue, volume, setVolume, playSong } = usePlayer();
   
   // Panel state — only one panel can be open at a time
   const [activePanel, setActivePanel] = useState(null); // 'lyrics' | 'queue' | 'volume' | null

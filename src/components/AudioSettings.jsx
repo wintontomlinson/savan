@@ -3,7 +3,6 @@ import { SlidersHorizontal, X, Timer, Waves } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 
 export default function AudioSettings() {
-  const { showToast } = usePlayer();
   const [open, setOpen] = useState(false);
   const [crossfade, setCrossfade] = useState(() => parseInt(localStorage.getItem('crossfade_dur') || '5'));
 
