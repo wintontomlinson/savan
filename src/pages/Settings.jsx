@@ -31,7 +31,7 @@ export default function Settings() {
   const handleBand = (i, val) => { const v = [...eqValues]; v[i] = val; setEqValues(v); setEqBand(i, val); setActivePreset('Custom'); try { localStorage.setItem('ma_eq_preset', 'Custom'); localStorage.setItem('ma_eq_values', JSON.stringify(v)); } catch {} };
 
   return (
-    <div className="pb-6 pt-3 max-w-lg">
+    <div className="flex items-center justify-center min-h-screen bg-[#060606]"><div className="w-full max-w-2xl bg-[#111] rounded-2xl border border-white/[0.08] p-6 backdrop-blur-xl shadow-xl">
       <h1 className="text-[26px] font-black text-transparent bg-clip-text tracking-tight mb-1" style={{ backgroundImage: 'linear-gradient(90deg, #fff 0%, #e879f9 60%, #a78bfa 100%)' }}>Settings</h1>
       <p className="text-[12px] text-white/35 mb-7">Audio & app preferences</p>
 
@@ -80,7 +80,7 @@ export default function Settings() {
                 <div className="relative h-16 w-full flex justify-center">
                   <input type="range" min="-8" max="8" step="1" value={eqValues[i]} onChange={e => handleBand(i, parseInt(e.target.value))}
                     className="absolute h-16 w-6 appearance-none bg-transparent cursor-pointer [writing-mode:vertical-lr] [direction:rtl] [&::-webkit-slider-track]:w-[3px] [&::-webkit-slider-track]:rounded-full [&::-webkit-slider-track]:bg-white/[0.06] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white" />
-                </div>
+</div></div>
                 <span className="text-[7px] text-white/20">{band}</span>
               </div>
             ))}
@@ -163,14 +163,14 @@ function Section({ title, children }) {
   return (
     <div className="mb-4">
       <p className="text-[11px] text-white/25 font-semibold uppercase tracking-wider mb-2 px-0.5">{title}</p>
-      <div className="bg-white/[0.02] rounded-xl border border-white/[0.04] overflow-hidden">{children}</div>
+      <div className="bg-[#1a1a1a]/60 backdrop-blur-md rounded-xl border border-white/[0.07] overflow-hidden shadow-md">{children}</div>
     </div>
   );
 }
 
 function Row({ label, desc, children }) {
   return (
-    <div className="flex items-center justify-between px-4 py-3.5">
+    <div className="flex items-center justify-between px-5 py-4 hover:bg-white/[0.02] transition-colors rounded-lg">
       <div><p className="text-[13px] text-white/70 font-medium">{label}</p>{desc && <p className="text-[10px] text-white/25 mt-0.5">{desc}</p>}</div>
       <div className="shrink-0">{children}</div>
     </div>
