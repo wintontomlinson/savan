@@ -59,12 +59,17 @@ export default function Explore() {
   const songsRef = useRef(null);
 
   const loadArtist = async (artist) => {
-    if (activeArtist === artist.name) { setActiveArtist(null); setSongs([]); return; }
+    if (activeArtist === artist.name) { setActiveArtist(null); setSongs([]); scrollToTop(); return; }
     setActiveArtist(artist.name);
     setLoading(true);
     const s = await searchSongs(artist.name, 20) || [];
     setSongs(s);
     setLoading(false);
+  };
+
+  const scrollToTop = () => {
+    const main = document.getElementById('main-scroll');
+    if (main) main.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const playGenre = async (genre) => {
@@ -149,7 +154,7 @@ export default function Explore() {
                     className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white rounded-full text-[11px] font-bold shadow-md hover:scale-[1.03] active:scale-95 transition-all">
                     <Play size={11} fill="white" /> Play
                   </button>
-                  <button onClick={() => { setActiveArtist(null); setSongs([]); }}
+                  <button onClick={() => { setActiveArtist(null); setSongs([]); scrollToTop(); }}
                     className="w-7 h-7 rounded-full bg-white/[0.06] flex items-center justify-center hover:bg-white/[0.1] active:scale-90">
                     <X size={12} className="text-white/40" />
                   </button>
