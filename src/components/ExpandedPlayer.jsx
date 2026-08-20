@@ -143,11 +143,14 @@ export default function ExpandedPlayer() {
       <div className="absolute inset-0 overflow-hidden">
         <img src={currentSong.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover blur-[150px] scale-[2] opacity-30" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-[#050505]/70 to-[#050505]" />
+        {/* Audio Visualizer Bars — behind everything */}
+        {isPlaying && !hasPanel && <AudioVisualizer />}
         {/* Animated disco glow orbs */}
         {isPlaying && (
           <>
             <div className="absolute top-[20%] left-[10%] w-[200px] h-[200px] bg-rose-500/[0.08] rounded-full blur-[80px] animate-float" />
             <div className="absolute bottom-[30%] right-[5%] w-[180px] h-[180px] bg-purple-500/[0.06] rounded-full blur-[80px] animate-float" style={{ animationDelay: '1.5s' }} />
+            <div className="absolute top-[50%] right-[20%] w-[120px] h-[120px] bg-blue-500/[0.05] rounded-full blur-[60px] animate-float" style={{ animationDelay: '3s' }} />
           </>
         )}
       </div>
@@ -485,6 +488,27 @@ function PlainLyrics({ text, currentTime, duration }) {
           }`}>
           {line}
         </p>
+      ))}
+    </div>
+  );
+}
+
+
+
+// Audio Visualizer — animated bars that simulate music reaction
+function AudioVisualizer() {
+  return (
+    <div className="absolute bottom-0 left-0 right-0 h-[40%] flex items-end justify-center gap-[3px] px-4 opacity-40 pointer-events-none">
+      {Array.from({ length: 32 }).map((_, i) => (
+        <div
+          key={i}
+          className="flex-1 max-w-[8px] rounded-t-full bg-gradient-to-t from-rose-500/60 to-purple-500/30"
+          style={{
+            animation: `visualizerBar ${0.8 + Math.random() * 0.8}s ease-in-out infinite alternate`,
+            animationDelay: `${i * 0.05}s`,
+            height: `${15 + Math.random() * 40}%`,
+          }}
+        />
       ))}
     </div>
   );
