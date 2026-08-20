@@ -59,24 +59,25 @@ export default function Home() {
     <div className="pb-6 pt-3">
       {/* Hero Greeting */}
       <section className="mb-7 animate-in">
-        <div className="relative overflow-hidden rounded-2xl p-5 sm:p-6 border border-white/[0.06]" style={{ background: 'linear-gradient(145deg, #16122a 0%, #1a1035 35%, #0e0d18 100%)' }}>
-          {/* Ambient glow */}
-          <div className="absolute top-[-50%] right-[-30%] w-[60%] h-[80%] rounded-full blur-[80px]" style={{ background: 'radial-gradient(circle, rgba(236,72,153,0.06) 0%, transparent 70%)' }} />
-          <div className="absolute bottom-[-40%] left-[-20%] w-[50%] h-[60%] rounded-full blur-[70px]" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.05) 0%, transparent 70%)' }} />
+        <div className="relative overflow-hidden rounded-2xl p-5 sm:p-6 border border-white/[0.08]" style={{ background: 'linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 30%, #1a1145 60%, #0d0620 100%)' }}>
+          {/* Disco ambient glows */}
+          <div className="absolute top-[-30%] right-[10%] w-32 h-32 bg-fuchsia-500/[0.15] rounded-full blur-[60px] animate-pulse" style={{ animationDuration: '4s' }} />
+          <div className="absolute bottom-[-20%] left-[5%] w-28 h-28 bg-violet-400/[0.12] rounded-full blur-[50px] animate-pulse" style={{ animationDuration: '3s', animationDelay: '1s' }} />
+          <div className="absolute top-[30%] right-[-5%] w-20 h-20 bg-rose-500/[0.1] rounded-full blur-[40px] animate-pulse" style={{ animationDuration: '5s', animationDelay: '2s' }} />
           
           <div className="relative flex items-center justify-between gap-4">
             <div className="min-w-0">
-              <h1 className="text-[22px] sm:text-[26px] font-bold text-white tracking-tight">{getGreeting()}</h1>
+              <h1 className="text-[24px] sm:text-[28px] font-black text-transparent bg-clip-text tracking-tight" style={{ backgroundImage: 'linear-gradient(90deg, #fff 0%, #f0abfc 50%, #c084fc 100%)' }}>{getGreeting()}</h1>
               {prefs ? (
-                <p className="text-[11px] text-white/30 mt-1.5">{prefs.totalPlays} plays{prefs.topArtists?.[0] && <> &middot; {typeof prefs.topArtists[0] === 'string' ? prefs.topArtists[0] : prefs.topArtists[0].name}</>}</p>
+                <p className="text-[11px] text-white/35 mt-1.5 font-medium">{prefs.totalPlays} plays{prefs.topArtists?.[0] && <> &middot; {typeof prefs.topArtists[0] === 'string' ? prefs.topArtists[0] : prefs.topArtists[0].name}</>}</p>
               ) : (
-                <p className="text-[11px] text-white/25 mt-1.5">Your music, your vibe</p>
+                <p className="text-[11px] text-white/25 mt-1.5">Drop the beat</p>
               )}
             </div>
             {history.length > 0 && (
               <button onClick={() => { const s = [...history.slice(0, 20)].sort(() => Math.random() - 0.5); playSong(s[0], s); }}
-                className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-white text-black text-[12px] font-bold rounded-full shadow-lg shadow-white/[0.08] hover:shadow-white/[0.15] hover:scale-[1.04] active:scale-[0.96] transition-all duration-300">
-                <Shuffle size={13} /> Shuffle
+                className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white text-[12px] font-bold rounded-full shadow-lg shadow-fuchsia-500/20 hover:shadow-fuchsia-500/30 hover:scale-[1.04] active:scale-[0.96] transition-all duration-300">
+                <Shuffle size={13} /> Mix
               </button>
             )}
           </div>
