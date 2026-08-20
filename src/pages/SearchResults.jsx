@@ -8,7 +8,7 @@ import SongRow from '../components/SongRow';
 import SongCard from '../components/SongCard';
 import HorizontalScroll from '../components/HorizontalScroll';
 
-const TRENDING = ['Arijit Singh', 'Diljit Dosanjh', 'AP Dhillon', 'Shreya Ghoshal', 'Sidhu Moosewala', 'Atif Aslam', 'Jubin Nautiyal', 'The Weeknd', 'Karan Aujla', 'Pritam'];
+const FALLBACK_TRENDING = ['Arijit Singh', 'Diljit Dosanjh', 'AP Dhillon', 'Shreya Ghoshal', 'Sidhu Moosewala', 'Atif Aslam', 'Jubin Nautiyal', 'The Weeknd', 'Karan Aujla', 'Pritam'];
 
 export default function SearchResults() {
   const [params, setParams] = useSearchParams();
@@ -22,6 +22,7 @@ export default function SearchResults() {
   const [error, setError] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [focused, setFocused] = useState(false);
+  const [trending, setTrending] = useState(FALLBACK_TRENDING);
   const [recentSearches, setRecentSearches] = useState(() => {
     try { return JSON.parse(localStorage.getItem('ma_recent_searches')) || []; } catch { return []; }
   });
@@ -47,6 +48,30 @@ export default function SearchResults() {
 
   useEffect(() => { setQuery(q); }, [q]);
   useEffect(() => { if (!q) inputRef.current?.focus(); }, []);
+
+  // Fetch trending artists from current trending songs
+  useEffect(() => {
+    (async () => {
+      try {
+        const cached = sessionStorage.getItem('ma_trending_artists');
+        if (cached) { setTrending(JSON.parse(cached)); return; }
+        const songs = await searchSongs('trending hindi songs 2024', 30) || [];
+        if (songs.length > 0) {
+          const seen = new Set();
+          const artists = [];
+          for (const s of songs) {
+            const name = s.artist?.split(',')[0]?.trim();
+            if (name && !seen.has(name)) { seen.add(name); artists.push(name); }
+            if (artists.length >= 10) break;
+          }
+          if (artists.length >= 5) {
+            setTrending(artists);
+            sessionStorage.setItem('ma_trending_artists', JSON.stringify(artists));
+          }
+        }
+      } catch {}
+    })();
+  }, []);
 
   const doSearch = async () => {
     if (!q?.trim()) return;
@@ -227,7 +252,7 @@ export default function SearchResults() {
               <p className="text-[14px] text-white font-bold">Trending</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-              {TRENDING.map((t, i) => (
+              {trending.map((t, i) => (
                 <button key={t} onClick={() => quickSearch(t)}
                   className="flex items-center gap-3 px-4 py-3.5 bg-white/[0.02] hover:bg-white/[0.05] rounded-xl border border-white/[0.03] hover:border-white/[0.07] transition-all duration-200 active:scale-[0.98] text-left group hover:-translate-y-0.5">
                   <span className={`text-[13px] font-bold w-5 tabular-nums ${i < 3 ? 'text-rose-400' : 'text-white/15'}`}>{i + 1}</span>
