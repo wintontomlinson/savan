@@ -14,15 +14,18 @@ import SearchResults from './pages/SearchResults';
 import Settings from './pages/Settings';
 import { useEffect, useRef } from 'react';
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    // Reset scroll on all main content areas
+    const main = document.getElementById('main-scroll');
+    if (main) main.scrollTop = 0;
+  }, [pathname]);
+  return null;
+}
+
 function AnimatedRoutes() {
   const location = useLocation();
-  const mainRef = useRef(null);
-
-  // Scroll to top on route change
-  useEffect(() => {
-    const main = document.querySelector('main');
-    if (main) main.scrollTop = 0;
-  }, [location.pathname]);
 
   return (
     <div key={location.pathname} className="page-wrapper">
@@ -44,8 +47,9 @@ export default function App() {
         <Sidebar />
         <div className="flex-1 flex flex-col min-h-0 min-w-0 md:ml-[72px] lg:ml-[240px]">
           <Header />
-          <main className="flex-1 min-h-0 scroll-y pb-32 md:pb-24 px-4 sm:px-6 lg:px-8 xl:px-10">
+          <main id="main-scroll" className="flex-1 min-h-0 scroll-y pb-32 md:pb-24 px-4 sm:px-6 lg:px-8 xl:px-10">
             <div className="max-w-[1400px] mx-auto">
+              <ScrollToTop />
               <AnimatedRoutes />
             </div>
           </main>

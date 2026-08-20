@@ -1,12 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { Loader2, Play, X, Shuffle, ChevronRight, Disc3, TrendingUp, ListMusic, Mic, Users, Radio } from 'lucide-react';
+import { Loader2, Play, X, Shuffle, ChevronRight, Disc3, TrendingUp, ListMusic, Mic, Users, Radio, Sparkles, Music } from 'lucide-react';
 import { searchSongs, getPlaylistById } from '../data/api';
 import { usePlayer } from '../context/PlayerContext';
 import SongRow from '../components/SongRow';
 import SongCard from '../components/SongCard';
 import HorizontalScroll from '../components/HorizontalScroll';
 
-// Browse sections — diverse genres with search queries for more variety
 const BROWSE_SECTIONS = [
   { id: 'trending', label: 'Trending Now', icon: TrendingUp, playlistId: '1219706044', searchQuery: 'latest hindi hits 2024 trending', color: 'from-rose-500/20 to-pink-600/10', iconColor: 'text-rose-400' },
   { id: 'dance', label: 'Dance Hits', icon: Disc3, playlistId: '1219706999', searchQuery: 'bollywood dance party songs', color: 'from-amber-500/20 to-orange-600/10', iconColor: 'text-amber-400' },
@@ -93,7 +92,6 @@ export default function Explore() {
 
   const loadBrowse = async (section, shouldPlay = false) => {
     if (shouldPlay) {
-      // On click — fetch fresh 30 songs via search for variety
       const fresh = await searchSongs(section.searchQuery, 30) || [];
       if (fresh.length > 0) {
         const filtered = fresh.filter(s => s.id !== (currentSong?.id || ''));
@@ -103,7 +101,6 @@ export default function Explore() {
       }
       return;
     }
-    // On mount — load playlist for display
     if (browseData[section.id]) return;
     setBrowseLoading(p => ({ ...p, [section.id]: true }));
     const results = await getPlaylistById(section.playlistId) || [];
@@ -111,7 +108,6 @@ export default function Explore() {
     setBrowseLoading(p => ({ ...p, [section.id]: false }));
   };
 
-  // Load all browse sections on mount (NO auto-play)
   useEffect(() => {
     BROWSE_SECTIONS.forEach(sec => loadBrowse(sec, false));
   }, []);
@@ -133,26 +129,37 @@ export default function Explore() {
 
   return (
     <div className="pb-6 pt-2">
-      {/* Page Title */}
-      <div className="mb-5">
-        <h1 className="text-[22px] sm:text-[26px] font-bold text-white">Explore</h1>
-        <p className="text-[13px] text-white/40 mt-1">Discover music you love</p>
+      {/* Header */}
+      <div className="mb-6">
+        <div className="flex items-center gap-3 mb-1">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500/20 to-purple-500/10 flex items-center justify-center border border-rose-500/10">
+            <Sparkles size={16} className="text-rose-400" />
+          </div>
+          <div>
+            <h1 className="text-[24px] font-bold text-white tracking-tight">Explore</h1>
+            <p className="text-[12px] text-white/35">Discover new music you&apos;ll love</p>
+          </div>
+        </div>
       </div>
 
-      {/* Browse Categories Grid */}
+      {/* Browse Categories */}
       <section className="mb-8">
+        <p className="text-[11px] text-white/30 font-semibold uppercase tracking-wider mb-3 px-1">Quick Play</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
           {BROWSE_SECTIONS.map(sec => (
             <button key={sec.id} onClick={() => loadBrowse(sec, true)}
-              className={`relative overflow-hidden rounded-2xl p-4 text-left transition-all duration-200 active:scale-[0.97] border border-white/[0.04] hover:border-white/[0.08] bg-gradient-to-br ${sec.color}`}>
-              <sec.icon size={20} className={`${sec.iconColor} mb-2`} />
-              <p className="text-[13px] font-semibold text-white">{sec.label}</p>
+              className={`relative overflow-hidden rounded-2xl p-4 text-left transition-all duration-200 active:scale-[0.97] border border-white/[0.04] hover:border-white/[0.08] bg-gradient-to-br ${sec.color} group`}>
+              <sec.icon size={18} className={`${sec.iconColor} mb-2`} />
+              <p className="text-[12px] font-semibold text-white">{sec.label}</p>
+              <div className="absolute right-3 bottom-3 w-7 h-7 rounded-full bg-white/[0.08] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Play size={10} className="text-white ml-0.5" fill="white" />
+              </div>
             </button>
           ))}
         </div>
       </section>
 
-      {/* Browse Section Results — horizontal scroll cards */}
+      {/* Browse Section Results */}
       {BROWSE_SECTIONS.map(sec => {
         const data = browseData[sec.id];
         const isLoading = browseLoading[sec.id];
@@ -161,7 +168,7 @@ export default function Explore() {
           <section key={sec.id} className="mb-7 animate-in">
             {isLoading ? (
               <div className="flex justify-center py-6">
-                <Loader2 size={18} className="text-white/40 animate-spin" />
+                <Loader2 size={18} className="text-white/30 animate-spin" />
               </div>
             ) : data && data.length > 0 && (
               <HorizontalScroll title={sec.label}>
@@ -172,36 +179,36 @@ export default function Explore() {
         );
       })}
 
-      {/* Songs Panel — shows when artist selected */}
+      {/* Artist Songs Panel */}
       {activeArtist && (
         <div ref={songsRef} className="mb-8 animate-scale">
           {loading ? (
             <div className="flex justify-center py-12">
-              <Loader2 size={22} className="text-white/60 animate-spin" />
+              <Loader2 size={22} className="text-white/40 animate-spin" />
             </div>
           ) : songs.length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3 min-w-0">
-                  <img src={ARTISTS.find(a => a.name === activeArtist)?.img} alt="" className="w-12 h-12 rounded-full object-cover ring-2 ring-white/10 shrink-0" />
+                  <img src={ARTISTS.find(a => a.name === activeArtist)?.img} alt="" className="w-14 h-14 rounded-full object-cover ring-2 ring-white/10 shrink-0 shadow-lg" />
                   <div className="min-w-0">
-                    <h2 className="text-[17px] font-bold text-white truncate">{activeArtist}</h2>
-                    <p className="text-[11px] text-white/40">{songs.length} songs</p>
+                    <h2 className="text-[18px] font-bold text-white truncate">{activeArtist}</h2>
+                    <p className="text-[11px] text-white/35">{songs.length} songs</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <button onClick={() => shufflePlay(songs)} className="w-9 h-9 rounded-full bg-white/[0.08] flex items-center justify-center btn-press hover:bg-white/[0.12] transition-colors">
-                    <Shuffle size={14} className="text-white" />
+                  <button onClick={() => shufflePlay(songs)} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center hover:bg-white/[0.1] transition-colors active:scale-90">
+                    <Shuffle size={14} className="text-white/70" />
                   </button>
-                  <button onClick={() => playSong(songs[0], songs)} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-rose-500 to-rose-600 rounded-full text-[12px] text-white font-bold btn-press shadow-lg shadow-rose-500/25 hover:shadow-rose-500/40 hover:scale-[1.02] transition-all duration-300">
-                    <Play size={13} fill="white" /> Play All
+                  <button onClick={() => playSong(songs[0], songs)} className="flex items-center gap-2 px-5 py-2.5 bg-white text-black rounded-full text-[12px] font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all active:scale-95">
+                    <Play size={13} fill="black" /> Play All
                   </button>
-                  <button onClick={() => { setActiveArtist(null); setSongs([]); }} className="w-9 h-9 rounded-full bg-white/[0.08] flex items-center justify-center btn-press hover:bg-white/[0.12] transition-colors">
-                    <X size={14} className="text-white/60" />
+                  <button onClick={() => { setActiveArtist(null); setSongs([]); }} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center hover:bg-white/[0.1] transition-colors active:scale-90">
+                    <X size={14} className="text-white/50" />
                   </button>
                 </div>
               </div>
-              <div className="bg-[#0c0c0c] rounded-2xl overflow-hidden border border-white/[0.04]">
+              <div className="rounded-2xl overflow-hidden border border-white/[0.04]">
                 {songs.map((s, i) => <SongRow key={s.id} song={s} index={i} songList={songs} />)}
               </div>
             </div>
@@ -209,7 +216,7 @@ export default function Explore() {
         </div>
       )}
 
-      {/* Top Artists by Category */}
+      {/* Artists by Category */}
       <div className="space-y-8">
         {CATEGORIES.map(cat => {
           const artists = ARTISTS.filter(a => a.cat === cat);
@@ -221,7 +228,7 @@ export default function Explore() {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-[16px] sm:text-[18px] font-bold text-white">{cat}</h2>
                 {artists.length > 8 && (
-                  <button onClick={() => toggleExpand(cat)} className="flex items-center gap-1 text-[12px] text-white/40 hover:text-white/70 transition-colors duration-200 btn-press">
+                  <button onClick={() => toggleExpand(cat)} className="flex items-center gap-1 text-[12px] text-white/35 hover:text-white/60 transition-colors duration-200 active:scale-95">
                     <span>{isExpanded ? 'Show less' : 'See all'}</span>
                     <ChevronRight size={14} className={`transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} />
                   </button>
@@ -242,45 +249,36 @@ export default function Explore() {
 
 function ArtistCard({ artist, isActive, onClick }) {
   return (
-    <button onClick={onClick} className="flex flex-col items-center gap-2 group transition-all duration-300 active:scale-[0.93]">
+    <button onClick={onClick} className="flex flex-col items-center gap-2.5 group transition-all duration-300 active:scale-[0.93]">
       <div className="relative w-full aspect-square">
-        {/* Outer glow for active */}
-        {isActive && <div className="absolute -inset-1 rounded-full bg-gradient-to-b from-rose-500/30 to-rose-600/10 blur-md" />}
-        
-        {/* Image container */}
+        {isActive && <div className="absolute -inset-1 rounded-full bg-gradient-to-b from-rose-500/25 to-rose-600/5 blur-md" />}
         <div className={`relative w-full h-full rounded-full overflow-hidden transition-all duration-300 ${
           isActive
-            ? 'ring-2 ring-rose-400 shadow-xl shadow-rose-500/25'
-            : 'ring-1 ring-white/[0.08] shadow-lg shadow-black/40 group-hover:ring-white/[0.15] group-hover:shadow-xl group-hover:shadow-black/60'
+            ? 'ring-2 ring-rose-400/80 shadow-xl shadow-rose-500/20'
+            : 'ring-1 ring-white/[0.06] shadow-lg shadow-black/40 group-hover:ring-white/[0.12] group-hover:shadow-xl'
         }`}>
           <img src={artist.img} alt={artist.name}
             className={`w-full h-full object-cover transition-all duration-300 ${
               isActive ? 'scale-110 brightness-90' : 'group-hover:scale-110 group-hover:brightness-75'
             }`} loading="lazy" />
-          
-          {/* Gradient overlay */}
           <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent transition-opacity duration-300 ${
             isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           }`} />
-          
-          {/* Play button */}
           <div className={`absolute inset-0 flex items-center justify-center transition-all duration-250 ${
             isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           }`}>
             <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-xl transition-all duration-250 ${
               isActive 
-                ? 'bg-rose-500 scale-100 shadow-rose-500/30' 
-                : 'bg-white/90 scale-75 group-hover:scale-100 shadow-black/30'
+                ? 'bg-white scale-100' 
+                : 'bg-white/90 scale-75 group-hover:scale-100'
             }`}>
-              <Play size={14} className={isActive ? 'text-white ml-0.5' : 'text-black ml-0.5'} fill={isActive ? 'white' : 'black'} />
+              <Play size={14} className="text-black ml-0.5" fill="black" />
             </div>
           </div>
         </div>
       </div>
-      
-      {/* Name */}
       <p className={`text-[11px] sm:text-[12px] font-semibold text-center leading-tight truncate w-full px-0.5 transition-colors duration-200 ${
-        isActive ? 'text-rose-400' : 'text-white/70 group-hover:text-white'
+        isActive ? 'text-rose-400' : 'text-white/60 group-hover:text-white'
       }`}>{artist.name}</p>
     </button>
   );
