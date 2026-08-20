@@ -67,24 +67,7 @@ export function PlayerProvider({ children }) {
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return false;
 
-      // Save current playback state
-      const wasPlaying = !a.paused;
-      const savedTime = a.currentTime;
-      const savedSrc = a.src;
-      
-      // crossOrigin must be set BEFORE src is loaded
-      // If audio is already playing, we need to reload it
-      const needsReload = !!a.src;
-      
-      audioA.current.crossOrigin = 'anonymous';
-      audioB.current.crossOrigin = 'anonymous';
-      
-      // If audio was playing, we need to reload with CORS
-      if (needsReload && savedSrc) {
-        a.src = savedSrc;
-        a.load();
-      }
-      
+      // crossOrigin is already set at creation time, no reload needed
       audioCtxRef.current = new AC();
       
       // Create gain node (for volume boost up to 200%)
@@ -120,15 +103,6 @@ export function PlayerProvider({ children }) {
       
       // Resume AudioContext
       if (audioCtxRef.current.state === 'suspended') audioCtxRef.current.resume();
-      
-      // Restore playback
-      if (needsReload && savedSrc) {
-        a.currentTime = savedTime;
-        if (wasPlaying) {
-          // Small delay to let CORS reload complete
-          setTimeout(() => { a.play().catch(() => {}); }, 200);
-        }
-      }
       
       enhancedRef.current = true;
       return true;
@@ -263,6 +237,9 @@ export function PlayerProvider({ children }) {
   useEffect(() => {
     audioA.current = new Audio();
     audioB.current = new Audio();
+    // Set crossOrigin at creation so audio is always CORS-ready for Web Audio API
+    audioA.current.crossOrigin = 'anonymous';
+    audioB.current.crossOrigin = 'anonymous';
     audioA.current.volume = volumeRef.current;
     audioB.current.volume = 0;
 
