@@ -112,27 +112,32 @@ export default function Explore() {
         </div>
       </section>
 
-      {/* Artists - RIGHT AFTER genres so they're immediately visible */}
-      <section className="mb-6 animate-in" style={{ animationDelay: '0.05s' }}>
-        <h2 className="text-[15px] font-bold text-white mb-3">Artists</h2>
-        <div className="flex gap-3.5 scroll-x pb-2">
-          {ARTISTS.map(a => (
-            <button key={a.name} onClick={() => loadArtist(a)}
-              className="flex flex-col items-center gap-1.5 shrink-0 group active:scale-[0.93] transition-all duration-300">
-              <div className={`w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-full overflow-hidden transition-all duration-300 ${
-                activeArtist === a.name
-                  ? 'ring-[3px] ring-fuchsia-400 shadow-lg shadow-fuchsia-500/20 scale-110'
-                  : 'ring-1 ring-white/[0.08] group-hover:ring-fuchsia-400/40 group-hover:scale-105'
-              }`}>
-                <img src={a.img} alt={a.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
-              </div>
-              <p className={`text-[9px] sm:text-[10px] font-medium text-center w-16 sm:w-[72px] truncate transition-colors ${
-                activeArtist === a.name ? 'text-fuchsia-300' : 'text-white/40 group-hover:text-white/75'
-              }`}>{a.name}</p>
-            </button>
-          ))}
-        </div>
-      </section>
+      {/* Artists by Category */}
+      {['Punjabi', 'Bollywood', 'English', 'Hip-Hop', 'Legends'].map((cat, ci) => {
+        const catArtists = ARTISTS.filter(a => a.cat === cat);
+        return (
+          <section key={cat} className="mb-6 animate-in" style={{ animationDelay: `${(ci + 1) * 0.04}s` }}>
+            <h2 className="text-[14px] font-bold text-white mb-3">{cat}</h2>
+            <div className="flex gap-4 scroll-x pb-1">
+              {catArtists.map(a => (
+                <button key={a.name} onClick={() => loadArtist(a)}
+                  className="flex flex-col items-center gap-2 shrink-0 group active:scale-[0.92] transition-all duration-300">
+                  <div className={`w-[70px] h-[70px] sm:w-20 sm:h-20 rounded-full overflow-hidden transition-all duration-300 shadow-lg ${
+                    activeArtist === a.name
+                      ? 'ring-[3px] ring-fuchsia-400 shadow-fuchsia-500/20 scale-110'
+                      : 'ring-1 ring-white/[0.08] group-hover:ring-fuchsia-400/30 group-hover:shadow-xl group-hover:scale-105'
+                  }`}>
+                    <img src={a.img} alt={a.name} className="w-full h-full object-cover group-hover:scale-110 group-hover:brightness-90 transition-all duration-500" loading="lazy" />
+                  </div>
+                  <p className={`text-[10px] sm:text-[11px] font-medium text-center w-[70px] sm:w-20 truncate transition-colors ${
+                    activeArtist === a.name ? 'text-fuchsia-300 font-semibold' : 'text-white/50 group-hover:text-white/80'
+                  }`}>{a.name}</p>
+                </button>
+              ))}
+            </div>
+          </section>
+        );
+      })}
 
       {/* Artist Songs Panel */}
       {activeArtist && (
