@@ -1,33 +1,166 @@
-import{useState,useRef,useEffect}from'react';
-import{useNavigate}from'react-router-dom';
-import{MoreVertical,Play,ListPlus,Heart,Disc3,User2,Share2,Download}from'lucide-react';
-import{usePlayer}from'../context/PlayerContext';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  EllipsisVertical,
+  Play,
+  ListStart,
+  ListPlus,
+  Heart,
+  Disc3,
+  UserRound,
+  Share2,
+  Download,
+  Plus,
+  ChevronRight,
+  ChevronLeft,
+} from 'lucide-react';
+import { usePlayer } from '../context/PlayerContext';
+import { getPlaylists, addSongToPlaylist, createPlaylist } from '../data/playlists';
 
-export default function ContextMenu({song,className=''}){
-  const[open,setOpen]=useState(false);
-  const ref=useRef(null);
-  const nav=useNavigate();
-  const{addToQueue,toggleLike,likedSongs,playSong,showToast,downloadToDevice}=usePlayer();
-  const liked=likedSongs.includes(song.id);
+export default function ContextMenu({ song }) {
+  const [open, setOpen] = useState(false);
+  const [view, setView] = useState('main'); // 'main' | 'playlists'
+  const wrapRef = useRef(null);
+  const navigate = useNavigate();
+  const { playSong, playNextInQueue, addToQueue, toggleLike, likedSongs, downloadToDevice, showToast } = usePlayer();
+  const liked = likedSongs.includes(song.id);
 
-  useEffect(()=>{const h=e=>{if(ref.current&&!ref.current.contains(e.target))setOpen(false);};document.addEventListener('mousedown',h);return()=>document.removeEventListener('mousedown',h);},[]);
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
+    };
+    const onKey = (e) => e.key === 'Escape' && setOpen(false);
+    document.addEventListener('pointerdown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
 
-  const items=[
-    {icon:Play,label:'Play now',action:()=>playSong(song)},
-    {icon:ListPlus,label:'Add to queue',action:()=>addToQueue(song)},
-    {icon:Download,label:'Download',action:()=>downloadToDevice(song)},
-    {icon:Heart,label:liked?'Remove from Liked':'Add to Liked',action:()=>toggleLike(song.id)},
-    {icon:Disc3,label:'Go to album',action:()=>nav(`/search?q=${encodeURIComponent(song.album||song.title)}`)},
-    {icon:User2,label:'Go to artist',action:()=>nav(`/search?q=${encodeURIComponent(song.artist?.split(',')[0]?.trim()||song.artist)}`)},
-    {icon:Share2,label:'Share',action:async()=>{const text=`${song.title} - ${song.artist}`;if(navigator.share){try{await navigator.share({title:song.title,text});}catch{}}else{await navigator.clipboard?.writeText(text);showToast('Copied!');}}},
+  useEffect(() => {
+    if (!open) setView('main');
+  }, [open]);
+
+  const share = async () => {
+    const text = `${song.title} — ${song.artist}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: song.title, text });
+      } catch {}
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('Copied to clipboard');
+    } catch {
+      showToast('Could not share this track', 'error');
+    }
+  };
+
+  const saveTo = (playlist) => {
+    const added = addSongToPlaylist(playlist.id, song);
+    showToast(added ? `Added to ${playlist.name}` : `Already in ${playlist.name}`);
+    setOpen(false);
+  };
+
+  const saveToNew = () => {
+    const name = window.prompt('New playlist name');
+    if (!name?.trim()) return;
+    const playlist = createPlaylist(name);
+    addSongToPlaylist(playlist.id, song);
+    showToast(`Created “${playlist.name}”`);
+    setOpen(false);
+  };
+
+  const items = [
+    { icon: Play, label: 'Play now', run: () => playSong(song) },
+    { icon: ListStart, label: 'Play next', run: () => playNextInQueue(song) },
+    { icon: ListPlus, label: 'Add to queue', run: () => addToQueue(song) },
+    { icon: Plus, label: 'Save to playlist', submenu: true },
+    { icon: Heart, label: liked ? 'Remove from Liked' : 'Add to Liked', run: () => toggleLike(song) },
+    { icon: Download, label: 'Download', run: () => downloadToDevice(song) },
+    { icon: UserRound, label: 'Go to artist', run: () => navigate(`/search?q=${encodeURIComponent(song.artist?.split(',')[0]?.trim() || '')}`) },
+    { icon: Disc3, label: 'Go to album', run: () => navigate(`/search?q=${encodeURIComponent(song.album || song.title)}`) },
+    { icon: Share2, label: 'Share', run: share },
   ];
 
-  return(
-    <div ref={ref} className={`relative ${className}`}>
-      <button onClick={e=>{e.stopPropagation();setOpen(!open);}} className="p-1.5 rounded-full hover:bg-white/10 transition-colors"><MoreVertical size={16} className="text-white"/></button>
-      {open&&<div className="absolute right-0 top-full mt-1 w-48 bg-[#282828] rounded-xl border border-[#383838] shadow-2xl overflow-hidden z-50" onClick={e=>e.stopPropagation()}>
-        {items.map((it,i)=><button key={i} onClick={()=>{it.action();setOpen(false);}} className="flex items-center gap-3 w-full px-4 py-2.5 text-[13px] text-white hover:bg-white/10 transition-colors"><it.icon size={15} className="text-[#AAAAAA]"/><span className="flex-1 text-left">{it.label}</span></button>)}
-      </div>}
+  const playlists = view === 'playlists' ? getPlaylists() : [];
+
+  return (
+    <div ref={wrapRef} className="relative">
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((p) => !p);
+        }}
+        aria-label={`More options for ${song.title}`}
+        aria-expanded={open}
+        className={`press rounded-full p-1.5 text-white/30 transition-all hover:bg-white/10 hover:text-white ${
+          open ? 'bg-white/10 text-white' : 'sm:opacity-0 sm:group-hover:opacity-100'
+        }`}
+      >
+        <EllipsisVertical size={16} />
+      </button>
+
+      {open && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="a-pop absolute right-0 top-[calc(100%+4px)] z-50 w-[210px] overflow-hidden rounded-xl border border-hair bg-surface-2/95 py-1 shadow-2xl shadow-black/70 backdrop-blur-xl"
+        >
+          {view === 'main' &&
+            items.map((item) => (
+              <button
+                key={item.label}
+                onClick={() => {
+                  if (item.submenu) setView('playlists');
+                  else {
+                    item.run();
+                    setOpen(false);
+                  }
+                }}
+                className="flex w-full items-center gap-3 px-3.5 py-2 text-left text-[12.5px] text-white/85 transition-colors hover:bg-white/[0.08]"
+              >
+                <item.icon size={14} className="shrink-0 text-white/45" />
+                <span className="flex-1">{item.label}</span>
+                {item.submenu && <ChevronRight size={13} className="text-white/30" />}
+              </button>
+            ))}
+
+          {view === 'playlists' && (
+            <>
+              <button
+                onClick={() => setView('main')}
+                className="flex w-full items-center gap-2 border-b border-hair px-3.5 py-2 text-left text-[11.5px] font-semibold text-white/45 hover:text-white"
+              >
+                <ChevronLeft size={13} /> Save to playlist
+              </button>
+              <div className="max-h-[188px] overflow-y-auto">
+                {playlists.length === 0 && (
+                  <p className="px-3.5 py-3 text-[11.5px] text-white/30">No playlists yet.</p>
+                )}
+                {playlists.map((playlist) => (
+                  <button
+                    key={playlist.id}
+                    onClick={() => saveTo(playlist)}
+                    className="flex w-full items-center justify-between gap-2 px-3.5 py-2 text-left text-[12.5px] text-white/85 transition-colors hover:bg-white/[0.08]"
+                  >
+                    <span className="truncate">{playlist.name}</span>
+                    <span className="shrink-0 text-[10.5px] text-white/25">{playlist.songs.length}</span>
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={saveToNew}
+                className="flex w-full items-center gap-3 border-t border-hair px-3.5 py-2 text-left text-[12.5px] font-semibold text-accent transition-colors hover:bg-white/[0.08]"
+              >
+                <Plus size={14} /> New playlist
+              </button>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

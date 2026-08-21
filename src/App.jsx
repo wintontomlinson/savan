@@ -1,37 +1,31 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import { PlayerProvider } from './context/PlayerContext';
-import { AuthProvider } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
-import MiniPlayer from './components/MiniPlayer';
-import ExpandedPlayer from './components/ExpandedPlayer';
-import Toast from './components/Toast';
+import PlayerBar from './components/PlayerBar';
+import NowPlaying from './components/NowPlaying';
+import QueuePanel from './components/QueuePanel';
 import MobileNav from './components/MobileNav';
+import Toast from './components/Toast';
 import Home from './pages/Home';
 import Explore from './pages/Explore';
 import Library from './pages/Library';
 import SearchResults from './pages/SearchResults';
 import Settings from './pages/Settings';
-import { useEffect } from 'react';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
-    const main = document.getElementById('main-scroll');
-    if (main) {
-      main.scrollTop = 0;
-      main.scrollTo({ top: 0, behavior: 'instant' });
-    }
-    window.scrollTo(0, 0);
+    document.getElementById('main-scroll')?.scrollTo({ top: 0, behavior: 'instant' });
   }, [pathname]);
   return null;
 }
 
-function AnimatedRoutes() {
+function Pages() {
   const location = useLocation();
-
   return (
-    <div key={location.pathname} className="page-wrapper">
+    <div key={location.pathname} className="a-fade-up">
       <Routes location={location}>
         <Route path="/" element={<Home />} />
         <Route path="/explore" element={<Explore />} />
@@ -45,25 +39,36 @@ function AnimatedRoutes() {
 
 export default function App() {
   return (
-    <AuthProvider><PlayerProvider><BrowserRouter>
-      <div className="fixed inset-0 flex bg-[#080808]">
-        <Sidebar />
-        <div className="flex-1 flex flex-col min-h-0 min-w-0 md:ml-[72px] lg:ml-[240px]">
-          <Header />
-          <main id="main-scroll" className="flex-1 min-h-0 scroll-y pb-32 md:pb-24 px-4 sm:px-6 lg:px-8 xl:px-10">
-            <div className="max-w-[1400px] mx-auto">
-              <ScrollToTop />
-              <AnimatedRoutes />
+    <PlayerProvider>
+      <BrowserRouter>
+        <div className="fixed inset-0 flex flex-col bg-ink">
+          {/* Rail + content + queue */}
+          <div className="flex min-h-0 flex-1 gap-2 md:p-2 md:pb-0">
+            <Sidebar />
+
+            <div className="flex min-w-0 flex-1 flex-col overflow-hidden border-hair bg-surface md:rounded-2xl md:border">
+              <Header />
+              <main id="main-scroll" className="scroll-y flex-1">
+                <div className="mx-auto w-full max-w-[1400px] px-4 pb-14 sm:px-6 lg:px-8">
+                  <ScrollToTop />
+                  <Pages />
+                </div>
+              </main>
             </div>
-          </main>
+
+            <QueuePanel />
+          </div>
+
+          {/* Bottom chrome */}
+          <div className="shrink-0">
+            <PlayerBar />
+            <MobileNav />
+          </div>
+
+          <NowPlaying />
+          <Toast />
         </div>
-        <MiniPlayer />
-        <ExpandedPlayer />
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-30">
-          <MobileNav />
-        </div>
-        <Toast />
-      </div>
-    </BrowserRouter></PlayerProvider></AuthProvider>
+      </BrowserRouter>
+    </PlayerProvider>
   );
 }

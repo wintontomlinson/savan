@@ -1,304 +1,311 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Shuffle, Zap, Heart, Music4, Sparkles, Radio, Moon, RefreshCw, Play, TriangleAlert } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
-import { getHistory, analyzePreferences } from '../data/algorithm';
-import { searchSongs } from '../data/api';
-import { getHomeQueries } from '../data/algorithm';
-import { getGreeting } from '../data/mockData';
-import SongRow from '../components/SongRow';
+import { getHistory, analyzePreferences, getHomeQueries } from '../data/algorithm';
+import { searchSongs, searchArtists } from '../data/api';
+import { getGreeting } from '../data/format';
 import SongCard from '../components/SongCard';
-import HorizontalScroll from '../components/HorizontalScroll';
-import { Shuffle, Zap, Heart, Music2, Sparkles, BarChart3, Loader2, RefreshCw } from 'lucide-react';
+import SongList from '../components/SongList';
+import SongRow from '../components/SongRow';
+import Shelf from '../components/Shelf';
+import ChipRow from '../components/ChipRow';
+import ArtistCircle from '../components/ArtistCircle';
 
-const MOOD_SECTIONS = [
-  { key: 'chill', label: 'Chill', query: 'lofi chill hindi', icon: Music2 },
-  { key: 'energy', label: 'Energy', query: 'workout motivation songs', icon: Zap },
-  { key: 'sad', label: 'Sad', query: 'sad hindi heartbreak', icon: Heart },
-  { key: 'party', label: 'Party', query: 'dance party bollywood', icon: Sparkles },
-  { key: 'romance', label: 'Romance', query: 'romantic hindi songs', icon: Heart },
-  { key: 'focus', label: 'Focus', query: 'study instrumental focus', icon: BarChart3 },
+const MOODS = [
+  { id: 'chill', label: 'Chill', icon: Music4, query: 'lofi chill hindi' },
+  { id: 'energy', label: 'Energy', icon: Zap, query: 'workout motivation songs' },
+  { id: 'romance', label: 'Romance', icon: Heart, query: 'romantic hindi songs' },
+  { id: 'party', label: 'Party', icon: Sparkles, query: 'dance party bollywood' },
+  { id: 'sad', label: 'Feels', icon: Radio, query: 'sad hindi heartbreak' },
+  { id: 'focus', label: 'Focus', icon: Moon, query: 'study instrumental focus' },
 ];
 
-const TRENDING_QUERIES = [
-  { key: 'trending', query: 'trending hindi songs 2024', title: 'Trending Now' },
-  { key: 'new', query: 'new releases hindi 2024', title: 'New Releases' },
-  { key: 'viral', query: 'viral songs 2024', title: 'Going Viral' },
+const CHARTS = [
+  { id: 'trending', query: 'trending hindi songs 2024', title: 'Trending now', subtitle: 'What everyone is playing today' },
+  { id: 'new', query: 'new releases hindi 2024', title: 'New releases', subtitle: 'Fresh from this week' },
+  { id: 'viral', query: 'viral songs 2024', title: 'Going viral', subtitle: 'Blowing up right now' },
 ];
 
 export default function Home() {
-  const { playSong, currentSong, upNext } = usePlayer();
-  const [sections, setSections] = useState({});
-  const [trendingData, setTrendingData] = useState({});
+  const { playSong, playShuffled, currentSong, upNext } = usePlayer();
+
+  const [charts, setCharts] = useState({});
+  const [personal, setPersonal] = useState({});
+  const [artists, setArtists] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const [activeMood, setActiveMood] = useState(null);
+  const [failed, setFailed] = useState(false);
+
+  const [mood, setMood] = useState(null);
   const [moodSongs, setMoodSongs] = useState([]);
-  const [topArtists, setTopArtists] = useState([]);
+  const [moodLoading, setMoodLoading] = useState(false);
 
   const queries = useMemo(() => getHomeQueries(currentSong), [currentSong]);
   const history = useMemo(() => getHistory(), []);
   const prefs = useMemo(() => analyzePreferences(), []);
-  const quickPicks = history.slice(0, 6);
 
-  const loadHomeData = async () => {
+  const shortcuts = history.slice(0, 8);
+  const quickPicks = (currentSong && upNext.length > 0 ? upNext : history).slice(0, 9);
+
+  const load = useCallback(async () => {
     setLoading(true);
-    setError(false);
+    setFailed(false);
     try {
-      const [homeRes, trendingRes] = await Promise.all([
-        Promise.all(queries.map(async s => [s.key, await searchSongs(s.query, 12)])),
-        Promise.all(TRENDING_QUERIES.map(async s => [s.key, await searchSongs(s.query, 15)])),
+      const [chartPairs, personalPairs] = await Promise.all([
+        Promise.all(CHARTS.map(async (c) => [c.id, await searchSongs(c.query, 16)])),
+        Promise.all(queries.map(async (s) => [s.key, await searchSongs(s.query, 14)])),
       ]);
-      setSections(Object.fromEntries(homeRes));
-      setTrendingData(Object.fromEntries(trendingRes));
 
-      // Extract top artists from trending
-      const artistCounts = {};
-      Object.values(trendingData).flat().forEach(song => {
-        const artist = song.artist?.split(',')[0]?.trim();
-        if (artist) artistCounts[artist] = (artistCounts[artist] || 0) + 1;
-      });
-      const sortedArtists = Object.entries(artistCounts)
+      const chartData = Object.fromEntries(chartPairs);
+      setCharts(chartData);
+      setPersonal(Object.fromEntries(personalPairs));
+
+      if (Object.values(chartData).every((list) => !list?.length)) {
+        setFailed(true);
+        setLoading(false);
+        return;
+      }
+
+      // Rank artists by how often they appear across the charts we just loaded.
+      const counts = {};
+      Object.values(chartData)
+        .flat()
+        .forEach((song) => {
+          const name = song?.artist?.split(',')[0]?.trim();
+          if (name) counts[name] = (counts[name] || 0) + 1;
+        });
+      const top = Object.entries(counts)
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 6)
+        .slice(0, 8)
         .map(([name]) => name);
-      
-      // Fetch artist images
-      const { searchArtists } = await import('../data/api');
-      const artistProfiles = await Promise.all(
-        sortedArtists.map(name => searchArtists(name, 1).then(r => r[0]).catch(() => null))
+      const profiles = await Promise.all(
+        top.map((name) => searchArtists(name, 1).then((r) => r[0]).catch(() => null)),
       );
-      setTopArtists(artistProfiles.filter(Boolean));
-
+      setArtists(profiles.filter(Boolean));
       setLoading(false);
     } catch {
-      setError(true);
+      setFailed(true);
       setLoading(false);
     }
-  };
+  }, [queries]);
 
-  useEffect(() => { loadHomeData(); }, [queries]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
-  const playMood = async (mood) => {
-    if (activeMood === mood.key) { setActiveMood(null); setMoodSongs([]); return; }
-    setActiveMood(mood.key);
+  const pickMood = async (item) => {
+    if (mood === item.id) {
+      setMood(null);
+      setMoodSongs([]);
+      return;
+    }
+    setMood(item.id);
     setMoodLoading(true);
-    const songs = await searchSongs(mood.query, 20) || [];
+    const songs = (await searchSongs(item.query, 24)) || [];
     setMoodSongs(songs);
     setMoodLoading(false);
-    if (songs.length > 0) {
-      const shuffled = [...songs].sort(() => Math.random() - 0.5);
-      playSong(shuffled[0], shuffled);
-    }
+    if (songs.length) playShuffled(songs);
   };
 
-  const playShuffled = (songs) => {
-    const shuffled = [...songs].sort(() => Math.random() - 0.5);
-    playSong(shuffled[0], shuffled);
-  };
-
-  const shuffleHistory = () => {
-    const s = history.slice(0, 30).sort(() => Math.random() - 0.5);
-    playSong(s[0], s);
+  const playArtist = async (artist) => {
+    const songs = (await searchSongs(artist.name, 24)) || [];
+    if (songs.length) playShuffled(songs);
   };
 
   return (
-    <div className="pb-6 pt-3">
-      {/* Hero Section - Clean & Dynamic */}
-      <section className="mb-8 animate-in">
-        <div className="relative overflow-hidden rounded-2xl p-5 sm:p-6 border border-white/[0.06]" style={{ background: 'linear-gradient(135deg, #0f0818 0%, #1a0a2e 50%, #0f0818 100%)' }}>
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(225,29,72,0.08)_0%,_transparent_70%)]" />
-          <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="min-w-0">
-              <h1 className="text-[24px] sm:text-[28px] font-black text-transparent bg-clip-text tracking-tight" style={{ backgroundImage: 'linear-gradient(90deg, #fff 0%, #f0abfc 50%, #c084fc 100%)' }}>
-                {getGreeting()}
-              </h1>
-              <p className="mt-1.5 text-[11px] text-white/35 font-medium">
-                {prefs ? (
-                  <>
-                    {prefs.totalPlays} plays
-                    {prefs.topArtists?.[0] && (
-                      <>
-                        {' · '}
-                        {typeof prefs.topArtists[0] === 'string' ? prefs.topArtists[0] : prefs.topArtists[0].name}
-                      </>
-                    )}
-                  </>
-                ) : (
-                  'Discover something new today'
-                )}
+    <div className="pt-6">
+      {/* Greeting */}
+      <header className="mb-7 flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-[26px] font-bold tracking-tight sm:text-[32px]">{getGreeting()}</h1>
+          <p className="mt-1 text-[13px] text-white/40">
+            {prefs
+              ? `${prefs.totalPlays} plays${prefs.topArtists?.[0] ? ` · on repeat: ${prefs.topArtists[0]}` : ''}`
+              : 'Pick a mood, or let the queue build itself.'}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          {history.length > 1 && (
+            <button
+              onClick={() => playShuffled(history.slice(0, 40))}
+              className="press flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-[12px] font-bold text-black transition-transform hover:scale-[1.03]"
+            >
+              <Shuffle size={14} /> Shuffle history
+            </button>
+          )}
+          <button
+            onClick={load}
+            aria-label="Refresh recommendations"
+            className="press flex items-center gap-2 rounded-full border border-hair bg-white/[0.05] px-4 py-2.5 text-[12px] font-semibold text-white/65 hover:bg-white/[0.09]"
+          >
+            <RefreshCw size={13} className={loading ? 'animate-spin' : ''} /> Refresh
+          </button>
+        </div>
+      </header>
+
+      {/* Recently played shortcuts */}
+      {shortcuts.length > 0 && (
+        <section className="mb-8 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          {shortcuts.map((song) => (
+            <button
+              key={song.id}
+              onClick={() => playSong(song, shortcuts)}
+              className="group flex items-center gap-3 overflow-hidden rounded-xl bg-white/[0.05] pr-3 text-left transition-colors hover:bg-white/[0.1]"
+            >
+              <img src={song.thumbnail} alt="" className="h-[54px] w-[54px] shrink-0 object-cover" loading="lazy" />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[12.5px] font-semibold">{song.title}</span>
+                <span className="block truncate text-[11px] text-white/40">{song.artist}</span>
+              </span>
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                <Play size={13} fill="white" className="ml-0.5" />
+              </span>
+            </button>
+          ))}
+        </section>
+      )}
+
+      {/* Mood chips */}
+      <ChipRow items={MOODS} activeId={mood} onSelect={pickMood} className="mb-8" />
+
+      {/* Mood mix */}
+      {mood && (
+        <section className="mb-9">
+          <div className="mb-3.5 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-[17px] font-bold tracking-tight sm:text-[19px]">
+                {MOODS.find((m) => m.id === mood)?.label} mix
+              </h2>
+              <p className="mt-0.5 text-[11.5px] text-white/35">
+                {moodLoading ? 'Building your mix…' : `${moodSongs.length} tracks queued`}
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-2 shrink-0">
-              {history.length > 0 && (
-                <button onClick={shuffleHistory}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white text-[11px] font-bold rounded-full shadow-lg shadow-fuchsia-500/20 hover:shadow-fuchsia-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300">
-                  <Shuffle size={12} /> Shuffle History
-                </button>
-              )}
-              <button onClick={loadHomeData}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-white/[0.06] hover:bg-white/[0.1] text-white/70 text-[11px] font-medium rounded-full active:scale-[0.98] transition-all">
-                <Loader2 size={12} className={loading ? 'animate-spin' : ''} /> Refresh
+            {moodSongs.length > 0 && (
+              <button
+                onClick={() => playShuffled(moodSongs)}
+                className="press flex shrink-0 items-center gap-1.5 rounded-full bg-white/[0.07] px-3.5 py-2 text-[11.5px] font-semibold text-white/70 hover:bg-white/[0.12]"
+              >
+                <Shuffle size={12} /> Shuffle
               </button>
-            </div>
+            )}
           </div>
-        </div>
-      </section>
+          {moodLoading ? <ListSkeleton rows={5} /> : <SongList songs={moodSongs.slice(0, 12)} />}
+        </section>
+      )}
 
-      {/* Mood Quick Actions - Clean Pills */}
-      <section className="mb-8 animate-in" style={{ animationDelay: '0.05s' }}>
-        <div className="flex gap-2 overflow-x-auto scroll-x pb-2">
-          {MOOD_SECTIONS.map((m, i) => (
-            <button key={m.key} onClick={() => playMood(m)}
-              style={{ animationDelay: `${i * 30}ms` }}
-              className={`flex shrink-0 items-center gap-2 px-4 py-2.5 rounded-full transition-all duration-300 active:scale-95 ${
-                activeMood === m.key
-                  ? 'bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-lg shadow-rose-500/30'
-                  : 'bg-white/[0.04] text-white/60 border border-white/[0.05] hover:bg-white/[0.07] hover:border-white/[0.1] hover:text-white'
-              }`}>
-              <m.icon size={14} className={activeMood === m.key ? 'text-white' : 'text-white/50'} />
-              <span className="text-[12px] font-medium">{m.label}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* Top Artists Carousel - Live from trending */}
-      {topArtists.length > 0 && (
-        <section className="mb-8 animate-in" style={{ animationDelay: '0.1s' }}>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-[16px] font-bold text-white">Top Artists Right Now</h2>
-            <span className="text-[10px] text-white/30">Updated from trending</span>
+      {/* Quick picks */}
+      {quickPicks.length > 0 && (
+        <section className="mb-9">
+          <div className="mb-3.5">
+            <h2 className="text-[17px] font-bold tracking-tight sm:text-[19px]">
+              {currentSong ? 'Up next' : 'Quick picks'}
+            </h2>
+            <p className="mt-0.5 text-[11.5px] text-white/35">
+              {currentSong ? 'Chosen to follow what you are playing' : 'Straight back into your rotation'}
+            </p>
           </div>
-          <div className="flex gap-3 overflow-x-auto scroll-x pb-2">
-            {topArtists.map((artist, i) => (
-              <button key={artist.name} onClick={() => playMood({ key: `artist_${artist.id}`, query: artist.name, label: artist.name })}
-                style={{ animationDelay: `${i * 40}ms` }}
-                className="flex shrink-0 flex-col items-center gap-2 group active:scale-95 transition-all">
-                <div className="relative w-18 h-18 sm:w-20 sm:h-20">
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-rose-500/20 to-fuchsia-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <img src={artist.img} alt={artist.name}
-                    className="w-full h-full rounded-full object-cover ring-1 ring-white/[0.06] group-hover:ring-rose-400/40 group-hover:scale-105 transition-all duration-300 shadow-lg" loading="lazy" />
-                </div>
-                <span className="text-[10px] font-semibold text-center leading-tight truncate w-18 sm:w-20 text-white/70 group-hover:text-white transition-colors">{artist.name}</span>
-              </button>
+          <div className="grid gap-x-6 rounded-2xl border border-hair bg-surface-2/40 p-1.5 xl:grid-cols-2">
+            {quickPicks.map((song, i) => (
+              <SongRow
+                key={`${song.id}-${i}`}
+                song={song}
+                index={i}
+                songList={quickPicks}
+                showAlbum={false}
+                showDuration={false}
+              />
             ))}
           </div>
         </section>
       )}
 
-      {/* Jump Back In - Smart History */}
-      {(quickPicks.length > 0 || (currentSong && upNext.length > 0)) && (
-        <section className="mb-8 animate-in" style={{ animationDelay: '0.15s' }}>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-[16px] font-bold text-white">{currentSong ? 'Up Next' : 'Jump Back In'}</h2>
-            <span className="text-[10px] text-white/30">
-              {currentSong ? `${upNext.length} songs` : `${quickPicks.length} recent`}
-            </span>
-          </div>
-          <div className="rounded-2xl border border-white/[0.04] overflow-hidden bg-[#0c0c0c]">
-            {(currentSong ? upNext.slice(0, 8) : quickPicks.slice(0, 8)).map((s, i) => (
-              <SongRow key={`${s.id}-${i}`} song={s} index={i} songList={currentSong ? upNext : quickPicks} />
-            ))}
-          </div>
-        </section>
-      )}
+      {loading && <HomeSkeleton />}
 
-      {/* Mood Results - When mood is active */}
-      {activeMood && moodSongs.length > 0 && (
-        <section className="mb-8 animate-in" style={{ animationDelay: '0.2s' }}>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-[16px] font-bold text-white">{MOOD_SECTIONS.find(m => m.key === activeMood)?.label} Mix</h2>
-              <p className="text-[10px] text-white/30 mt-0.5">{moodSongs.length} songs • Tap to play</p>
-            </div>
-            <button onClick={() => playShuffled(moodSongs)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.06] hover:bg-white/[0.1] rounded-full text-[10px] font-medium text-white/60 active:scale-95">
-              <Shuffle size={11} /> Shuffle
-            </button>
-          </div>
-          <div className="rounded-2xl border border-white/[0.04] overflow-hidden bg-[#0c0c0c]">
-            {moodSongs.slice(0, 15).map((s, i) => <SongRow key={s.id} song={s} index={i} songList={moodSongs} />)}
-          </div>
-        </section>
-      )}
-
-      {/* Loading State */}
-      {loading && (
-        <div className="space-y-8 animate-in">
-          {[1, 2, 3].map(i => (
-            <div key={i}>
-              <div className="flex items-center justify-between mb-3">
-                <div className="skeleton h-4 w-24 rounded-lg" />
-              </div>
-              <div className="flex gap-3 overflow-x-auto scroll-x pb-2">
-                {[...Array(5)].map((_, j) => (
-                  <div key={j} className="shrink-0 w-[150px]">
-                    <div className="aspect-square skeleton rounded-2xl mb-2" />
-                    <div className="skeleton h-3 w-3/4 mb-1 rounded" />
-                    <div className="skeleton h-2.5 w-1/2 rounded" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Error State */}
-      {error && !loading && (
-        <div className="text-center py-16 animate-in">
-          <Music2 size={28} className="text-white/10 mx-auto mb-3" />
-          <p className="text-[14px] text-white/50 font-medium mb-2">Couldn't load music</p>
-          <p className="text-[12px] text-white/20 mb-5">Check your connection</p>
-          <button onClick={loadHomeData} className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-black text-[12px] font-bold rounded-full shadow-lg active:scale-95 transition-all hover:scale-[1.02]">
+      {failed && !loading && (
+        <div className="py-16 text-center">
+          <TriangleAlert size={26} className="mx-auto mb-3 text-white/15" />
+          <p className="text-[14px] font-semibold text-white/60">Couldn&apos;t reach the music catalogue</p>
+          <p className="mb-5 mt-1 text-[12px] text-white/30">Check your connection and try again.</p>
+          <button
+            onClick={load}
+            className="press inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-[12px] font-bold text-black"
+          >
             <RefreshCw size={13} /> Retry
           </button>
         </div>
       )}
 
-      {/* Trending Sections - Live Data */}
-      {!loading && !error && (
+      {!loading && !failed && (
         <>
-          {/* Featured Trending - Large Card */}
-          {trendingData.trending?.length > 0 && (
-            <section className="mb-8 animate-in" style={{ animationDelay: '0.2s' }}>
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="text-[16px] font-bold text-white">Trending Now</h2>
-                  <p className="text-[10px] text-white/30 mt-0.5">Updated live from charts</p>
-                </div>
-              </div>
-              <HorizontalScroll title="Trending Now">
-                {trendingData.trending.slice(0, 12).map(s => <SongCard key={s.id} song={s} />)}
-              </HorizontalScroll>
-            </section>
+          {artists.length > 0 && (
+            <Shelf title="Artists on rotation" subtitle="Pulled from today's charts">
+              {artists.map((a) => (
+                <ArtistCircle key={a.id || a.name} name={a.name} image={a.img} onClick={() => playArtist(a)} />
+              ))}
+            </Shelf>
           )}
 
-          {/* Other Trending Sections */}
-          {TRENDING_QUERIES.filter(t => t.key !== 'trending').map((sec, idx) => {
-            const songs = trendingData[sec.key] || [];
+          {CHARTS.map((chart) => {
+            const songs = charts[chart.id] || [];
             if (!songs.length) return null;
             return (
-              <section key={sec.key} className="mb-8 animate-in" style={{ animationDelay: `${(idx + 2) * 0.06}s` }}>
-                <HorizontalScroll title={sec.title}>
-                  {songs.map(s => <SongCard key={s.id} song={s} />)}
-                </HorizontalScroll>
-              </section>
+              <Shelf key={chart.id} title={chart.title} subtitle={chart.subtitle} seeAllTo={`/search?q=${encodeURIComponent(chart.query)}`}>
+                {songs.map((song) => (
+                  <SongCard key={song.id} song={song} songList={songs} />
+                ))}
+              </Shelf>
             );
           })}
 
-          {/* Personalized Sections from Algorithm */}
-          {queries.map((sec, idx) => {
-            const songs = sections[sec.key] || [];
+          {queries.map((section) => {
+            const songs = personal[section.key] || [];
             if (!songs.length) return null;
             return (
-              <section key={sec.key} className="mb-8 animate-in" style={{ animationDelay: `${(idx + 4) * 0.06}s` }}>
-                <HorizontalScroll title={sec.title}>
-                  {songs.map(s => <SongCard key={s.id} song={s} />)}
-                </HorizontalScroll>
-              </section>
+              <Shelf key={section.key} title={section.title} seeAllTo={`/search?q=${encodeURIComponent(section.query)}`}>
+                {songs.map((song) => (
+                  <SongCard key={song.id} song={song} songList={songs} />
+                ))}
+              </Shelf>
             );
           })}
         </>
       )}
+    </div>
+  );
+}
+
+function ListSkeleton({ rows = 4 }) {
+  return (
+    <div className="space-y-2">
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3">
+          <div className="skeleton h-11 w-11 shrink-0 rounded-lg" />
+          <div className="flex-1 space-y-2">
+            <div className="skeleton h-3 w-2/5" />
+            <div className="skeleton h-2.5 w-1/4" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function HomeSkeleton() {
+  return (
+    <div className="space-y-9">
+      {[0, 1, 2].map((row) => (
+        <div key={row}>
+          <div className="skeleton mb-4 h-4 w-40" />
+          <div className="flex gap-4 overflow-hidden">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="w-[144px] shrink-0 sm:w-[164px]">
+                <div className="skeleton mb-2.5 aspect-square rounded-xl" />
+                <div className="skeleton mb-1.5 h-3 w-3/4" />
+                <div className="skeleton h-2.5 w-1/2" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

@@ -21,10 +21,6 @@ export function addToHistory(song) {
   } catch {}
 }
 
-export function isPlayed(id) {
-  return playedSet.has(id);
-}
-
 export function resetPlayed() {
   playedSet.clear();
 }

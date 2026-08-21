@@ -6,11 +6,14 @@
   "id": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#080808",
-  "theme_color": "#080808",
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "lang": "en",
   "dir": "ltr",
-  "categories": ["music", "entertainment"],
+  "categories": [
+    "music",
+    "entertainment"
+  ],
   "icons": [
     {
       "src": "/icons/icon-72.png",
@@ -88,13 +91,23 @@
       "name": "Search",
       "short_name": "Search",
       "url": "/search",
-      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "/icons/icon-96.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "Explore",
       "short_name": "Explore",
       "url": "/explore",
-      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "/icons/icon-96.png",
+          "sizes": "96x96"
+        }
+      ]
     }
   ]
 }

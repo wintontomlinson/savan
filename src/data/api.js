@@ -1,8 +1,6 @@
-// MusicArea API Layer
-// MusicArea API Layer — JioSaavn + YouTube Music
-// JioSaavn: audio playback, lyrics, suggestions
-// YT Music: search discovery, trending
-// MusicArea API Layer
+// Music Area data layer.
+// JioSaavn (unofficial API) for catalogue, streams and suggestions.
+// LRCLIB for time-synced lyrics, with JioSaavn plain lyrics as a fallback.
 
 const BASE = 'https://jiosavan-api2.vercel.app/api';
 
@@ -79,15 +77,6 @@ function getAudioByQuality(urls) {
   return [...urls]
     .filter(item => item?.url)
     .sort((a, b) => parseInt(b.quality, 10) - parseInt(a.quality, 10))[0]?.url || '';
-}
-
-export function getQuality() {
-  return '320kbps';
-}
-
-export function setQuality(q) {
-  if (q !== '320kbps') return;
-  try { localStorage.setItem('audio_quality', '320kbps'); } catch {}
 }
 
 function mapSong(s) {

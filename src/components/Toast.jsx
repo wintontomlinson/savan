@@ -1,23 +1,37 @@
+import { Check, CircleAlert, Info, X } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 
-export default function Toast() {
-  const { toasts } = usePlayer();
+const STYLES = {
+  success: { icon: Check, ring: 'border-emerald-400/25', tint: 'text-emerald-300' },
+  error: { icon: CircleAlert, ring: 'border-red-400/25', tint: 'text-red-300' },
+  info: { icon: Info, ring: 'border-hair-strong', tint: 'text-white/60' },
+};
 
+export default function Toast() {
+  const { toasts, dismissToast } = usePlayer();
   if (!toasts.length) return null;
 
   return (
-    <div className="fixed bottom-24 md:bottom-20 left-4 right-4 z-[200] flex flex-col gap-2 pointer-events-none">
-      {toasts.map(t => (
-        <div key={t.id} className="pointer-events-auto animate-toastIn max-w-md mx-auto sm:mx-0 sm:ml-auto">
-          <div className={`px-4 py-3 rounded-xl border shadow-2xl shadow-black/60 backdrop-blur-xl flex items-center gap-3 ${
-            t.type === 'error' ? 'bg-red-500/20 border-red-500/30 text-red-300' :
-            t.type === 'success' ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300' :
-            'bg-white/[0.08] border-white/[0.12] text-white'
-          }`}>
-            <span className="flex-1 text-sm font-medium">{t.msg}</span>
+    <div className="pointer-events-none fixed bottom-[132px] left-0 right-0 z-[200] flex flex-col items-center gap-2 px-4 md:bottom-[96px]">
+      {toasts.map((t) => {
+        const style = STYLES[t.type] || STYLES.info;
+        return (
+          <div
+            key={t.id}
+            className={`a-pop chrome pointer-events-auto flex max-w-[400px] items-center gap-2.5 rounded-full border py-2.5 pl-4 pr-2.5 shadow-2xl shadow-black/60 ${style.ring}`}
+          >
+            <style.icon size={15} className={`shrink-0 ${style.tint}`} />
+            <span className="text-[12.5px] font-medium">{t.msg}</span>
+            <button
+              onClick={() => dismissToast(t.id)}
+              aria-label="Dismiss"
+              className="press rounded-full p-1 text-white/30 hover:text-white"
+            >
+              <X size={13} />
+            </button>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

@@ -1,273 +1,228 @@
-import { useState, useRef, useEffect } from 'react';
-import { Loader2, Play, X, Shuffle, Disc3, TrendingUp, ListMusic, Mic, Users, Radio, ArrowUpRight } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Shuffle, Play, X, LoaderCircle } from 'lucide-react';
 import { searchSongs, searchArtists, getPlaylistById } from '../data/api';
+import { COLLECTIONS } from '../data/catalog';
 import { usePlayer } from '../context/PlayerContext';
-import SongRow from '../components/SongRow';
 import SongCard from '../components/SongCard';
-import HorizontalScroll from '../components/HorizontalScroll';
-
-// Browse sections — diverse genres with search queries for more variety
-const BROWSE_SECTIONS = [
-  { id: 'trending', label: 'Trending Now', icon: TrendingUp, playlistId: '1219706044', searchQuery: 'latest hindi hits 2024 trending', color: 'from-rose-500/20 to-pink-600/10', iconColor: 'text-rose-400' },
-  { id: 'dance', label: 'Dance Hits', icon: Disc3, playlistId: '1219706999', searchQuery: 'bollywood dance party songs', color: 'from-amber-500/20 to-orange-600/10', iconColor: 'text-amber-400' },
-  { id: 'retro', label: '90s Bollywood', icon: Radio, playlistId: '1167751266', searchQuery: '90s bollywood songs classic hindi', color: 'from-emerald-500/20 to-green-600/10', iconColor: 'text-emerald-400' },
-  { id: 'english', label: 'English Pop', icon: Users, playlistId: '303128179', searchQuery: 'english pop songs trending 2024', color: 'from-blue-500/20 to-cyan-600/10', iconColor: 'text-blue-400' },
-  { id: 'lofi', label: 'Lo-Fi Chill', icon: ListMusic, playlistId: '1079336813', searchQuery: 'lofi hindi chill relax', color: 'from-purple-500/20 to-violet-600/10', iconColor: 'text-purple-400' },
-  { id: 'hiphop', label: 'Hip-Hop', icon: Mic, playlistId: '1265128247', searchQuery: 'indian hip hop rap songs', color: 'from-indigo-500/20 to-purple-600/10', iconColor: 'text-indigo-400' },
-  { id: 'sad', label: 'Sad Songs', icon: ListMusic, playlistId: '802336660', searchQuery: 'sad hindi songs heartbreak', color: 'from-sky-500/20 to-blue-600/10', iconColor: 'text-sky-400' },
-  { id: 'workout', label: 'Workout', icon: TrendingUp, playlistId: '156710699', searchQuery: 'workout gym motivation hindi songs', color: 'from-orange-500/20 to-red-600/10', iconColor: 'text-orange-400' },
-  { id: 'sufi', label: 'Sufi', icon: Radio, playlistId: '1262711873', searchQuery: 'sufi songs qawwali hindi', color: 'from-teal-500/20 to-emerald-600/10', iconColor: 'text-teal-400' },
-  { id: 'punjabi', label: 'Punjabi Hits', icon: Disc3, playlistId: '4144832', searchQuery: 'punjabi songs latest hits', color: 'from-pink-500/20 to-rose-600/10', iconColor: 'text-pink-400' },
-];
+import SongList from '../components/SongList';
+import Shelf from '../components/Shelf';
+import ArtistCircle from '../components/ArtistCircle';
 
 export default function Explore() {
-  const [activeArtist, setActiveArtist] = useState(null);
-  const [songs, setSongs] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [browseData, setBrowseData] = useState({});
-  const [browseLoading, setBrowseLoading] = useState({});
+  const { playSong, playShuffled } = usePlayer();
+  const [collections, setCollections] = useState({});
+  const [loading, setLoading] = useState(true);
   const [artists, setArtists] = useState([]);
   const [artistsLoading, setArtistsLoading] = useState(true);
-  const { playSong, currentSong } = usePlayer();
-  const songsRef = useRef(null);
-
-  const loadArtist = async (artist) => {
-    if (activeArtist === artist.name) { setActiveArtist(null); setSongs([]); scrollToTop(); return; }
-    setActiveArtist(artist.name);
-    setLoading(true);
-    const s = await searchSongs(artist.name, 20) || [];
-    setSongs(s);
-    setLoading(false);
-  };
-
-  const scrollToTop = () => {
-    const main = document.getElementById('main-scroll');
-    if (main) main.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const loadBrowse = async (section, shouldPlay = false) => {
-    if (shouldPlay) {
-      // On click — fetch fresh 30 songs via search for variety
-      const fresh = await searchSongs(section.searchQuery, 30) || [];
-      if (fresh.length > 0) {
-        const filtered = fresh.filter(s => s.id !== (currentSong?.id || ''));
-        const toPlay = filtered.length > 0 ? filtered : fresh;
-        const shuffled = [...toPlay].sort(() => Math.random() - 0.5);
-        playSong(shuffled[0], shuffled);
-      }
-      return;
-    }
-    // On mount — load playlist for display
-    if (browseData[section.id]) return;
-    setBrowseLoading(p => ({ ...p, [section.id]: true }));
-    const results = await getPlaylistById(section.playlistId) || [];
-    setBrowseData(p => ({ ...p, [section.id]: results }));
-    setBrowseLoading(p => ({ ...p, [section.id]: false }));
-  };
+  const [activeArtist, setActiveArtist] = useState(null);
+  const [artistSongs, setArtistSongs] = useState([]);
+  const [artistLoading, setArtistLoading] = useState(false);
+  const detailRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
-    const loadExploreData = async () => {
-      setBrowseLoading(Object.fromEntries(BROWSE_SECTIONS.map(section => [section.id, true])));
-      const collections = await Promise.all(BROWSE_SECTIONS.map(async section => [section.id, await getPlaylistById(section.playlistId) || []]));
-      if (cancelled) return;
-      const data = Object.fromEntries(collections);
-      setBrowseData(data);
-      setBrowseLoading({});
 
-      const names = [...new Set(collections.flatMap(([, songs]) => songs.flatMap(song => song.artist.split(',').map(name => name.trim()).filter(Boolean))))];
-      const profiles = await Promise.all(names.map(async name => (await searchArtists(name, 1))[0]));
-      if (!cancelled) {
-        setArtists(profiles.filter(Boolean));
-        setArtistsLoading(false);
-      }
+    (async () => {
+      const pairs = await Promise.all(
+        COLLECTIONS.map(async (c) => [c.id, (await getPlaylistById(c.playlistId)) || []]),
+      );
+      if (cancelled) return;
+      setCollections(Object.fromEntries(pairs));
+      setLoading(false);
+
+      // Surface the artists that actually appear in these collections.
+      const names = [
+        ...new Set(
+          pairs
+            .flatMap(([, songs]) => songs)
+            .flatMap((song) => (song.artist || '').split(',').map((n) => n.trim()))
+            .filter(Boolean),
+        ),
+      ].slice(0, 14);
+      const profiles = await Promise.all(names.map((name) => searchArtists(name, 1).then((r) => r[0]).catch(() => null)));
+      if (cancelled) return;
+      setArtists(profiles.filter(Boolean));
+      setArtistsLoading(false);
+    })();
+
+    return () => {
+      cancelled = true;
     };
-    loadExploreData();
-    return () => { cancelled = true; };
   }, []);
 
-  useEffect(() => {
-    if (songs.length > 0 && songsRef.current) {
-      songsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const openCollection = async (collection) => {
+    const fresh = (await searchSongs(collection.query, 30)) || collections[collection.id] || [];
+    if (fresh.length) playShuffled(fresh);
+  };
+
+  const openArtist = async (artist) => {
+    if (activeArtist?.name === artist.name) {
+      setActiveArtist(null);
+      setArtistSongs([]);
+      return;
     }
-  }, [songs]);
-
-  const shufflePlay = (list) => {
-    const shuffled = [...list].sort(() => Math.random() - 0.5);
-    playSong(shuffled[0], shuffled);
+    setActiveArtist(artist);
+    setArtistLoading(true);
+    const songs = (await searchSongs(artist.name, 24)) || [];
+    setArtistSongs(songs);
+    setArtistLoading(false);
+    detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const playDiscoveryMix = () => {
-    const uniqueSongs = [...new Map(Object.values(browseData).flat().map(song => [song.id, song])).values()];
-    if (uniqueSongs.length) shufflePlay(uniqueSongs);
-  };
+  const everything = [...new Map(Object.values(collections).flat().map((s) => [s.id, s])).values()];
 
   return (
-    <div className="pb-8 pt-3">
-      <div className="mb-7 flex items-end justify-between">
+    <div className="pt-6">
+      <header className="mb-7 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-rose-400">Discover</p>
-          <h1 className="text-[27px] font-bold tracking-tight text-white sm:text-3xl">Explore music</h1>
-          <p className="mt-1 text-[13px] text-white/45">Fresh sounds, familiar artists, no filler.</p>
+          <p className="mb-1 text-[10.5px] font-bold uppercase tracking-[0.18em] text-accent">Browse</p>
+          <h1 className="text-[26px] font-bold tracking-tight sm:text-[32px]">Explore music</h1>
+          <p className="mt-1 text-[13px] text-white/40">Genres, moods and the artists behind them.</p>
         </div>
-        <button onClick={playDiscoveryMix} className="flex shrink-0 items-center gap-2 rounded-full border border-white/[0.12] bg-white/[0.06] px-4 py-2.5 text-[11px] font-bold text-white transition-colors hover:bg-white/[0.1] active:scale-95">
-          <Shuffle size={13} /> Shuffle
-        </button>
-      </div>
+        {everything.length > 0 && (
+          <button
+            onClick={() => playShuffled(everything)}
+            className="press flex shrink-0 items-center gap-2 rounded-full bg-white px-4 py-2.5 text-[12px] font-bold text-black transition-transform hover:scale-[1.03]"
+          >
+            <Shuffle size={14} /> Discovery mix
+          </button>
+        )}
+      </header>
 
+      {/* Genre tiles */}
       <section className="mb-10">
-        <div className="mb-4 flex items-end justify-between gap-4">
-          <div>
-            <h2 className="text-[17px] font-bold tracking-tight text-white">Start with a mood</h2>
-            <p className="mt-1 text-[11px] text-white/35">Tap a collection and we will build the queue.</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {BROWSE_SECTIONS.map((sec, index) => (
-            <CollectionTile key={sec.id} section={sec} song={browseData[sec.id]?.[0]} featured={index === 0} onClick={() => loadBrowse(sec, true)} />
+        <h2 className="mb-3.5 text-[17px] font-bold tracking-tight sm:text-[19px]">Browse all</h2>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {COLLECTIONS.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => openCollection(c)}
+              className="lift relative h-[112px] overflow-hidden rounded-xl p-3.5 text-left"
+              style={{ background: `linear-gradient(145deg, ${c.from} 0%, ${c.to} 100%)` }}
+            >
+              <p className="relative z-10 max-w-[70%] text-[14.5px] font-bold leading-tight drop-shadow">{c.label}</p>
+              {collections[c.id]?.[0]?.thumbnail && (
+                <img
+                  src={collections[c.id][0].thumbnail}
+                  alt=""
+                  className="absolute -bottom-2 -right-4 h-[72px] w-[72px] rotate-[25deg] rounded-md object-cover shadow-2xl shadow-black/50"
+                  loading="lazy"
+                />
+              )}
+              <span className="absolute inset-0 bg-black/10" />
+            </button>
           ))}
         </div>
       </section>
 
-      <section className="mb-10 animate-in" style={{ animationDelay: '0.05s' }}>
-        <div className="mb-4 flex items-end justify-between">
+      {/* Artists */}
+      <section className="mb-10">
+        <div className="mb-3.5 flex items-end justify-between">
           <div>
-            <h2 className="text-[17px] font-bold tracking-tight text-white">Artists in rotation</h2>
-            <p className="mt-1 text-[11px] text-white/35">From the tracks playing across Explore.</p>
+            <h2 className="text-[17px] font-bold tracking-tight sm:text-[19px]">Artists in rotation</h2>
+            <p className="mt-0.5 text-[11.5px] text-white/35">Tap one to load their tracks below.</p>
           </div>
-          <span className="text-[11px] text-white/35">{artists.length} artists</span>
+          {!artistsLoading && <span className="text-[11.5px] text-white/30">{artists.length} artists</span>}
         </div>
         {artistsLoading ? (
-          <div className="flex gap-4 overflow-hidden pb-2">{[1, 2, 3, 4, 5, 6].map(item => <div key={item} className="h-24 w-20 shrink-0 rounded-full skeleton" />)}</div>
+          <div className="flex gap-4 overflow-hidden">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="shrink-0">
+                <div className="skeleton h-[86px] w-[86px] rounded-full sm:h-[100px] sm:w-[100px]" />
+              </div>
+            ))}
+          </div>
         ) : (
-        <div className="flex gap-4 scroll-x pb-2">
-          {artists.map(a => (
-            <ArtistCard key={a.name} artist={a} isActive={activeArtist === a.name} onClick={() => loadArtist(a)} />
-          ))}
-        </div>)}
+          <div className="scroll-x flex gap-4 pb-1">
+            {artists.map((a) => (
+              <ArtistCircle
+                key={a.id || a.name}
+                name={a.name}
+                image={a.img}
+                active={activeArtist?.name === a.name}
+                onClick={() => openArtist(a)}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
-      <div className="mb-5 flex items-end justify-between border-t border-white/[0.06] pt-7">
-        <div>
-          <h2 className="text-[17px] font-bold tracking-tight text-white">Keep exploring</h2>
-          <p className="mt-1 text-[11px] text-white/35">Full collections, updated from the catalog.</p>
-        </div>
-      </div>
-
-      {BROWSE_SECTIONS.map(sec => {
-        const data = browseData[sec.id];
-        const isLoading = browseLoading[sec.id];
-        if (!data && !isLoading) return null;
-        return (
-          <section key={sec.id} className="mb-7 animate-in">
-            {isLoading ? (
-              <div className="flex justify-center py-6">
-                <Loader2 size={18} className="text-white/40 animate-spin" />
-              </div>
-            ) : data && data.length > 0 && (
-              <HorizontalScroll title={sec.label}>
-                {data.map(s => <SongCard key={s.id} song={s} />)}
-              </HorizontalScroll>
-            )}
-          </section>
-        );
-      })}
-
+      {/* Artist detail */}
       {activeArtist && (
-        <div ref={songsRef} className="mb-8 animate-scale">
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 size={22} className="text-white/60 animate-spin" />
+        <section ref={detailRef} className="a-fade-up mb-10">
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <img src={activeArtist.img} alt="" className="h-14 w-14 rounded-full object-cover ring-2 ring-white/10" />
+            <div className="min-w-0 flex-1">
+              <h2 className="truncate text-[19px] font-bold tracking-tight">{activeArtist.name}</h2>
+              <p className="text-[11.5px] text-white/35">
+                {artistLoading ? 'Loading tracks…' : `${artistSongs.length} tracks`}
+              </p>
             </div>
-          ) : songs.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3 min-w-0">
-                  <img src={artists.find(a => a.name === activeArtist)?.img} alt="" className="w-12 h-12 rounded-full object-cover ring-2 ring-white/10 shrink-0" />
-                  <div className="min-w-0">
-                    <h2 className="text-[17px] font-bold text-white truncate">{activeArtist}</h2>
-                    <p className="text-[11px] text-white/40">{songs.length} songs</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button onClick={() => shufflePlay(songs)} className="w-9 h-9 rounded-full bg-white/[0.08] flex items-center justify-center btn-press hover:bg-white/[0.12] transition-colors">
-                    <Shuffle size={14} className="text-white" />
-                  </button>
-                  <button onClick={() => playSong(songs[0], songs)} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-rose-500 to-rose-600 rounded-full text-[12px] text-white font-bold btn-press shadow-lg shadow-rose-500/25 hover:shadow-rose-500/40 hover:scale-[1.02] transition-all duration-300">
-                    <Play size={13} fill="white" /> Play All
-                  </button>
-                  <button onClick={() => { setActiveArtist(null); setSongs([]); scrollToTop(); }} className="w-9 h-9 rounded-full bg-white/[0.08] flex items-center justify-center btn-press hover:bg-white/[0.12] transition-colors">
-                    <X size={14} className="text-white/60" />
-                  </button>
-                </div>
+            {artistSongs.length > 0 && (
+              <div className="flex shrink-0 items-center gap-2">
+                <button
+                  onClick={() => playShuffled(artistSongs)}
+                  aria-label="Shuffle artist"
+                  className="press flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.08] hover:bg-white/[0.14]"
+                >
+                  <Shuffle size={14} />
+                </button>
+                <button
+                  onClick={() => playSong(artistSongs[0], artistSongs)}
+                  className="press flex items-center gap-2 rounded-full bg-accent px-4 py-2.5 text-[12px] font-bold text-white"
+                >
+                  <Play size={13} fill="white" /> Play all
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveArtist(null);
+                    setArtistSongs([]);
+                  }}
+                  aria-label="Close artist"
+                  className="press flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.08] text-white/55 hover:bg-white/[0.14]"
+                >
+                  <X size={14} />
+                </button>
               </div>
-              <div className="bg-[#0c0c0c] rounded-2xl overflow-hidden border border-white/[0.04]">
-                {songs.map((s, i) => <SongRow key={s.id} song={s} index={i} songList={songs} />)}
-              </div>
+            )}
+          </div>
+          {artistLoading ? (
+            <div className="flex justify-center py-10">
+              <LoaderCircle size={20} className="animate-spin text-white/40" />
             </div>
+          ) : (
+            <SongList songs={artistSongs} />
           )}
-        </div>
+        </section>
       )}
 
-    </div>
-  );
-}
-
-function ArtistCard({ artist, isActive, onClick }) {
-  return (
-    <button onClick={onClick} className="flex flex-col items-center gap-2 shrink-0 group transition-all duration-300 active:scale-[0.93]">
-      <div className="relative w-20 h-20 sm:w-[90px] sm:h-[90px]">
-        {isActive && <div className="absolute -inset-1 rounded-full bg-gradient-to-b from-rose-500/30 to-rose-600/10 blur-md" />}
-        <div className={`relative w-full h-full rounded-full overflow-hidden transition-all duration-300 ${
-          isActive
-            ? 'ring-2 ring-rose-400 shadow-xl shadow-rose-500/25'
-            : 'ring-1 ring-white/[0.08] shadow-lg shadow-black/40 group-hover:ring-white/[0.15] group-hover:shadow-xl'
-        }`}>
-          <img src={artist.img} alt={artist.name}
-            className={`w-full h-full object-cover transition-all duration-300 ${
-              isActive ? 'scale-110 brightness-90' : 'group-hover:scale-110 group-hover:brightness-75'
-            }`} loading="lazy" />
-          <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent transition-opacity duration-300 ${
-            isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-          }`} />
-          <div className={`absolute inset-0 flex items-center justify-center transition-all duration-250 ${
-            isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-          }`}>
-            <div className={`w-9 h-9 rounded-full flex items-center justify-center shadow-xl transition-all duration-250 ${
-              isActive 
-                ? 'bg-rose-500 scale-100 shadow-rose-500/30' 
-                : 'bg-white/90 scale-75 group-hover:scale-100'
-            }`}>
-              <Play size={14} className={isActive ? 'text-white ml-0.5' : 'text-black ml-0.5'} fill={isActive ? 'white' : 'black'} />
+      {/* Collection shelves */}
+      {loading
+        ? Array.from({ length: 3 }).map((_, row) => (
+            <div key={row} className="mb-9">
+              <div className="skeleton mb-4 h-4 w-36" />
+              <div className="flex gap-4 overflow-hidden">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="w-[144px] shrink-0 sm:w-[164px]">
+                    <div className="skeleton mb-2.5 aspect-square rounded-xl" />
+                    <div className="skeleton mb-1.5 h-3 w-3/4" />
+                    <div className="skeleton h-2.5 w-1/2" />
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
-      <p className={`text-[11px] font-semibold text-center leading-tight truncate w-20 sm:w-[90px] transition-colors duration-200 ${
-        isActive ? 'text-rose-400' : 'text-white/70 group-hover:text-white'
-      }`}>{artist.name}</p>
-    </button>
-  );
-}
-
-function CollectionTile({ section, song, featured, onClick }) {
-  return (
-    <button onClick={onClick} className={`group relative min-h-[132px] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#111] p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:border-white/[0.18] hover:shadow-2xl hover:shadow-black/30 active:scale-[0.98] ${featured ? 'col-span-2 sm:row-span-2 sm:min-h-[276px]' : ''}`}>
-      {song?.thumbnail && <img src={song.thumbnail} alt="" className="absolute inset-0 h-full w-full object-cover opacity-45 transition-transform duration-500 group-hover:scale-110" loading="lazy" />}
-      <div className={`absolute inset-0 bg-gradient-to-br ${section.color} ${featured ? 'via-black/25 to-black/85' : 'from-black/10 to-black/80'}`} />
-      <div className="relative flex h-full flex-col justify-between">
-        <div className="flex items-center justify-between">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/30 backdrop-blur-md ring-1 ring-white/[0.12]">
-            <section.icon size={18} className={section.iconColor} />
-          </div>
-          <ArrowUpRight size={16} className="text-white/45 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-white" />
-        </div>
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/50">{featured ? 'Featured mix' : 'Collection'}</p>
-          <p className={`${featured ? 'mt-1 text-[22px] sm:text-[25px]' : 'mt-1 text-[14px]'} font-bold tracking-tight text-white`}>{section.label}</p>
-          {featured && <p className="mt-1 text-[11px] text-white/55">A fresh queue from today&apos;s picks</p>}
-        </div>
-      </div>
-    </button>
+          ))
+        : COLLECTIONS.map((c) => {
+            const songs = collections[c.id] || [];
+            if (!songs.length) return null;
+            return (
+              <Shelf key={c.id} title={c.label} seeAllTo={`/search?q=${encodeURIComponent(c.query)}`}>
+                {songs.map((song) => (
+                  <SongCard key={song.id} song={song} songList={songs} />
+                ))}
+              </Shelf>
+            );
+          })}
+    </div>
   );
 }
