@@ -79,7 +79,7 @@ export function getHomeQueries(currentSong) {
     const lang = currentSong.language || 'hindi';
     const queries = [];
     if (artist) queries.push({ key: 'playing', query: artist, title: `More ${artist}` });
-    queries.push({ key: 'lang', query: `${lang} top songs 2024`, title: `${lang.charAt(0).toUpperCase() + lang.slice(1)} Hits` });
+    queries.push({ key: 'lang', query: `${lang} top songs`, title: `${lang.charAt(0).toUpperCase() + lang.slice(1)} hits` });
     // Add user's other top artists
     if (prefs) {
       prefs.topArtists.filter(a => a !== artist).slice(0, 2).forEach(a => {
@@ -96,13 +96,14 @@ export function getHomeQueries(currentSong) {
     }));
   }
 
-  // New user defaults
+  // New user defaults. No hardcoded year: those queries go stale and start
+  // returning nothing, which silently removes a whole shelf from the page.
   return [
-    { key: 'bol', query: 'bollywood latest 2024', title: '🎬 Bollywood' },
-    { key: 'pun', query: 'punjabi top 2024', title: '🎵 Punjabi' },
-    { key: 'eng', query: 'english pop hits', title: '🌍 English' },
-    { key: 'lofi', query: 'lofi chill hindi', title: '😌 Lo-Fi' },
-    { key: 'rom', query: 'romantic hindi songs', title: '❤️ Romance' },
+    { key: 'bol', query: 'bollywood latest hits', title: 'Bollywood now' },
+    { key: 'pun', query: 'punjabi top hits', title: 'Punjabi picks' },
+    { key: 'eng', query: 'english pop hits', title: 'Global pop' },
+    { key: 'lofi', query: 'lofi chill hindi', title: 'Lo-fi and chill' },
+    { key: 'rom', query: 'romantic hindi songs', title: 'Late night romance' },
   ];
 }
 
