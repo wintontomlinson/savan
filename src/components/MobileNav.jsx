@@ -1,37 +1,41 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Compass, Search, Library, Settings } from 'lucide-react';
+import { House, Compass, Search, Library } from 'lucide-react';
 
-const items = [
-  { to: '/', icon: Home, label: 'Home' },
+const ITEMS = [
+  { to: '/', icon: House, label: 'Home' },
   { to: '/explore', icon: Compass, label: 'Explore' },
   { to: '/search', icon: Search, label: 'Search' },
   { to: '/library', icon: Library, label: 'Library' },
-  { to: '/settings', icon: Settings, label: 'Settings' },
 ];
 
 export default function MobileNav() {
   return (
-    <div className="bg-[#060606]/95 backdrop-blur-2xl border-t border-white/[0.05]">
-      <div className="flex items-center justify-around h-[56px] px-2">
-        {items.map(i => (
-          <NavLink key={i.to} to={i.to} className={({ isActive }) =>
-            `flex flex-col items-center justify-center py-1 px-3 transition-all duration-300 ${
-              isActive ? 'text-white' : 'text-[#444]'
-            }`
-          }>
+    <nav className="chrome border-t border-hair pb-[env(safe-area-inset-bottom)] md:hidden">
+      <div className="flex h-[58px] items-stretch justify-around">
+        {ITEMS.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.to === '/'}
+            className="press flex flex-1 flex-col items-center justify-center gap-1"
+          >
             {({ isActive }) => (
-              <div className="relative">
-                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-300 ${
-                  isActive ? 'bg-gradient-to-b from-rose-500/15 to-transparent scale-110' : 'hover:bg-white/[0.04]'
-                }`}>
-                  <i.icon size={20} strokeWidth={isActive ? 2.2 : 1.5} className={`transition-all duration-300 ${isActive ? 'text-rose-400' : ''}`} />
-                </div>
-                {isActive && <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-rose-400 rounded-full" />}
-              </div>
+              <>
+                <item.icon
+                  size={21}
+                  strokeWidth={isActive ? 2.4 : 1.8}
+                  className={isActive ? 'text-accent' : 'text-white/45'}
+                />
+                <span
+                  className={`text-[10px] font-semibold tracking-tight ${isActive ? 'text-white' : 'text-white/45'}`}
+                >
+                  {item.label}
+                </span>
+              </>
             )}
           </NavLink>
         ))}
       </div>
-    </div>
+    </nav>
   );
 }

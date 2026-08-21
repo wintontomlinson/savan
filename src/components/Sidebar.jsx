@@ -1,76 +1,84 @@
-import { NavLink } from 'react-router-dom';
-import { Home, Compass, Search, Library, Settings, Disc3 } from 'lucide-react';
-import { usePlayer } from '../context/PlayerContext';
+import { Link, useLocation } from 'react-router-dom';
+import { House, Compass, Search, Library, Settings, Heart, ArrowDownToLine, History } from 'lucide-react';
 
-const nav = [
-  { to: '/', icon: Home, label: 'Home' },
+const PRIMARY = [
+  { to: '/', icon: House, label: 'Home' },
   { to: '/explore', icon: Compass, label: 'Explore' },
   { to: '/search', icon: Search, label: 'Search' },
   { to: '/library', icon: Library, label: 'Library' },
-  { to: '/settings', icon: Settings, label: 'Settings' },
 ];
 
+const SHORTCUTS = [
+  { to: '/library?tab=liked', icon: Heart, label: 'Liked Songs', tint: 'text-accent' },
+  { to: '/library?tab=downloads', icon: ArrowDownToLine, label: 'Downloads', tint: 'text-sky-400' },
+  { to: '/library?tab=history', icon: History, label: 'Recently Played', tint: 'text-amber-400' },
+];
+
+function Row({ to, icon: Icon, label, tint, active }) {
+  return (
+    <Link
+      to={to}
+      className={`group relative flex items-center gap-3.5 rounded-xl px-3 py-2.5 text-[13.5px] font-semibold transition-colors duration-200 ${
+        active ? 'bg-white/[0.08] text-white' : 'text-white/55 hover:bg-white/[0.04] hover:text-white'
+      }`}
+      title={label}
+    >
+      {active && <span className="absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-r-full bg-accent" />}
+      <Icon
+        size={20}
+        strokeWidth={active ? 2.3 : 1.8}
+        className={`shrink-0 transition-colors ${
+          active ? 'text-accent' : `${tint || 'text-white/45'} group-hover:text-white/80`
+        }`}
+      />
+      <span className="hidden truncate lg:block">{label}</span>
+    </Link>
+  );
+}
+
 export default function Sidebar() {
-  const { currentSong, isPlaying, setExpanded } = usePlayer();
+  const { pathname, search } = useLocation();
+  const tab = new URLSearchParams(search).get('tab');
+
+  const isPrimary = (to) => {
+    if (to === '/library') return pathname === '/library' && !tab;
+    return to === '/' ? pathname === '/' : pathname.startsWith(to);
+  };
 
   return (
-    <aside className="hidden md:flex flex-col w-[72px] lg:w-[240px] h-full bg-[#030303] border-r border-white/[0.04] fixed left-0 top-0 z-20">
+    <aside className="hidden w-[76px] shrink-0 flex-col overflow-hidden rounded-2xl border border-hair bg-surface md:flex lg:w-[248px]">
       {/* Brand */}
-      <div className="px-4 lg:px-5 py-5 flex items-center gap-2.5">
-        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center shadow-lg shadow-rose-500/25 relative overflow-hidden animate-breathe">
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="relative">
-            <path d="M9 18V5l12-2v13" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <circle cx="6" cy="18" r="3" fill="white"/>
-            <circle cx="18" cy="16" r="3" fill="white"/>
+      <div className="flex items-center gap-3 px-4 pt-5 pb-4 lg:px-5">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent-hi to-accent-lo shadow-lg shadow-accent/25">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M9 18V5l12-2v13" stroke="white" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="6" cy="18" r="3" fill="white" />
+            <circle cx="18" cy="16" r="3" fill="white" />
           </svg>
         </div>
-        <span className="hidden lg:block text-[16px] font-bold text-white tracking-tight">Music Area</span>
+        <span className="hidden text-[15px] font-bold tracking-tight lg:block">Music Area</span>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-2 lg:px-3 mt-2 space-y-0.5">
-        {nav.map(item => (
-          <NavLink key={item.to} to={item.to} className={({ isActive }) =>
-            `flex items-center gap-3 px-3 py-3 rounded-xl text-[13px] font-medium transition-all duration-300 group relative ${
-              isActive
-                ? 'bg-white/[0.06] text-white'
-                : 'text-[#555] hover:text-white hover:bg-white/[0.03]'
-            }`
-          }>
-            {({ isActive }) => (
-              <>
-                {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[20px] bg-gradient-to-b from-rose-400 to-rose-600 rounded-r-full" />}
-                <item.icon size={20} strokeWidth={isActive ? 2.2 : 1.5} className={`transition-all duration-300 ${isActive ? 'text-rose-400' : 'group-hover:text-white/80'}`} />
-                <span className="hidden lg:block">{item.label}</span>
-              </>
-            )}
-          </NavLink>
+      <nav className="space-y-1 px-2 lg:px-3">
+        {PRIMARY.map((item) => (
+          <Row key={item.to} {...item} active={isPrimary(item.to)} />
         ))}
       </nav>
 
-      {/* Now Playing */}
-      {currentSong && (
-        <div className="px-2 lg:px-3 pb-4 mt-auto">
-          <div onClick={() => setExpanded(true)} className="p-2.5 lg:p-3 bg-gradient-to-br from-white/[0.04] to-white/[0.01] rounded-2xl border border-white/[0.05] cursor-pointer hover:bg-white/[0.06] transition-all duration-300 group">
-            <div className="flex items-center gap-2.5">
-              <div className={`w-10 h-10 rounded-xl overflow-hidden shrink-0 ring-1 ring-white/[0.08] transition-all duration-300 ${isPlaying ? 'shadow-lg shadow-rose-500/20 group-hover:scale-105' : ''}`}>
-                <img src={currentSong.thumbnail} alt="" className="w-full h-full object-cover" />
-              </div>
-              <div className="hidden lg:block min-w-0 flex-1">
-                <p className="text-[11px] font-semibold text-white truncate group-hover:text-rose-300 transition-colors">{currentSong.title}</p>
-                <p className="text-[10px] text-white/30 truncate">{currentSong.artist}</p>
-              </div>
-            </div>
-            {isPlaying && (
-              <div className="hidden lg:flex items-center gap-1.5 mt-2.5 px-0.5">
-                <Disc3 size={11} className="text-rose-400 animate-[spin_3s_linear_infinite]" />
-                <span className="text-[9px] text-rose-400/80 font-medium">Playing</span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <div className="mx-4 my-4 border-t border-hair lg:mx-5" />
+
+      <p className="hidden px-5 pb-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-white/30 lg:block">
+        Your Library
+      </p>
+      <nav className="space-y-1 px-2 lg:px-3">
+        {SHORTCUTS.map((item) => (
+          <Row key={item.to} {...item} active={pathname === '/library' && `?tab=${tab}` === item.to.split('/library')[1]} />
+        ))}
+      </nav>
+
+      <div className="mt-auto px-2 pb-3 lg:px-3">
+        <Row to="/settings" icon={Settings} label="Settings" active={pathname === '/settings'} />
+      </div>
     </aside>
   );
 }

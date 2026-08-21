@@ -1,53 +1,111 @@
-import { Play, Heart } from 'lucide-react';
+import { Play, Pause, Heart, X } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
-import { formatDuration } from '../data/mockData';
+import { formatDuration } from '../data/format';
 import Equalizer from './Equalizer';
+import ContextMenu from './ContextMenu';
 
-export default function SongRow({ song, index, songList = [] }) {
-  const { playSong, currentSong, isPlaying, toggleLike, likedSongs } = usePlayer();
-  const isActive = currentSong?.id === song.id;
+export default function SongRow({
+  song,
+  index,
+  songList = [],
+  showAlbum = true,
+  showDuration = true,
+  onRemove,
+}) {
+  const { playSong, togglePlay, currentSong, isPlaying, toggleLike, likedSongs } = usePlayer();
+  const isCurrent = currentSong?.id === song.id;
   const liked = likedSongs.includes(song.id);
 
+  const activate = () => {
+    if (isCurrent) togglePlay();
+    else playSong(song, songList);
+  };
+
   return (
-    <div className={`group flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-3 transition-all duration-200 cursor-pointer ${
-      isActive ? 'bg-rose-500/[0.06]' : 'hover:bg-white/[0.03] active:bg-white/[0.06]'
-    }`}
-      onClick={() => playSong(song, songList)} 
-      style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}>
-      
-      {/* # or EQ */}
-      <div className="w-6 shrink-0 flex justify-center">
-        {isActive && isPlaying ? <Equalizer /> : (
+    <div
+      onClick={activate}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          activate();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      className={`group grid cursor-pointer grid-cols-[24px_44px_minmax(0,1fr)_auto] items-center gap-3 rounded-lg px-2 py-2 transition-colors duration-150 sm:px-3 ${
+        isCurrent ? 'bg-accent/[0.09]' : 'hover:bg-white/[0.05]'
+      } ${showAlbum ? 'md:grid-cols-[24px_44px_minmax(0,1fr)_minmax(0,0.7fr)_auto]' : ''}`}
+    >
+      {/* Index / state */}
+      <div className="flex justify-center">
+        {isCurrent && isPlaying ? (
+          <Equalizer className="h-3.5" />
+        ) : (
           <>
-            <span className={`text-[12px] tabular-nums group-hover:hidden ${isActive ? 'text-rose-400 font-semibold' : 'text-white/20'}`}>{index + 1}</span>
-            {!(isActive && isPlaying) && <Play size={12} className="hidden group-hover:block text-white" fill="white" />}
+            <span
+              className={`text-[12px] tabular-nums group-hover:hidden ${
+                isCurrent ? 'font-semibold text-accent' : 'text-white/25'
+              }`}
+            >
+              {index + 1}
+            </span>
+            <span className="hidden text-white group-hover:block">
+              {isCurrent ? <Pause size={13} fill="white" /> : <Play size={13} fill="white" />}
+            </span>
           </>
         )}
       </div>
 
-      {/* Art */}
-      <div className="relative shrink-0">
-        <img src={song.thumbnail} alt="" className={`w-11 h-11 rounded-lg object-cover ring-1 transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg ${
-          isActive ? 'ring-fuchsia-500/20 shadow-fuchsia-500/10' : 'ring-white/[0.05]'
-        }`} loading="lazy" />
+      <img
+        src={song.thumbnail}
+        alt=""
+        className={`h-11 w-11 rounded-lg object-cover ring-1 ${isCurrent ? 'ring-accent/30' : 'ring-white/[0.06]'}`}
+        loading="lazy"
+      />
+
+      <div className="min-w-0">
+        <p className={`truncate text-[13.5px] font-medium leading-tight ${isCurrent ? 'text-accent' : 'text-white'}`}>
+          {song.title}
+        </p>
+        <p className="mt-0.5 truncate text-[11.5px] leading-tight text-white/40">{song.artist}</p>
       </div>
 
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <p className={`text-[13px] font-medium truncate leading-tight transition-colors duration-200 ${isActive ? 'text-rose-400' : 'text-white group-hover:text-white'}`}>{song.title}</p>
-        <p className="text-[11px] text-white/35 truncate mt-0.5">{song.artist}</p>
+      {showAlbum && (
+        <p className="hidden min-w-0 truncate text-[12px] text-white/35 md:block">{song.album || '—'}</p>
+      )}
+
+      <div className="flex items-center gap-1 justify-self-end">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleLike(song);
+          }}
+          aria-label={liked ? 'Remove from Liked Songs' : 'Add to Liked Songs'}
+          className={`press rounded-full p-1.5 transition-all ${
+            liked ? 'text-accent' : 'text-white/20 hover:text-white sm:opacity-0 sm:group-hover:opacity-100'
+          }`}
+        >
+          <Heart size={15} fill={liked ? 'currentColor' : 'none'} strokeWidth={liked ? 0 : 1.8} />
+        </button>
+        {showDuration && (
+          <span className="hidden w-9 text-right text-[11.5px] tabular-nums text-white/25 sm:block">
+            {formatDuration(song.duration)}
+          </span>
+        )}
+        {onRemove && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove(song);
+            }}
+            aria-label={`Remove ${song.title}`}
+            className="press rounded-full p-1.5 text-white/25 transition-all hover:text-red-400 sm:opacity-0 sm:group-hover:opacity-100"
+          >
+            <X size={15} />
+          </button>
+        )}
+        <ContextMenu song={song} />
       </div>
-
-      {/* Duration */}
-      <span className="text-[11px] text-white/20 tabular-nums shrink-0 hidden sm:block">{formatDuration(song.duration)}</span>
-
-      {/* Like */}
-      <button onClick={e => { e.stopPropagation(); toggleLike(song.id); }}
-        className={`p-1.5 shrink-0 transition-all duration-200 active:scale-90 rounded-full ${
-          liked ? 'text-rose-400' : 'text-white/15 sm:opacity-0 sm:group-hover:opacity-100 hover:text-white/50'
-        }`}>
-        <Heart size={14} fill={liked ? 'currentColor' : 'none'} strokeWidth={liked ? 0 : 1.5} />
-      </button>
     </div>
   );
 }

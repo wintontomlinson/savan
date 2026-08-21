@@ -1,212 +1,265 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, X, Play, Loader2, SearchX, TrendingUp, RefreshCw, Clock, Trash2, Shuffle, Heart, Music, Sparkles, Zap } from 'lucide-react';
-import { searchSongs } from '../data/api';
+import {
+  Search,
+  X,
+  Play,
+  LoaderCircle,
+  SearchX,
+  Clock,
+  Trash2,
+  Shuffle,
+  ChevronLeft,
+  Disc3,
+  Music4,
+  UserRound,
+} from 'lucide-react';
+import { searchSongs, searchArtists, searchAlbums, getAlbumById } from '../data/api';
+import { COLLECTIONS } from '../data/catalog';
 import { usePlayer } from '../context/PlayerContext';
 import { getHistory } from '../data/algorithm';
-import SongRow from '../components/SongRow';
+import SongList from '../components/SongList';
 import SongCard from '../components/SongCard';
-import HorizontalScroll from '../components/HorizontalScroll';
+import Shelf from '../components/Shelf';
+import ChipRow from '../components/ChipRow';
+import ArtistCircle from '../components/ArtistCircle';
+
+const TABS = [
+  { id: 'songs', label: 'Songs', icon: Music4 },
+  { id: 'artists', label: 'Artists', icon: UserRound },
+  { id: 'albums', label: 'Albums', icon: Disc3 },
+];
 
 export default function SearchResults() {
   const [params, setParams] = useSearchParams();
   const q = params.get('q') || '';
-  const { playSong, showToast } = usePlayer();
-  const [query, setQuery] = useState(q);
-  const [songs, setSongs] = useState([]);
-  const [suggestions, setSuggestions] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [sugLoading, setSugLoading] = useState(false);
-  const [error, setError] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const [trendingArtists, setTrendingArtists] = useState([]);
-  const [recentSearches, setRecentSearches] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('ma_recent_searches')) || []; } catch { return []; }
-  });
-  const requestId = useRef(0);
-  const sugTimer = useRef(null);
-  const inputRef = useRef(null);
+  const { playSong, playShuffled, showToast } = usePlayer();
 
-  const recentArtists = (() => {
-    const hist = getHistory().slice(0, 50);
+  const [query, setQuery] = useState(q);
+  const [tab, setTab] = useState('songs');
+  const [results, setResults] = useState({ songs: [], artists: [], albums: [] });
+  const [loading, setLoading] = useState(false);
+  const [empty, setEmpty] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  const [album, setAlbum] = useState(null);
+  const [albumLoading, setAlbumLoading] = useState(false);
+  const [recents, setRecents] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('ma_recent_searches')) || [];
+    } catch {
+      return [];
+    }
+  });
+
+  const inputRef = useRef(null);
+  const requestId = useRef(0);
+  const suggestTimer = useRef(null);
+
+  const history = getHistory();
+  const historyArtists = (() => {
     const seen = new Set();
-    const artists = [];
-    for (const s of hist) {
-      const name = s.artist?.split(',')[0]?.trim();
+    const out = [];
+    for (const song of history.slice(0, 60)) {
+      const name = song.artist?.split(',')[0]?.trim();
       if (name && !seen.has(name)) {
         seen.add(name);
-        artists.push({ name, img: s.thumbnail });
+        out.push({ name, img: song.thumbnail });
       }
-      if (artists.length >= 8) break;
+      if (out.length >= 10) break;
     }
-    return artists;
+    return out;
   })();
-  const recentSongsFromHistory = getHistory().slice(0, 6);
 
-  useEffect(() => { setQuery(q); }, [q]);
-  useEffect(() => { if (!q) inputRef.current?.focus(); }, []);
-
-  // Fetch trending artists
+  useEffect(() => setQuery(q), [q]);
   useEffect(() => {
-    (async () => {
+    if (!q) inputRef.current?.focus();
+  }, [q]);
+
+  const runSearch = useCallback(
+    async (term, which) => {
+      if (!term.trim()) return;
+      setLoading(true);
+      setEmpty(false);
+      setSuggestOpen(false);
+      setAlbum(null);
+
+      const id = ++requestId.current;
+      const fetcher =
+        which === 'artists'
+          ? searchArtists(term, 24)
+          : which === 'albums'
+            ? searchAlbums(term, 24)
+            : searchSongs(term, 30);
+      const data = (await fetcher) || [];
+      if (id !== requestId.current) return;
+
+      setResults((prev) => ({ ...prev, [which]: data }));
+      setEmpty(data.length === 0);
+      setLoading(false);
+    },
+    [],
+  );
+
+  // Run whenever the query or the active tab changes.
+  useEffect(() => {
+    if (!q) {
+      setResults({ songs: [], artists: [], albums: [] });
+      setEmpty(false);
+      return;
+    }
+    setRecents((prev) => {
+      const next = [q, ...prev.filter((s) => s !== q)].slice(0, 12);
       try {
-        const cached = sessionStorage.getItem('ma_trending_artists');
-        if (cached) { setTrendingArtists(JSON.parse(cached)); return; }
-        const songs = await searchSongs('trending hindi songs 2024', 30) || [];
-        if (songs.length > 0) {
-          const seen = new Set();
-          const artists = [];
-          for (const s of songs) {
-            const name = s.artist?.split(',')[0]?.trim();
-            if (name && !seen.has(name)) { seen.add(name); artists.push(name); }
-            if (artists.length >= 10) break;
-          }
-          if (artists.length >= 5) {
-            setTrendingArtists(artists);
-            sessionStorage.setItem('ma_trending_artists', JSON.stringify(artists));
-          }
-        }
+        localStorage.setItem('ma_recent_searches', JSON.stringify(next));
       } catch {}
-    })();
-  }, []);
+      return next;
+    });
+    runSearch(q, tab);
+  }, [q, tab, runSearch]);
 
-  const doSearch = async () => {
-    if (!q?.trim()) return;
-    setLoading(true); setError(false); setShowSuggestions(false);
-    const updated = [q, ...recentSearches.filter(s => s !== q)].slice(0, 10);
-    setRecentSearches(updated);
-    try { localStorage.setItem('ma_recent_searches', JSON.stringify(updated)); } catch {}
-    
-    const id = ++requestId.current;
-    const s = await searchSongs(q, 30) || [];
-    if (id !== requestId.current) return;
-    if (s.length === 0) { setError(true); setLoading(false); return; }
-    setSongs(s); setLoading(false);
-  };
-
-  useEffect(() => { if (q) doSearch(); }, [q]);
-
+  // Debounced inline suggestions.
   useEffect(() => {
-    if (query.length < 2 || query === q) { setSuggestions([]); setShowSuggestions(false); return; }
-    setSugLoading(true); setShowSuggestions(true);
-    if (sugTimer.current) clearTimeout(sugTimer.current);
-    sugTimer.current = setTimeout(async () => {
-      const results = await searchSongs(query, 5) || [];
-      setSuggestions(results); setSugLoading(false);
-    }, 300);
-    return () => { if (sugTimer.current) clearTimeout(sugTimer.current); };
-  }, [query]);
+    if (query.trim().length < 2 || query === q) {
+      setSuggestions([]);
+      setSuggestOpen(false);
+      return;
+    }
+    setSuggestOpen(true);
+    if (suggestTimer.current) clearTimeout(suggestTimer.current);
+    suggestTimer.current = setTimeout(async () => {
+      setSuggestions((await searchSongs(query, 6)) || []);
+    }, 280);
+    return () => clearTimeout(suggestTimer.current);
+  }, [query, q]);
 
-  const handleSubmit = (e) => { e.preventDefault(); if (query.trim()) { setParams({ q: query.trim() }); setShowSuggestions(false); } };
-  const quickSearch = (term) => { setQuery(term); setParams({ q: term }); setShowSuggestions(false); };
-  
-  const clearRecentSearches = () => {
-    setRecentSearches([]);
-    localStorage.removeItem('ma_recent_searches');
-    showToast('Recent searches cleared');
+  const submit = (e) => {
+    e.preventDefault();
+    const term = query.trim();
+    if (term) setParams({ q: term });
   };
 
-  const removeRecentSearch = (term) => {
-    const updated = recentSearches.filter(s => s !== term);
-    setRecentSearches(updated);
-    try { localStorage.setItem('ma_recent_searches', JSON.stringify(updated)); } catch {}
+  const jumpTo = (term) => {
+    setQuery(term);
+    setParams({ q: term });
   };
 
-  const clearSearch = () => {
+  const clearAll = () => {
     setQuery('');
-    setSongs([]);
-    setSuggestions([]);
-    setError(false);
-    setShowSuggestions(false);
     setParams({});
+    setResults({ songs: [], artists: [], albums: [] });
+    setEmpty(false);
+    setAlbum(null);
     inputRef.current?.focus();
   };
 
+  const openAlbum = async (item) => {
+    setAlbumLoading(true);
+    const detail = await getAlbumById(item.id);
+    setAlbumLoading(false);
+    if (detail?.songs?.length) setAlbum(detail);
+    else showToast('Could not load that album', 'error');
+  };
+
+  const songs = results.songs;
+
   return (
-    <div className="pb-6 pt-3">
-      {/* Search Bar - Clean & Sticky */}
-      <div className="sticky top-0 z-20 pb-4">
-        <form onSubmit={handleSubmit} className="relative">
-          <div className={`relative flex items-center rounded-2xl transition-all duration-300 ${
-            focused
-              ? 'bg-[#1c1c20] ring-1 ring-white/[0.12] shadow-2xl shadow-black/40'
-              : 'bg-[#131315] ring-1 ring-white/[0.05] hover:ring-white/[0.08]'
-          }`}>
-            <Search size={17} className={`absolute left-4 transition-all duration-300 ${focused ? 'text-white/70' : 'text-white/25'}`} />
+    <div className="pt-6">
+      {/* Search field */}
+      <div className="sticky top-0 z-20 -mx-4 mb-6 bg-surface/95 px-4 pb-4 pt-1 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <form onSubmit={submit} className="relative">
+          <div className="flex items-center rounded-2xl border border-hair bg-surface-2 transition-colors focus-within:border-hair-strong focus-within:bg-surface-3">
+            <Search size={18} className="ml-4 shrink-0 text-white/35" />
             <input
               ref={inputRef}
               value={query}
-              onChange={e => setQuery(e.target.value)}
-              onFocus={() => { setFocused(true); if (query.length >= 2 && suggestions.length > 0) setShowSuggestions(true); }}
-              onBlur={() => setFocused(false)}
-              placeholder="Search songs, artists, albums..."
-              className="w-full bg-transparent text-white text-[15px] font-medium pl-12 pr-12 py-4 rounded-2xl placeholder:text-white/20 focus:outline-none"
+              onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => query.trim().length >= 2 && query !== q && setSuggestOpen(true)}
+              placeholder="Songs, artists, albums"
+              className="w-full bg-transparent px-3.5 py-4 text-[15px] font-medium placeholder:text-white/25 focus:outline-none"
               autoComplete="off"
               spellCheck="false"
             />
             {query && (
-              <button type="button" onClick={clearSearch}
-                className="absolute right-3 w-8 h-8 rounded-full bg-white/[0.12] flex items-center justify-center hover:bg-white/[0.2] active:scale-85 transition-all duration-200">
-                <X size={14} className="text-white/80" />
+              <button
+                type="button"
+                onClick={clearAll}
+                aria-label="Clear search"
+                className="press mr-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/[0.1] text-white/70 hover:bg-white/[0.18]"
+              >
+                <X size={14} />
               </button>
             )}
           </div>
 
-          {/* Live Suggestions Dropdown */}
-          {showSuggestions && (
-            <div className="absolute left-0 right-0 top-[calc(100%+6px)] bg-[#18181b] rounded-2xl border border-white/[0.06] shadow-2xl shadow-black/60 overflow-hidden z-50 animate-scale">
-              {sugLoading && (
-                <div className="flex items-center gap-3 px-5 py-4">
-                  <Loader2 size={14} className="text-white/25 animate-spin" />
-                  <span className="text-[12px] text-white/30">Searching...</span>
-                </div>
-              )}
-              {!sugLoading && suggestions.map((s, i) => (
-                <button key={s.id || i} onClick={() => { playSong(s, suggestions); setShowSuggestions(false); }}
-                  className="flex items-center gap-3 w-full px-5 py-3.5 hover:bg-white/[0.04] active:bg-white/[0.07] transition-all duration-150 text-left border-b border-white/[0.03] last:border-0">
-                  <img src={s.thumbnail} alt="" className="w-11 h-11 rounded-xl object-cover shrink-0 shadow-md" loading="lazy" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[13px] text-white truncate font-medium">{s.title}</p>
-                    <p className="text-[10px] text-white/25 truncate">{s.artist}</p>
-                  </div>
-                  <div className="w-7 h-7 rounded-full bg-white/[0.06] flex items-center justify-center shrink-0">
-                    <Play size={10} className="text-white/40 ml-0.5" fill="currentColor" />
-                  </div>
+          {suggestOpen && suggestions.length > 0 && (
+            <div className="a-pop absolute left-0 right-0 top-[calc(100%+8px)] z-30 overflow-hidden rounded-2xl border border-hair bg-surface-2/95 shadow-2xl shadow-black/70 backdrop-blur-xl">
+              {suggestions.map((song) => (
+                <button
+                  key={song.id}
+                  onClick={() => {
+                    playSong(song, suggestions);
+                    setSuggestOpen(false);
+                  }}
+                  className="flex w-full items-center gap-3 border-b border-hair px-4 py-3 text-left transition-colors last:border-0 hover:bg-white/[0.05]"
+                >
+                  <img src={song.thumbnail} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" loading="lazy" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13px] font-medium">{song.title}</span>
+                    <span className="block truncate text-[11px] text-white/35">{song.artist}</span>
+                  </span>
+                  <Play size={12} fill="currentColor" className="shrink-0 text-white/30" />
                 </button>
               ))}
-              {!sugLoading && suggestions.length > 0 && (
-                <button onClick={handleSubmit} className="w-full px-5 py-3.5 text-[12px] text-white/40 font-medium hover:bg-white/[0.03] hover:text-white/60 transition-all text-center">
-                  View all results for "{query}" &rarr;
-                </button>
-              )}
+              <button
+                onClick={submit}
+                className="w-full px-4 py-3 text-center text-[12px] font-semibold text-accent transition-colors hover:bg-white/[0.04]"
+              >
+                See all results for “{query}”
+              </button>
             </div>
           )}
         </form>
+
+        {q && <ChipRow items={TABS} activeId={tab} onSelect={(t) => setTab(t.id)} className="mt-3" />}
       </div>
 
-      {/* Empty State - Discovery Dashboard */}
+      {/* ---------- Idle state ---------- */}
       {!q && (
-        <div className="space-y-8 animate-in">
-          {/* Recent Searches */}
-          {recentSearches.length > 0 && (
+        <div className="a-fade-up space-y-9">
+          {recents.length > 0 && (
             <section>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Clock size={13} className="text-white/25" />
-                  <p className="text-[12px] text-white/50 font-semibold">Recent Searches</p>
-                </div>
-                <button onClick={clearRecentSearches} className="flex items-center gap-1 text-[11px] text-white/25 hover:text-white/50 transition-colors active:scale-95">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="flex items-center gap-2 text-[13px] font-bold text-white/60">
+                  <Clock size={13} /> Recent searches
+                </h2>
+                <button
+                  onClick={() => {
+                    setRecents([]);
+                    localStorage.removeItem('ma_recent_searches');
+                  }}
+                  className="press flex items-center gap-1 text-[11.5px] text-white/30 hover:text-white/60"
+                >
                   <Trash2 size={11} /> Clear
                 </button>
               </div>
               <div className="flex flex-wrap gap-2">
-                {recentSearches.map(term => (
-                  <div key={term} className="flex items-center gap-1 bg-white/[0.04] rounded-full border border-white/[0.04] hover:border-white/[0.08] transition-all group">
-                    <button onClick={() => quickSearch(term)} className="pl-3.5 pr-1 py-2 text-[12px] text-white/60 font-medium hover:text-white/80 transition-colors">
+                {recents.map((term) => (
+                  <div key={term} className="flex items-center rounded-full bg-white/[0.06] transition-colors hover:bg-white/[0.1]">
+                    <button onClick={() => jumpTo(term)} className="py-2 pl-3.5 pr-1.5 text-[12px] font-medium text-white/70">
                       {term}
                     </button>
-                    <button onClick={() => removeRecentSearch(term)} className="pr-2.5 py-2 text-white/20 hover:text-white/50 transition-colors">
+                    <button
+                      onClick={() => {
+                        const next = recents.filter((s) => s !== term);
+                        setRecents(next);
+                        try {
+                          localStorage.setItem('ma_recent_searches', JSON.stringify(next));
+                        } catch {}
+                      }}
+                      aria-label={`Remove ${term}`}
+                      className="press py-2 pr-3 text-white/25 hover:text-white/60"
+                    >
                       <X size={11} />
                     </button>
                   </div>
@@ -215,87 +268,36 @@ export default function SearchResults() {
             </section>
           )}
 
-          {/* Your Artists - From History */}
-          {recentArtists.length > 0 && (
+          {historyArtists.length > 0 && (
             <section>
-              <div className="flex items-center gap-2 mb-3">
-                <Music size={13} className="text-white/25" />
-                <p className="text-[12px] text-white/50 font-semibold">Your Artists</p>
-              </div>
-              <div className="flex gap-4 overflow-x-auto scroll-x pb-2">
-                {recentArtists.map(a => (
-                  <button key={a.name} onClick={() => quickSearch(a.name)}
-                    className="flex shrink-0 flex-col items-center gap-2 group active:scale-95 transition-all">
-                    <div className="w-16 h-16 rounded-full overflow-hidden ring-1 ring-white/[0.06] group-hover:ring-white/[0.15] shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
-                      <img src={a.img} alt={a.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                    </div>
-                    <span className="text-[10px] text-white/40 font-medium text-center w-16 truncate group-hover:text-white/70 transition-colors">{a.name}</span>
-                  </button>
+              <h2 className="mb-3.5 text-[17px] font-bold tracking-tight">Your artists</h2>
+              <div className="scroll-x flex gap-4 pb-1">
+                {historyArtists.map((a) => (
+                  <ArtistCircle key={a.name} name={a.name} image={a.img} onClick={() => jumpTo(a.name)} />
                 ))}
               </div>
             </section>
           )}
 
-          {/* Trending Artists */}
-          {trendingArtists.length > 0 && (
-            <section>
-              <div className="flex items-center gap-2 mb-3">
-                <TrendingUp size={13} className="text-rose-400" />
-                <p className="text-[12px] text-white/50 font-semibold">Trending Artists</p>
-                <span className="text-[10px] text-white/20">Live</span>
-              </div>
-              <div className="flex gap-4 overflow-x-auto scroll-x pb-2">
-                {trendingArtists.slice(0, 8).map((name, i) => (
-                  <button key={name} onClick={() => quickSearch(name)}
-                    style={{ animationDelay: `${i * 40}ms` }}
-                    className="flex shrink-0 flex-col items-center gap-2 group active:scale-95 transition-all">
-                    <div className="relative w-18 h-18 sm:w-20 sm:h-20">
-                      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-rose-500/20 to-fuchsia-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <img src={`https://picsum.photos/seed/${encodeURIComponent(name)}/200/200`} alt={name}
-                        className="w-full h-full rounded-full object-cover ring-1 ring-white/[0.06] group-hover:ring-rose-400/40 group-hover:scale-105 transition-all duration-300 shadow-lg" loading="lazy" />
-                    </div>
-                    <span className="text-[10px] font-semibold text-center leading-tight truncate w-18 sm:w-20 text-white/70 group-hover:text-white transition-colors">{name}</span>
-                  </button>
-                ))}
-              </div>
-            </section>
+          {history.length > 0 && (
+            <Shelf title="Recently played">
+              {history.slice(0, 12).map((song) => (
+                <SongCard key={song.id} song={song} songList={history.slice(0, 12)} />
+              ))}
+            </Shelf>
           )}
 
-          {/* Recently Played */}
-          {recentSongsFromHistory.length > 0 && (
-            <section>
-              <HorizontalScroll title="Recently Played">
-                {recentSongsFromHistory.map(s => <SongCard key={s.id} song={s} />)}
-              </HorizontalScroll>
-            </section>
-          )}
-
-          {/* Quick Mood Actions */}
           <section>
-            <div className="flex items-center gap-2 mb-3">
-              <Sparkles size={13} className="text-rose-400" />
-              <p className="text-[12px] text-white/50 font-semibold">Quick Mixes</p>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {[
-                { label: 'Chill', query: 'lofi chill hindi', icon: Music, color: 'from-blue-500 to-cyan-500' },
-                { label: 'Energy', query: 'workout motivation songs', icon: Zap, color: 'from-orange-500 to-red-500' },
-                { label: 'Party', query: 'dance party bollywood', icon: Sparkles, color: 'from-fuchsia-500 to-rose-500' },
-                { label: 'Sad', query: 'sad hindi heartbreak', icon: Heart, color: 'from-blue-500 to-indigo-500' },
-                { label: 'Romance', query: 'romantic hindi songs', icon: Heart, color: 'from-rose-500 to-pink-500' },
-                { label: 'Focus', query: 'study instrumental focus', icon: Music, color: 'from-green-500 to-teal-500' },
-              ].map((m, i) => (
-                <button key={m.label} onClick={() => quickSearch(m.query)}
-                  style={{ animationDelay: `${i * 40}ms` }}
-                  className="group relative p-4 rounded-2xl border border-white/[0.06] bg-gradient-to-br from-white/[0.02] to-white/[0.01] hover:border-white/[0.12] hover:bg-gradient-to-br hover:from-white/[0.05] hover:to-white/[0.03] transition-all duration-300 active:scale-[0.98] animate-in">
-                  <div className="flex items-center justify-between mb-3">
-                    <m.icon size={20} className="text-white/40 group-hover:text-white transition-colors" />
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br ${m.color}/20 group-hover:opacity-100 opacity-60 transition-opacity`}>
-                      <Play size={12} className="text-white ml-0.5" fill="white" />
-                    </div>
-                  </div>
-                  <p className="text-[13px] font-bold text-white">{m.label}</p>
-                  <p className="text-[10px] text-white/30 mt-1">Tap to play mix</p>
+            <h2 className="mb-3.5 text-[17px] font-bold tracking-tight">Browse categories</h2>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              {COLLECTIONS.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => jumpTo(c.query)}
+                  className="lift relative h-[96px] overflow-hidden rounded-xl p-3.5 text-left"
+                  style={{ background: `linear-gradient(145deg, ${c.from} 0%, ${c.to} 100%)` }}
+                >
+                  <p className="text-[14px] font-bold leading-tight drop-shadow">{c.label}</p>
                 </button>
               ))}
             </div>
@@ -303,74 +305,124 @@ export default function SearchResults() {
         </div>
       )}
 
-      {/* Results */}
-      {q && (
-        <div className="animate-in">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
-            <div>
-              <h2 className="text-[20px] font-black text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(90deg, #fff 0%, #e879f9 60%, #a78bfa 100%)' }}>{q}</h2>
-              <p className="text-[11px] text-white/25 mt-0.5">{loading ? 'Searching...' : songs.length > 0 ? `${songs.length} results` : ''}</p>
-            </div>
-            {songs.length > 0 && (
-              <div className="flex items-center gap-2 shrink-0">
-                <button onClick={() => { const s = [...songs].sort(() => Math.random() - 0.5); playSong(s[0], s); }}
-                  className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center hover:bg-white/[0.1] active:scale-90 transition-all" aria-label="Shuffle">
-                  <Shuffle size={14} className="text-white/60" />
+      {/* ---------- Album detail ---------- */}
+      {album && (
+        <div className="a-fade-up">
+          <button
+            onClick={() => setAlbum(null)}
+            className="press mb-4 flex items-center gap-1.5 text-[12px] font-semibold text-white/50 hover:text-white"
+          >
+            <ChevronLeft size={14} /> Back to results
+          </button>
+          <div className="mb-5 flex flex-wrap items-end gap-4">
+            <img src={album.thumbnail} alt="" className="art h-32 w-32 rounded-xl object-cover sm:h-40 sm:w-40" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-white/35">Album</p>
+              <h2 className="mt-1 text-[24px] font-bold leading-tight tracking-tight sm:text-[30px]">{album.title}</h2>
+              <p className="mt-1.5 text-[12.5px] text-white/45">
+                {album.artist}
+                {album.year ? ` · ${album.year}` : ''} · {album.songs.length} tracks
+              </p>
+              <div className="mt-4 flex items-center gap-2">
+                <button
+                  onClick={() => playSong(album.songs[0], album.songs)}
+                  className="press flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[12px] font-bold text-white"
+                >
+                  <Play size={13} fill="white" /> Play
                 </button>
-                <button onClick={() => playSong(songs[0], songs)}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white text-[12px] font-bold rounded-full shadow-lg shadow-fuchsia-500/20 hover:shadow-fuchsia-500/30 hover:scale-[1.03] active:scale-95 transition-all duration-300">
-                  <Play size={13} fill="white" /> Play All
+                <button
+                  onClick={() => playShuffled(album.songs)}
+                  className="press flex items-center gap-2 rounded-full bg-white/[0.08] px-4 py-2.5 text-[12px] font-semibold text-white/75 hover:bg-white/[0.14]"
+                >
+                  <Shuffle size={13} /> Shuffle
                 </button>
               </div>
-            )}
+            </div>
           </div>
+          <SongList songs={album.songs} showAlbum={false} />
+        </div>
+      )}
 
-          {loading && (
-            <div className="flex flex-col items-center py-20">
-              <div className="w-12 h-12 rounded-2xl bg-white/[0.04] flex items-center justify-center mb-3 animate-pulse">
-                <Search size={18} className="text-white/15" />
-              </div>
-              <p className="text-[12px] text-white/20">Finding music...</p>
+      {/* ---------- Results ---------- */}
+      {q && !album && (
+        <div className="a-fade-up">
+          {(loading || albumLoading) && (
+            <div className="flex flex-col items-center gap-3 py-20">
+              <LoaderCircle size={22} className="animate-spin text-white/35" />
+              <p className="text-[12px] text-white/30">Searching “{q}”…</p>
             </div>
           )}
 
-          {error && !loading && (
-            <div className="text-center py-20">
-              <SearchX size={28} className="text-white/10 mx-auto mb-3" />
-              <p className="text-[14px] text-white/50 font-medium">No results found</p>
-              <p className="text-[12px] text-white/20 mt-1 mb-5">Try different keywords</p>
-              <button onClick={doSearch} className="inline-flex items-center gap-2 px-4 py-2 bg-white/[0.06] text-white/60 text-[12px] rounded-full font-medium active:scale-95 transition-all hover:bg-white/[0.1]">
-                <RefreshCw size={12} /> Retry
-              </button>
+          {!loading && empty && (
+            <div className="py-20 text-center">
+              <SearchX size={28} className="mx-auto mb-3 text-white/12" />
+              <p className="text-[14px] font-semibold text-white/55">No {tab} found for “{q}”</p>
+              <p className="mt-1 text-[12px] text-white/25">Try a different spelling or another filter.</p>
             </div>
           )}
 
-          {!loading && !error && songs.length > 0 && (
+          {!loading && tab === 'songs' && songs.length > 0 && (
             <>
-              {/* Top Result - Featured */}
-              <div className="mb-5">
-                <p className="text-[10px] text-white/25 font-semibold uppercase tracking-wider mb-2 px-1">Best Match</p>
-                <button onClick={() => playSong(songs[0], songs)}
-                  className="group flex items-center gap-4 p-4 bg-white/[0.03] hover:bg-white/[0.05] rounded-2xl border border-white/[0.04] hover:border-white/[0.08] w-full text-left transition-all duration-300 hover:shadow-lg hover:shadow-black/20 hover:-translate-y-0.5">
-                  <img src={songs[0].thumbnail} alt="" className="w-16 h-16 rounded-xl object-cover shadow-xl ring-1 ring-white/[0.06] group-hover:scale-105 transition-transform duration-300" loading="lazy" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[17px] font-bold text-white truncate">{songs[0].title}</p>
-                    <p className="text-[12px] text-white/35 truncate mt-0.5">{songs[0].artist}</p>
+              <section className="mb-6">
+                <p className="mb-2 text-[10.5px] font-bold uppercase tracking-[0.16em] text-white/30">Top result</p>
+                <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-hair bg-surface-2/60 p-4">
+                  <img src={songs[0].thumbnail} alt="" className="art h-20 w-20 rounded-xl object-cover" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[19px] font-bold tracking-tight">{songs[0].title}</p>
+                    <p className="mt-1 truncate text-[12.5px] text-white/45">{songs[0].artist}</p>
                   </div>
-                  <div className="w-12 h-12 bg-gradient-to-r from-fuchsia-500 to-violet-500 rounded-full flex items-center justify-center shadow-xl shadow-fuchsia-500/20 shrink-0 opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100 transition-all duration-300">
-                    <Play size={18} className="text-white ml-0.5" fill="white" />
+                  <div className="flex shrink-0 items-center gap-2">
+                    <button
+                      onClick={() => playShuffled(songs)}
+                      aria-label="Shuffle results"
+                      className="press flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.08] hover:bg-white/[0.14]"
+                    >
+                      <Shuffle size={15} />
+                    </button>
+                    <button
+                      onClick={() => playSong(songs[0], songs)}
+                      className="press flex items-center gap-2 rounded-full bg-accent px-5 py-3 text-[12.5px] font-bold text-white"
+                    >
+                      <Play size={14} fill="white" /> Play
+                    </button>
                   </div>
-                </button>
-              </div>
-
-              {/* All Results */}
-              <div>
-                <p className="text-[10px] text-white/25 font-semibold uppercase tracking-wider mb-2 px-1">All Results ({songs.length - 1})</p>
-                <div className="rounded-2xl border border-white/[0.04] overflow-hidden bg-[#0c0c0c]">
-                  {songs.slice(1).map((s, i) => <SongRow key={`${s.id}-${i}`} song={s} index={i + 1} songList={songs} />)}
                 </div>
-              </div>
+              </section>
+
+              <p className="mb-2 text-[10.5px] font-bold uppercase tracking-[0.16em] text-white/30">
+                All songs · {songs.length}
+              </p>
+              <SongList songs={songs} />
             </>
+          )}
+
+          {!loading && tab === 'artists' && results.artists.length > 0 && (
+            <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 lg:grid-cols-6">
+              {results.artists.map((a) => (
+                <div key={a.id || a.name} className="flex justify-center">
+                  <ArtistCircle name={a.name} image={a.img} onClick={() => jumpTo(a.name)} />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!loading && tab === 'albums' && results.albums.length > 0 && (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
+              {results.albums.map((a) => (
+                <button key={a.id} onClick={() => openAlbum(a)} className="group text-left">
+                  <div className="art mb-2.5 aspect-square overflow-hidden rounded-xl ring-1 ring-white/[0.06]">
+                    <img
+                      src={a.thumbnail}
+                      alt=""
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                  </div>
+                  <p className="truncate text-[13px] font-semibold">{a.title}</p>
+                  <p className="mt-1 truncate text-[11.5px] text-white/40">{a.year || a.artist}</p>
+                </button>
+              ))}
+            </div>
           )}
         </div>
       )}
