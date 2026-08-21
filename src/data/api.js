@@ -66,6 +66,13 @@ async function fetchApi(endpoint, { retries = 2, timeout = 8000 } = {}) {
 
 function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+/** AbortSignal.timeout needs iOS 16, so build the same thing by hand. */
+function timeoutSignal(ms) {
+  const controller = new AbortController();
+  setTimeout(() => controller.abort(), ms);
+  return controller.signal;
+}
+
 // Data Normalization
 function bestImage(images) {
   if (!images?.length) return '';
@@ -238,7 +245,7 @@ export async function getLyrics(songId, title, artist) {
     try {
       const cleanArtist = artist.split(',')[0].trim();
       const url = `https://lrclib.net/api/search?track_name=${encodeURIComponent(title)}&artist_name=${encodeURIComponent(cleanArtist)}`;
-      const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+      const res = await fetch(url, { signal: timeoutSignal(5000) });
       if (res.ok) {
         const results = await res.json();
         const synced = results.find(r => r.syncedLyrics);
@@ -330,7 +337,7 @@ async function wikipediaPortrait(name) {
     'https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&piprop=thumbnail' +
     `&pithumbsize=500&redirects=1&format=json&origin=*&titles=${encodeURIComponent(name)}`;
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    const res = await fetch(url, { signal: timeoutSignal(6000) });
     if (!res.ok) return '';
     const data = await res.json();
     const page = Object.values(data?.query?.pages || {})[0];

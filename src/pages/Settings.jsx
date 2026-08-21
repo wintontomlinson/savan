@@ -25,7 +25,17 @@ function readNumber(key, fallback) {
 }
 
 export default function Settings() {
-  const { boostLevel, setVolumeBoost, applyEqPreset, setEqBand, resetAudio, showToast } = usePlayer();
+  const {
+    boostLevel,
+    setVolumeBoost,
+    applyEqPreset,
+    setEqBand,
+    resetAudio,
+    showToast,
+    effectsEnabled,
+    setEffectsEnabled,
+    effectsBreakBackgroundPlayback,
+  } = usePlayer();
 
   const [crossfade, setCrossfade] = useState(() => readNumber('crossfade_dur', 0));
   const [preset, setPreset] = useState(() => localStorage.getItem('ma_eq_preset') || 'Flat');
@@ -38,6 +48,8 @@ export default function Settings() {
     }
   });
   const [cacheSize, setCacheSize] = useState(getCacheSize);
+
+  const outputMax = effectsEnabled ? 200 : 100;
 
   const persist = (nextPreset, nextGains) => {
     try {
@@ -85,21 +97,46 @@ export default function Settings() {
 
       {/* ---------- Sound ---------- */}
       <Group icon={AudioWaveform} title="Sound" hint="Output level and equaliser, applied live via the Web Audio API.">
-        <Row label="Output level" value={`${boostLevel}%`} accent={boostLevel > 100}>
+        <ToggleRow
+          label="Sound effects"
+          on={effectsEnabled}
+          onChange={(next) => {
+            const needsReload = setEffectsEnabled(next);
+            if (!next) {
+              if (boostLevel > 100) setVolumeBoost(100);
+              choosePreset(EQ_PRESETS[0]);
+            }
+            if (needsReload) showToast('Reload the app to fully restore background playback');
+            else if (!next) showToast('Effects off, background playback protected');
+          }}
+          desc={
+            effectsBreakBackgroundPlayback
+              ? 'Needed for the equaliser and for boosting above 100%. On iPhone and iPad this routes audio through the Web Audio API, which stops playback when you leave the app or lock the screen, so it is off by default here.'
+              : 'Needed for the equaliser and for boosting above 100%.'
+          }
+          warn={effectsBreakBackgroundPlayback}
+        />
+
+        <Row
+          label="Output level"
+          value={`${boostLevel}%`}
+          accent={boostLevel > 100}
+          hint={effectsEnabled ? null : 'Turn on sound effects to go above 100%.'}
+        >
           <input
             type="range"
             min="0"
-            max="200"
+            max={effectsEnabled ? 200 : 100}
             step="5"
             value={boostLevel}
             onChange={(e) => setVolumeBoost(parseInt(e.target.value, 10))}
             aria-label="Output level"
             className="slider mt-1"
             style={{
-              background: `linear-gradient(to right, ${boostLevel > 100 ? '#fb923c' : '#fff'} ${(boostLevel / 200) * 100}%, rgba(255,255,255,0.14) ${(boostLevel / 200) * 100}%)`,
+              background: `linear-gradient(to right, ${boostLevel > 100 ? '#fb923c' : '#fff'} ${(boostLevel / outputMax) * 100}%, rgba(255,255,255,0.14) ${(boostLevel / outputMax) * 100}%)`,
             }}
           />
-          <Ticks labels={['0%', '100%', '200%']} />
+          <Ticks labels={outputMax === 200 ? ['0%', '100%', '200%'] : ['0%', '50%', '100%']} />
           {boostLevel > 100 && (
             <p className="mt-2 text-[11px] text-orange-300/80">
               Above 100% the signal is amplified in software. Compression keeps it from clipping, but keep an eye on
@@ -108,13 +145,22 @@ export default function Settings() {
           )}
         </Row>
 
-        <Row label="Equaliser preset" value={preset}>
-          <div className="scroll-x -mx-1 mt-1 flex gap-2 px-1 pb-1">
+        <Row
+          label="Equaliser preset"
+          value={effectsEnabled ? preset : 'Off'}
+          hint={effectsEnabled ? null : 'Turn on sound effects to use the equaliser.'}
+        >
+          <div
+            className={`scroll-x -mx-1 mt-1 flex gap-2 px-1 pb-1 ${
+              effectsEnabled ? '' : 'pointer-events-none opacity-40'
+            }`}
+          >
             {EQ_PRESETS.map((item) => (
               <button
                 key={item.name}
                 onClick={() => choosePreset(item)}
-                data-active={preset === item.name}
+                disabled={!effectsEnabled}
+                data-active={effectsEnabled && preset === item.name}
                 className="chip shrink-0"
               >
                 {item.name}
@@ -123,8 +169,15 @@ export default function Settings() {
           </div>
         </Row>
 
-        <Row label="10-band equaliser" value={`${gains.filter((g) => g !== 0).length} bands adjusted`}>
-          <div className="scroll-x -mx-1 flex gap-1 px-1 pt-2">
+        <Row
+          label="10-band equaliser"
+          value={effectsEnabled ? `${gains.filter((g) => g !== 0).length} bands adjusted` : 'Off'}
+        >
+          <div
+            className={`scroll-x -mx-1 flex gap-1 px-1 pt-2 ${
+              effectsEnabled ? '' : 'pointer-events-none opacity-40'
+            }`}
+          >
             {EQ_BANDS.map((band, i) => (
               <div key={band} className="flex w-[42px] shrink-0 flex-col items-center gap-1.5">
                 <span
@@ -154,7 +207,11 @@ export default function Settings() {
 
       {/* ---------- Playback ---------- */}
       <Group icon={Gauge} title="Playback" hint="How one track hands over to the next.">
-        <Row label="Crossfade" value={crossfade === 0 ? 'Off' : `${crossfade}s`}>
+        <Row
+          label="Crossfade"
+          value={crossfade === 0 ? 'Off' : `${crossfade}s`}
+          hint="Skipped while the app is in the background, where a fade cannot be timed reliably. Tracks hand over gaplessly instead."
+        >
           <input
             type="range"
             min="0"
@@ -252,7 +309,7 @@ function Group({ icon: Icon, title, hint, children }) {
   );
 }
 
-function Row({ label, value, accent, children }) {
+function Row({ label, value, accent, hint, children }) {
   return (
     <div className="p-4">
       <div className="mb-2.5 flex items-baseline justify-between gap-3">
@@ -262,6 +319,33 @@ function Row({ label, value, accent, children }) {
         </span>
       </div>
       {children}
+      {hint && <p className="mt-2 text-[11px] text-white/35">{hint}</p>}
+    </div>
+  );
+}
+
+function ToggleRow({ label, desc, on, onChange, warn }) {
+  return (
+    <div className="flex items-start gap-3 p-4">
+      <div className="min-w-0 flex-1">
+        <p className="text-[13px] font-semibold text-white/85">{label}</p>
+        <p className={`mt-1 text-[11.5px] leading-relaxed ${warn ? 'text-amber-300/70' : 'text-white/35'}`}>{desc}</p>
+      </div>
+      <button
+        role="switch"
+        aria-checked={on}
+        aria-label={label}
+        onClick={() => onChange(!on)}
+        className={`press relative mt-0.5 h-7 w-12 shrink-0 rounded-full transition-colors ${
+          on ? 'bg-accent' : 'bg-white/[0.14]'
+        }`}
+      >
+        <span
+          className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform ${
+            on ? 'translate-x-[22px]' : 'translate-x-0.5'
+          }`}
+        />
+      </button>
     </div>
   );
 }
