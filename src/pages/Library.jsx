@@ -38,7 +38,7 @@ const TABS = [
 function readSongs(key) {
   try {
     const list = JSON.parse(localStorage.getItem(key));
-    return Array.isArray(list) ? list : [];
+    return Array.isArray(list) ? list.filter((s) => s && s.id) : [];
   } catch {
     return [];
   }

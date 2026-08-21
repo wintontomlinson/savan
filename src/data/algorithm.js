@@ -4,8 +4,12 @@ const HISTORY_KEY = 'ma_history';
 const playedSet = new Set();
 
 export function getHistory() {
-  try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; }
-  catch { return []; }
+  try {
+    const list = JSON.parse(localStorage.getItem(HISTORY_KEY));
+    return Array.isArray(list) ? list.filter((s) => s && s.id) : [];
+  } catch {
+    return [];
+  }
 }
 
 export function addToHistory(song) {

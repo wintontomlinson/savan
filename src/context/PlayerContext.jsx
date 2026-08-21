@@ -20,11 +20,13 @@ function getCrossfadeSec() {
   }
 }
 
-function readJson(key, fallback) {
+/** Always hands back an array — a stale or hand-edited key must not crash boot. */
+function readList(key) {
   try {
-    return JSON.parse(localStorage.getItem(key)) ?? fallback;
+    const value = JSON.parse(localStorage.getItem(key));
+    return Array.isArray(value) ? value : [];
   } catch {
-    return fallback;
+    return [];
   }
 }
 
@@ -53,8 +55,8 @@ export function PlayerProvider({ children }) {
   const [repeatMode, setRepeat] = useState('none');
   const [isExpanded, setExpanded] = useState(false);
   const [queueOpen, setQueueOpen] = useState(false);
-  const [likedSongs, setLikedSongs] = useState(() => readJson('liked', []));
-  const [downloadedSongs, setDownloadedSongs] = useState(() => readJson('downloads', []));
+  const [likedSongs, setLikedSongs] = useState(() => readList('liked'));
+  const [downloadedSongs, setDownloadedSongs] = useState(() => readList('downloads'));
   const [toasts, setToasts] = useState([]);
 
   const cur = () => (activeRef.current === 'A' ? audioA.current : audioB.current);
@@ -601,7 +603,7 @@ export function PlayerProvider({ children }) {
 
     setLikedSongs((prev) => {
       const has = prev.includes(id);
-      const saved = readJson('ma_liked_songs', []);
+      const saved = readList('ma_liked_songs');
       try {
         if (has) {
           localStorage.setItem('ma_liked_songs', JSON.stringify(saved.filter((s) => s.id !== id)));
@@ -637,7 +639,7 @@ export function PlayerProvider({ children }) {
 
       setDownloadedSongs((prev) => {
         const has = prev.includes(id);
-        const saved = readJson('ma_downloaded_songs', []);
+        const saved = readList('ma_downloaded_songs');
         try {
           if (has) {
             localStorage.setItem('ma_downloaded_songs', JSON.stringify(saved.filter((s) => s.id !== id)));
