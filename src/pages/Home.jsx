@@ -65,13 +65,17 @@ export default function Home() {
         return;
       }
 
-      // Rank artists by how often they appear across the charts we just loaded.
+      // Rank artists by how often they appear across the charts we just loaded,
+      // remembering one of their tracks so the avatar always has something.
       const counts = {};
+      const artwork = {};
       Object.values(chartData)
         .flat()
         .forEach((song) => {
           const name = song?.artist?.split(',')[0]?.trim();
-          if (name) counts[name] = (counts[name] || 0) + 1;
+          if (!name) return;
+          counts[name] = (counts[name] || 0) + 1;
+          if (!artwork[name]) artwork[name] = song.thumbnail;
         });
       const top = Object.entries(counts)
         .sort((a, b) => b[1] - a[1])
@@ -80,7 +84,7 @@ export default function Home() {
       const profiles = await Promise.all(
         top.map((name) => searchArtists(name, 1).then((r) => r[0]).catch(() => null)),
       );
-      setArtists(profiles.filter(Boolean));
+      setArtists(profiles.filter(Boolean).map((p) => ({ ...p, art: artwork[p.name] || '' })));
       setLoading(false);
     } catch {
       setFailed(true);
@@ -239,7 +243,13 @@ export default function Home() {
           {artists.length > 0 && (
             <Shelf title="Artists on rotation" subtitle="Pulled from today's charts">
               {artists.map((a) => (
-                <ArtistCircle key={a.id || a.name} name={a.name} image={a.img} onClick={() => playArtist(a)} />
+                <ArtistCircle
+                  key={a.id || a.name}
+                  name={a.name}
+                  image={a.img}
+                  fallbackImage={a.art}
+                  onClick={() => playArtist(a)}
+                />
               ))}
             </Shelf>
           )}

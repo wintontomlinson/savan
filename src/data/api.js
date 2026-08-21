@@ -68,8 +68,18 @@ function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // Data Normalization
 function bestImage(images) {
-  if (!images?.length) return 'https://picsum.photos/seed/def/300/300';
-  return images[images.length - 1]?.url || images[0]?.url;
+  if (!images?.length) return '';
+  return images[images.length - 1]?.url || images[0]?.url || '';
+}
+
+/**
+ * JioSaavn returns a grey silhouette placeholder for artists it has no photo
+ * for (and those URLs are hotlink-protected, so they often fail to load too).
+ * Treat them as "no image" so the resolver below can look elsewhere.
+ */
+function isRealArtistImage(url) {
+  if (!url) return false;
+  return !/artist-default|\/_i\/3\.0\/|default-(film|music|artist)/i.test(url);
 }
 
 function getAudioByQuality(urls) {
@@ -114,10 +124,11 @@ function mapAlbum(a) {
 
 function mapArtist(a) {
   if (!a) return null;
+  const img = bestImage(a.image);
   return {
     id: a.id,
     name: cleanText(a.name),
-    img: bestImage(a.image),
+    img: isRealArtistImage(img) ? img : '',
   };
 }
 
@@ -256,6 +267,107 @@ export async function getLyrics(songId, title, artist) {
     return result;
   }
   return null;
+}
+
+// ---------------------------------------------------------------------------
+// Artist images
+//
+// JioSaavn has no photo for a lot of artists. Resolution order:
+//   1. JioSaavn's own artist photo, when it is not the default placeholder
+//   2. Wikipedia, matched on the exact page title
+//   3. Artwork from one of the artist's own tracks
+//
+// Wikipedia's free-text search is deliberately not used: querying names like
+// "Hansika Pareek" or "AP Dhillon" returns a different musician's article, and
+// showing the wrong person's face is worse than showing no photo at all.
+// ---------------------------------------------------------------------------
+
+const ARTIST_IMG_KEY = 'ma_artist_images';
+const ARTIST_IMG_TTL = 30 * 24 * 60 * 60 * 1000; // 30 days
+const ARTIST_IMG_MAX = 400;
+
+const artistImgMemo = new Map();
+const artistImgInflight = new Map();
+
+function loadArtistImgStore() {
+  try {
+    const store = JSON.parse(localStorage.getItem(ARTIST_IMG_KEY));
+    return store && typeof store === 'object' ? store : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveArtistImg(name, url) {
+  const key = name.toLowerCase();
+  artistImgMemo.set(key, url);
+  try {
+    const store = loadArtistImgStore();
+    store[key] = { url, ts: Date.now() };
+    const keys = Object.keys(store);
+    if (keys.length > ARTIST_IMG_MAX) {
+      keys
+        .sort((a, b) => (store[a].ts || 0) - (store[b].ts || 0))
+        .slice(0, keys.length - ARTIST_IMG_MAX)
+        .forEach((k) => delete store[k]);
+    }
+    localStorage.setItem(ARTIST_IMG_KEY, JSON.stringify(store));
+  } catch {}
+}
+
+function readArtistImgCache(name) {
+  const key = name.toLowerCase();
+  if (artistImgMemo.has(key)) return { hit: true, url: artistImgMemo.get(key) };
+  const entry = loadArtistImgStore()[key];
+  if (!entry) return { hit: false };
+  if (Date.now() - (entry.ts || 0) > ARTIST_IMG_TTL) return { hit: false };
+  artistImgMemo.set(key, entry.url);
+  return { hit: true, url: entry.url };
+}
+
+async function wikipediaPortrait(name) {
+  const url =
+    'https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&piprop=thumbnail' +
+    `&pithumbsize=500&redirects=1&format=json&origin=*&titles=${encodeURIComponent(name)}`;
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (!res.ok) return '';
+    const data = await res.json();
+    const page = Object.values(data?.query?.pages || {})[0];
+    if (!page || page.missing !== undefined) return '';
+    if (/disambiguation/i.test(page.title || '')) return '';
+    return page.thumbnail?.source || '';
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Best available image for an artist name. Never rejects; resolves to '' when
+ * nothing suitable exists. Results (including misses) are cached for 30 days.
+ */
+export async function resolveArtistImage(name) {
+  if (!name?.trim()) return '';
+  const cached = readArtistImgCache(name);
+  if (cached.hit) return cached.url;
+  if (artistImgInflight.has(name)) return artistImgInflight.get(name);
+
+  const task = (async () => {
+    const fromSaavn = (await searchArtists(name, 1))[0]?.img;
+    if (fromSaavn) return fromSaavn;
+
+    const fromWikipedia = await wikipediaPortrait(name);
+    if (fromWikipedia) return fromWikipedia;
+
+    const track = (await searchSongs(name, 1))[0];
+    return track?.thumbnail || '';
+  })();
+
+  artistImgInflight.set(name, task);
+  const url = await task;
+  artistImgInflight.delete(name);
+  saveArtistImg(name, url);
+  return url;
 }
 
 // Stream URL Refresh

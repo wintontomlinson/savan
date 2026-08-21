@@ -273,7 +273,12 @@ export default function SearchResults() {
               <h2 className="mb-3.5 text-[17px] font-bold tracking-tight">Your artists</h2>
               <div className="scroll-x flex gap-4 pb-1">
                 {historyArtists.map((a) => (
-                  <ArtistCircle key={a.name} name={a.name} image={a.img} onClick={() => jumpTo(a.name)} />
+                  <ArtistCircle
+                    key={a.name}
+                    name={a.name}
+                    fallbackImage={a.img}
+                    onClick={() => jumpTo(a.name)}
+                  />
                 ))}
               </div>
             </section>
