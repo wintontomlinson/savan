@@ -19,7 +19,7 @@ function write(list) {
 }
 
 /**
- * User playlists only — Liked Songs and Downloads have their own stores.
+ * User playlists only. Liked Songs and Downloads have their own stores.
  * Entries are normalised because earlier versions of the app wrote a
  * different shape (and an auto "__liked__" playlist) into the same key.
  */

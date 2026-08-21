@@ -25,7 +25,7 @@ export default function Header() {
 
   return (
     <header className="chrome sticky top-0 z-30 flex h-[60px] shrink-0 items-center gap-3 border-b border-hair px-4 sm:px-6 lg:px-8">
-      {/* History nav — desktop */}
+      {/* History nav (desktop) */}
       <div className="hidden items-center gap-1.5 md:flex">
         <button
           onClick={() => navigate(-1)}
@@ -43,7 +43,7 @@ export default function Header() {
         </button>
       </div>
 
-      {/* Brand — mobile */}
+      {/* Brand (mobile) */}
       <Link to="/" className="flex items-center gap-2.5 md:hidden">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-accent-hi to-accent-lo shadow-md shadow-accent/20">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -61,7 +61,7 @@ export default function Header() {
 
       <div className="flex-1" />
 
-      {/* Search — desktop, hidden on the search page itself */}
+      {/* Search: desktop only, hidden on the search page itself */}
       {pathname !== '/search' && (
         <form onSubmit={submit} className="hidden md:block">
           <div className="flex h-9 w-[230px] items-center gap-2 rounded-full border border-hair bg-white/[0.05] px-3.5 transition-colors focus-within:border-hair-strong focus-within:bg-white/[0.08] lg:w-[300px]">

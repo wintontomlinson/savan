@@ -89,7 +89,7 @@ export function getHomeQueries(currentSong) {
     return queries;
   }
 
-  // No song playing — show based on history or defaults
+  // No song playing, so use history or defaults
   if (prefs && prefs.topArtists.length > 0) {
     return prefs.topArtists.slice(0, 4).map(a => ({
       key: `art_${a}`, query: `${a} songs`, title: a

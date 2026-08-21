@@ -102,7 +102,7 @@ export default function Settings() {
           <Ticks labels={['0%', '100%', '200%']} />
           {boostLevel > 100 && (
             <p className="mt-2 text-[11px] text-orange-300/80">
-              Above 100% the signal is amplified in software — compression keeps it from clipping, but keep an eye on
+              Above 100% the signal is amplified in software. Compression keeps it from clipping, but keep an eye on
               your ears.
             </p>
           )}
@@ -173,7 +173,7 @@ export default function Settings() {
 
         <Row label="Streaming quality" value="320 kbps">
           <p className="text-[11.5px] text-white/35">
-            The highest bitrate the source offers is always selected — there is nothing to downgrade here.
+            The highest bitrate the source offers is always selected, so there is nothing to downgrade here.
           </p>
         </Row>
       </Group>
@@ -220,7 +220,7 @@ export default function Settings() {
           onClick={() => {
             if (!window.confirm('Erase every playlist, like, download and setting stored in this browser?')) return;
             localStorage.clear();
-            showToast('Everything erased — reloading');
+            showToast('Everything erased, reloading');
             setTimeout(() => window.location.reload(), 700);
           }}
         />

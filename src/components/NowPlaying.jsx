@@ -124,7 +124,7 @@ export default function NowPlaying() {
         )}
       </div>
 
-      {/* Top bar — doubles as the swipe-down handle */}
+      {/* Top bar, doubles as the swipe-down handle */}
       <div
         className="relative flex h-14 shrink-0 items-center justify-between px-4 sm:px-6"
         onPointerDown={(e) => {
@@ -152,7 +152,7 @@ export default function NowPlaying() {
 
       {/* Body */}
       <div className="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-5 pb-5 sm:px-8 lg:flex-row lg:gap-14 lg:px-14 lg:pb-10">
-        {/* Lyrics / queue — above the transport on mobile, beside it on desktop */}
+        {/* Lyrics / queue: above the transport on mobile, beside it on desktop */}
         {panel && (
           <div className="order-first min-h-0 w-full flex-1 lg:order-last lg:h-[68vh] lg:max-w-[600px]">
             {panel === 'lyrics' ? (
@@ -239,7 +239,7 @@ export default function NowPlaying() {
             </button>
           </div>
 
-          {/* Volume — desktop only, phones use hardware keys */}
+          {/* Volume: desktop only, phones use hardware keys */}
           <div className="mb-4 hidden items-center gap-3 lg:flex">
             <button
               onClick={() => setVolume(volume === 0 ? 1 : 0)}
@@ -397,7 +397,7 @@ function SyncedLyrics({ lrc, currentTime }) {
   return <LyricLines lines={lines.map((l) => l.text)} activeIndex={activeIndex} />;
 }
 
-/** No timestamps available — spread lines across the vocal window as an estimate. */
+/** No timestamps available, so spread lines across the vocal window as an estimate. */
 function PlainLyrics({ text, currentTime, duration }) {
   const lines = useMemo(() => text.split('\n').filter((l) => l.trim()), [text]);
   const intro = duration < 150 ? 5 : duration < 240 ? 8 : 12;

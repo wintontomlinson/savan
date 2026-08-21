@@ -44,7 +44,7 @@ export default function ContextMenu({ song }) {
   }, [open]);
 
   const share = async () => {
-    const text = `${song.title} — ${song.artist}`;
+    const text = `${song.title} by ${song.artist}`;
     if (navigator.share) {
       try {
         await navigator.share({ title: song.title, text });

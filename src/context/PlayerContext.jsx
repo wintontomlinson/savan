@@ -20,7 +20,7 @@ function getCrossfadeSec() {
   }
 }
 
-/** Always hands back an array — a stale or hand-edited key must not crash boot. */
+/** Always hands back an array, so a stale or hand-edited key cannot crash boot. */
 function readList(key) {
   try {
     const value = JSON.parse(localStorage.getItem(key));
@@ -337,7 +337,7 @@ export function PlayerProvider({ children }) {
       });
     }
 
-    document.title = `${currentSong.title} · ${currentSong.artist} — Music Area`;
+    document.title = `${currentSong.title} · ${currentSong.artist} | Music Area`;
 
     let cancelled = false;
     getNextSongs(currentSong).then((songs) => {
@@ -621,10 +621,10 @@ export function PlayerProvider({ children }) {
       showToast(`Downloading "${song.title}"…`);
       try {
         const ok = await downloadSong(song);
-        showToast(ok ? `Saved "${song.title}"` : 'Download failed — try again', ok ? 'success' : 'error');
+        showToast(ok ? `Saved "${song.title}"` : 'Download failed, try again', ok ? 'success' : 'error');
         return ok;
       } catch {
-        showToast('Download failed — try again', 'error');
+        showToast('Download failed, try again', 'error');
         return false;
       }
     },

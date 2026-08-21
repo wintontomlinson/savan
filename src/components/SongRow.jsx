@@ -71,7 +71,7 @@ export default function SongRow({
       </div>
 
       {showAlbum && (
-        <p className="hidden min-w-0 truncate text-[12px] text-white/35 md:block">{song.album || '—'}</p>
+        <p className="hidden min-w-0 truncate text-[12px] text-white/35 md:block">{song.album || ''}</p>
       )}
 
       <div className="flex items-center gap-1 justify-self-end">

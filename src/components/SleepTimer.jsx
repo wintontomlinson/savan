@@ -27,7 +27,7 @@ export default function SleepTimer() {
       if (left > 0) return;
       setDeadline(null);
       if (latest.current.isPlaying) latest.current.togglePlay();
-      latest.current.showToast('Sleep timer finished — good night');
+      latest.current.showToast('Sleep timer finished. Good night');
     };
     tick();
     const id = setInterval(tick, 1000);
