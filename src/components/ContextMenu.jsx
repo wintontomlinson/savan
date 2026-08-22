@@ -9,7 +9,6 @@ import {
   Disc3,
   UserRound,
   Share2,
-  Download,
   Plus,
   ChevronRight,
   ChevronLeft,
@@ -22,7 +21,7 @@ export default function ContextMenu({ song }) {
   const [view, setView] = useState('main'); // 'main' | 'playlists'
   const wrapRef = useRef(null);
   const navigate = useNavigate();
-  const { playSong, playNextInQueue, addToQueue, toggleLike, likedSongs, downloadToDevice, showToast } = usePlayer();
+  const { playSong, playNextInQueue, addToQueue, toggleLike, likedSongs, showToast } = usePlayer();
   const liked = likedSongs.includes(song.id);
 
   useEffect(() => {
@@ -80,7 +79,6 @@ export default function ContextMenu({ song }) {
     { icon: ListPlus, label: 'Add to queue', run: () => addToQueue(song) },
     { icon: Plus, label: 'Save to playlist', submenu: true },
     { icon: Heart, label: liked ? 'Remove from Liked' : 'Add to Liked', run: () => toggleLike(song) },
-    { icon: Download, label: 'Download', run: () => downloadToDevice(song) },
     { icon: UserRound, label: 'Go to artist', run: () => navigate(`/search?q=${encodeURIComponent(song.artist?.split(',')[0]?.trim() || '')}`) },
     { icon: Disc3, label: 'Go to album', run: () => navigate(`/search?q=${encodeURIComponent(song.album || song.title)}`) },
     { icon: Share2, label: 'Share', run: share },

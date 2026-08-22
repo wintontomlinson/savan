@@ -11,8 +11,6 @@ import {
   ChevronDown,
   MicVocal,
   ListMusic,
-  Check,
-  Download,
   Volume1,
   Volume2,
   VolumeX,
@@ -21,7 +19,6 @@ import { usePlayer } from '../context/PlayerContext';
 import { getLyrics } from '../data/api';
 import { formatDuration } from '../data/format';
 import Seekbar from './Seekbar';
-import SleepTimer from './SleepTimer';
 
 export default function NowPlaying() {
   const {
@@ -38,8 +35,6 @@ export default function NowPlaying() {
     cycleRepeat,
     likedSongs,
     toggleLike,
-    downloadedSongs,
-    toggleDownload,
     isExpanded,
     setExpanded,
     queue,
@@ -98,7 +93,6 @@ export default function NowPlaying() {
   if (!isExpanded || !currentSong) return null;
 
   const liked = likedSongs.includes(currentSong.id);
-  const downloaded = downloadedSongs.includes(currentSong.id);
   const VolumeIcon = volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
 
   return (
@@ -144,10 +138,10 @@ export default function NowPlaying() {
         <div className="mx-4 min-w-0 flex-1 text-center">
           <p className="text-[9.5px] font-semibold uppercase tracking-[0.22em] text-white/35">Now Playing</p>
           <p className="mx-auto mt-0.5 max-w-[240px] truncate text-[12px] font-medium text-white/60">
-            {currentSong.album || 'Music Area'}
+            {currentSong.album || 'Savan'}
           </p>
         </div>
-        <SleepTimer />
+        <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-white/45">High quality</span>
       </div>
 
       {/* Body */}
@@ -277,12 +271,6 @@ export default function NowPlaying() {
               badge={queue.length || null}
               active={panel === 'queue'}
               onClick={() => setPanel((p) => (p === 'queue' ? null : 'queue'))}
-            />
-            <Pill
-              icon={downloaded ? Check : Download}
-              label={downloaded ? 'Saved' : 'Save'}
-              active={downloaded}
-              onClick={() => toggleDownload(currentSong)}
             />
           </div>
         </div>

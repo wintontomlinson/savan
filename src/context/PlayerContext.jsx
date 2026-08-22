@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 import { addToHistory, getNextSongs, resetPlayed } from '../data/algorithm';
-import { refreshStreamUrl, downloadSong } from '../data/api';
+import { refreshStreamUrl } from '../data/api';
 
 const Ctx = createContext();
 export const usePlayer = () => useContext(Ctx);
@@ -88,7 +88,6 @@ export function PlayerProvider({ children }) {
   const [isExpanded, setExpanded] = useState(false);
   const [queueOpen, setQueueOpen] = useState(false);
   const [likedSongs, setLikedSongs] = useState(() => readList('liked'));
-  const [downloadedSongs, setDownloadedSongs] = useState(() => readList('downloads'));
   const [toasts, setToasts] = useState([]);
 
   const cur = () => (activeRef.current === 'A' ? audioA.current : audioB.current);
@@ -345,12 +344,6 @@ export function PlayerProvider({ children }) {
   }, [likedSongs]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('downloads', JSON.stringify(downloadedSongs));
-    } catch {}
-  }, [downloadedSongs]);
-
-  useEffect(() => {
     if ('mediaSession' in navigator) navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
   }, [isPlaying]);
 
@@ -369,7 +362,7 @@ export function PlayerProvider({ children }) {
   /* Metadata + related-song prefetch whenever the track changes */
   useEffect(() => {
     if (!currentSong) {
-      document.title = 'Music Area';
+      document.title = 'Savan';
       return;
     }
 
@@ -420,7 +413,7 @@ export function PlayerProvider({ children }) {
       });
     }
 
-    document.title = `${currentSong.title} · ${currentSong.artist} | Music Area`;
+    document.title = `${currentSong.title} · ${currentSong.artist} | Savan`;
 
     let cancelled = false;
     getNextSongs(currentSong).then((songs) => {
@@ -818,48 +811,6 @@ export function PlayerProvider({ children }) {
     });
   }, []);
 
-  const downloadToDevice = useCallback(
-    async (song) => {
-      if (!song) return false;
-      showToast(`Downloading "${song.title}"…`);
-      try {
-        const ok = await downloadSong(song);
-        showToast(ok ? `Saved "${song.title}"` : 'Download failed, try again', ok ? 'success' : 'error');
-        return ok;
-      } catch {
-        showToast('Download failed, try again', 'error');
-        return false;
-      }
-    },
-    [showToast],
-  );
-
-  const toggleDownload = useCallback(
-    (song) => {
-      const id = typeof song === 'string' ? song : song?.id;
-      if (!id) return;
-      const full = typeof song === 'object' ? song : currentSongRef.current?.id === id ? currentSongRef.current : null;
-
-      setDownloadedSongs((prev) => {
-        const has = prev.includes(id);
-        const saved = readList('ma_downloaded_songs');
-        try {
-          if (has) {
-            localStorage.setItem('ma_downloaded_songs', JSON.stringify(saved.filter((s) => s.id !== id)));
-          } else if (full) {
-            localStorage.setItem(
-              'ma_downloaded_songs',
-              JSON.stringify([full, ...saved.filter((s) => s.id !== id)].slice(0, 300)),
-            );
-            downloadToDevice(full);
-          }
-        } catch {}
-        return has ? prev.filter((x) => x !== id) : [...prev, id];
-      });
-    },
-    [downloadToDevice],
-  );
-
   return (
     <Ctx.Provider
       value={{
@@ -877,7 +828,6 @@ export function PlayerProvider({ children }) {
         isExpanded,
         queueOpen,
         likedSongs,
-        downloadedSongs,
         toasts,
         // transport
         playSong,
@@ -904,8 +854,6 @@ export function PlayerProvider({ children }) {
         clearQueue,
         // library
         toggleLike,
-        toggleDownload,
-        downloadToDevice,
         // ui
         setExpanded,
         setQueueOpen,

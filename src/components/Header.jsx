@@ -1,20 +1,13 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Search, Settings } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 
-const TITLES = {
-  '/': 'Listen Now',
-  '/explore': 'Explore',
-  '/search': 'Search',
-  '/library': 'Library',
-  '/settings': 'Settings',
-};
+const TITLES = { '/': 'Home', '/explore': 'Discover', '/search': 'Search', '/library': 'Library' };
 
 export default function Header() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [q, setQ] = useState('');
-
   const submit = (e) => {
     e.preventDefault();
     const term = q.trim();
@@ -22,79 +15,28 @@ export default function Header() {
     navigate(`/search?q=${encodeURIComponent(term)}`);
     setQ('');
   };
-
   return (
-    <header className="chrome sticky top-0 z-30 flex h-[60px] shrink-0 items-center gap-3 border-b border-hair px-4 sm:px-6 lg:px-8">
-      {/* History nav (desktop) */}
-      <div className="hidden items-center gap-1.5 md:flex">
-        <button
-          onClick={() => navigate(-1)}
-          aria-label="Go back"
-          className="press flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white/70 transition-colors hover:bg-black/60 hover:text-white"
-        >
-          <ChevronLeft size={18} />
-        </button>
-        <button
-          onClick={() => navigate(1)}
-          aria-label="Go forward"
-          className="press flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white/70 transition-colors hover:bg-black/60 hover:text-white"
-        >
-          <ChevronRight size={18} />
-        </button>
+    <header className="chrome sticky top-0 z-30 flex h-[68px] shrink-0 items-center gap-3 border-b border-hair px-4 sm:px-6 lg:px-9">
+      <div className="hidden items-center gap-1 md:flex">
+        <button onClick={() => navigate(-1)} aria-label="Go back" className="press nav-circle"><ChevronLeft size={18} /></button>
+        <button onClick={() => navigate(1)} aria-label="Go forward" className="press nav-circle"><ChevronRight size={18} /></button>
       </div>
-
-      {/* Brand (mobile) */}
       <Link to="/" className="flex items-center gap-2.5 md:hidden">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-accent-hi to-accent-lo shadow-md shadow-accent/20">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M9 18V5l12-2v13" stroke="white" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-            <circle cx="6" cy="18" r="3" fill="white" />
-            <circle cx="18" cy="16" r="3" fill="white" />
-          </svg>
-        </div>
-        <span className="text-[15px] font-bold tracking-tight">Music Area</span>
+        <div className="brand-mark flex h-9 w-9 items-center justify-center rounded-xl"><span className="text-[19px] font-black">s</span></div>
+        <span className="text-[17px] font-extrabold tracking-[-0.05em]">savan</span>
       </Link>
-
-      <h1 className="hidden text-[15px] font-bold tracking-tight text-white/80 md:block lg:text-[16px]">
-        {TITLES[pathname] || 'Music Area'}
-      </h1>
-
+      <div className="hidden md:block">
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/28">Savan</p>
+        <h1 className="text-[15px] font-bold tracking-tight text-white/90">{TITLES[pathname] || 'Savan'}</h1>
+      </div>
       <div className="flex-1" />
-
-      {/* Search: desktop only, hidden on the search page itself */}
-      {pathname !== '/search' && (
-        <form onSubmit={submit} className="hidden md:block">
-          <div className="flex h-9 w-[230px] items-center gap-2 rounded-full border border-hair bg-white/[0.05] px-3.5 transition-colors focus-within:border-hair-strong focus-within:bg-white/[0.08] lg:w-[300px]">
-            <Search size={15} className="shrink-0 text-white/40" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Songs, artists, albums"
-              className="w-full bg-transparent text-[13px] font-medium placeholder:text-white/30 focus:outline-none"
-              autoComplete="off"
-              spellCheck="false"
-            />
-          </div>
-        </form>
-      )}
-
-      <Link
-        to="/search"
-        aria-label="Search"
-        className="press flex h-9 w-9 items-center justify-center rounded-full border border-hair bg-white/[0.05] text-white/70 md:hidden"
-      >
-        <Search size={17} />
-      </Link>
-
-      <Link
-        to="/settings"
-        aria-label="Settings"
-        className={`press flex h-9 w-9 items-center justify-center rounded-full border border-hair transition-colors md:hidden ${
-          pathname === '/settings' ? 'bg-white/[0.12] text-white' : 'bg-white/[0.05] text-white/70'
-        }`}
-      >
-        <Settings size={17} />
-      </Link>
+      {pathname !== '/search' && <form onSubmit={submit} className="hidden md:block">
+        <div className="flex h-10 w-[250px] items-center gap-2 rounded-2xl border border-hair bg-white/[0.045] px-3.5 transition-colors focus-within:border-white/20 focus-within:bg-white/[0.075] lg:w-[320px]">
+          <Search size={15} className="shrink-0 text-white/38" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search songs, artists, albums" className="w-full bg-transparent text-[13px] font-medium placeholder:text-white/28 focus:outline-none" autoComplete="off" spellCheck="false" />
+        </div>
+      </form>}
+      <Link to="/search" aria-label="Search" className="press flex h-10 w-10 items-center justify-center rounded-2xl border border-hair bg-white/[0.05] text-white/75 md:hidden"><Search size={18} /></Link>
     </header>
   );
 }

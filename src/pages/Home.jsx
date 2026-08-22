@@ -250,25 +250,22 @@ export default function Home() {
 
   return (
     <div className="pt-6">
-      <header className="mb-7 flex items-end justify-between gap-4">
+      <header className="mb-8 flex items-end justify-between gap-4 pt-1">
         <div className="min-w-0">
-          <h1 className="text-[26px] font-bold tracking-tight sm:text-[32px]">{getGreeting()}</h1>
-          <p className="mt-1 text-[13px] text-white/40">
+          <p className="mb-1 text-[10px] font-extrabold uppercase tracking-[0.2em] text-accent-hi">{getGreeting()}</p>
+          <h1 className="text-[30px] font-extrabold tracking-[-0.05em] sm:text-[38px]">Made for you</h1>
+          <p className="mt-1.5 text-[13px] text-white/42">
             {prefs
-              ? `${prefs.totalPlays} ${prefs.totalPlays === 1 ? 'play' : 'plays'} so far${
-                  prefs.topArtists?.[0] ? `, mostly ${prefs.topArtists[0]}` : ''
-                }`
-              : 'Pick a mood, or just hit play.'}
+              ? `${prefs.totalPlays} ${prefs.totalPlays === 1 ? 'play' : 'plays'} tuned into your taste${prefs.topArtists?.[0] ? `, led by ${prefs.topArtists[0]}` : ''}`
+              : 'Your personal station starts with the music you play.'}
           </p>
         </div>
-        <button
-          onClick={refresh}
-          aria-label="Refresh recommendations"
-          title="Refresh"
-          className="press flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-hair bg-white/[0.05] text-white/55 transition-colors hover:bg-white/[0.1] hover:text-white"
-        >
-          <RefreshCw size={15} className={status === 'loading' ? 'animate-spin' : ''} />
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="hidden rounded-full border border-white/10 bg-white/[0.055] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-white/50 sm:block">Highest quality</span>
+          <button onClick={refresh} aria-label="Refresh recommendations" title="Refresh recommendations" className="press flex h-10 w-10 items-center justify-center rounded-2xl border border-hair bg-white/[0.055] text-white/60 transition-colors hover:bg-white/[0.12] hover:text-white">
+            <RefreshCw size={15} className={status === 'loading' ? 'animate-spin' : ''} />
+          </button>
+        </div>
       </header>
 
       {status === 'loading' && <HeroSkeleton />}
@@ -289,7 +286,7 @@ export default function Home() {
 
       {heroSong && (
         <FeatureHero
-          eyebrow={resumeSong ? 'Pick up where you left off' : 'Featured today'}
+          eyebrow={resumeSong ? 'Continue listening' : 'Your daily signal'}
           song={heroSong}
           meta={heroSong.album && heroSong.album !== heroSong.title ? heroSong.album : null}
           onPlay={() =>
@@ -355,8 +352,9 @@ export default function Home() {
       {feed.chart.length > 0 && (
         <section className="mb-9">
           <div className="mb-3.5">
-            <h2 className="text-[17px] font-bold tracking-tight sm:text-[19px]">Top 10 today</h2>
-            <p className="mt-0.5 text-[11.5px] text-white/35">The most played tracks right now</p>
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-accent-hi">Live chart</p>
+            <h2 className="mt-1 text-[19px] font-extrabold tracking-[-0.035em] sm:text-[22px]">The pulse right now</h2>
+            <p className="mt-0.5 text-[11.5px] text-white/35">The tracks everyone is returning to today</p>
           </div>
           <ChartList songs={feed.chart} />
         </section>

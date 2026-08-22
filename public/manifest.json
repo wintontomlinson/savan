@@ -1,13 +1,13 @@
 {
-  "name": "Music Area",
-  "short_name": "Music Area",
-  "description": "Free, ad-free music streaming. Play Bollywood, Punjabi, English songs with lyrics, equalizer, and more.",
+  "name": "Savan",
+  "short_name": "Savan",
+  "description": "A focused, high-quality music experience with personal recommendations and lyrics.",
   "start_url": "/",
   "id": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#050507",
+  "theme_color": "#050507",
   "lang": "en",
   "dir": "ltr",
   "categories": [
@@ -76,14 +76,14 @@
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Music Area Home"
+      "label": "Savan Home"
     },
     {
       "src": "/icons/screenshot-narrow.png",
       "sizes": "720x1280",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Music Area Player"
+      "label": "Savan Player"
     }
   ],
   "shortcuts": [

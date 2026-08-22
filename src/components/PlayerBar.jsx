@@ -99,7 +99,7 @@ export default function PlayerBar() {
       </div>
 
       {/* ---------- Desktop: three-zone transport ---------- */}
-      <div className="hidden h-[78px] items-center gap-4 px-4 md:flex lg:px-6">
+      <div className="chrome hidden h-[82px] items-center gap-4 border-t border-hair px-4 md:flex lg:px-7">
         {/* Now playing */}
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <button
@@ -107,7 +107,7 @@ export default function PlayerBar() {
             className="group relative shrink-0"
             aria-label="Open full screen player"
           >
-            <img src={currentSong.thumbnail} alt="" className="art h-14 w-14 rounded-xl object-cover" />
+            <img src={currentSong.thumbnail} alt="" className="art h-14 w-14 rounded-2xl object-cover ring-1 ring-white/10" />
             <span className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/55 opacity-0 transition-opacity group-hover:opacity-100">
               <ChevronUp size={20} />
             </span>

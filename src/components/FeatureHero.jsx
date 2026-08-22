@@ -12,29 +12,30 @@ export default function FeatureHero({ eyebrow, song, meta, onPlay, onShuffle, sh
   const playing = isCurrent && isPlaying;
 
   return (
-    <section className="relative mb-9 overflow-hidden rounded-2xl border border-hair">
+    <section className="hero-frame relative mb-10 overflow-hidden rounded-[26px] border border-hair">
       <img
         src={song.thumbnail}
         alt=""
         aria-hidden="true"
         className="absolute inset-0 h-full w-full scale-125 object-cover blur-3xl saturate-150"
       />
-      <div className="absolute inset-0 bg-gradient-to-br from-black/85 via-black/70 to-black/45" />
+      <div className="absolute inset-0 bg-gradient-to-br from-black/90 via-black/74 to-black/34" />
+      <div className="absolute -left-16 -top-24 h-56 w-56 rounded-full bg-accent/20 blur-[90px]" />
 
-      <div className="relative flex flex-col gap-5 p-5 sm:p-7 lg:flex-row lg:items-center lg:gap-10 lg:p-8">
+      <div className="relative flex flex-col gap-6 p-5 sm:p-8 lg:flex-row lg:items-center lg:gap-12 lg:p-10">
         <img
           src={song.thumbnail}
           alt={song.title}
-          className="order-first h-32 w-32 shrink-0 rounded-2xl object-cover shadow-[0_20px_50px_-12px_rgba(0,0,0,0.9)] ring-1 ring-white/10 sm:h-40 sm:w-40 lg:order-last lg:h-[200px] lg:w-[200px]"
+          className="order-first h-32 w-32 shrink-0 rounded-[22px] object-cover shadow-[0_28px_60px_-14px_rgba(0,0,0,0.95)] ring-1 ring-white/15 sm:h-44 sm:w-44 lg:order-last lg:h-[212px] lg:w-[212px]"
         />
 
         <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.18em] text-accent">
+          <p className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.2em] text-accent-hi">
             {eyebrow}
             {playing && <Equalizer className="h-2.5" />}
           </p>
 
-          <h2 className="line-2 mt-2 text-[24px] font-bold leading-[1.06] tracking-tight sm:text-[30px] lg:text-[38px]">
+          <h2 className="line-2 mt-2 text-[27px] font-extrabold leading-[1.02] tracking-[-0.045em] sm:text-[34px] lg:text-[42px]">
             {song.title}
           </h2>
 

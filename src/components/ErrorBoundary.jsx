@@ -17,7 +17,7 @@ export default class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
-    console.error('Music Area crashed:', error, info?.componentStack);
+    console.error('Savan crashed:', error, info?.componentStack);
   }
 
   render() {

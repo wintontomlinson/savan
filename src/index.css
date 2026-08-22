@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ============================================================
-   Music Area design system
+   Savan design system
    Structure from Spotify (rail + floating panes + player bar),
    typography & materials from Apple Music,
    chips + density from YouTube Music.
@@ -9,18 +9,18 @@
 
 @theme {
   /* Surfaces: near-black base with layered elevation */
-  --color-ink: #000000;
-  --color-surface: #0a0a0c;
-  --color-surface-2: #131317;
-  --color-surface-3: #1b1b21;
-  --color-surface-4: #24242b;
-  --color-hair: rgba(255, 255, 255, 0.07);
-  --color-hair-strong: rgba(255, 255, 255, 0.14);
+  --color-ink: #050507;
+  --color-surface: #0d0d12;
+  --color-surface-2: #16161e;
+  --color-surface-3: #20202b;
+  --color-surface-4: #2b2b38;
+  --color-hair: rgba(255, 255, 255, 0.075);
+  --color-hair-strong: rgba(255, 255, 255, 0.18);
 
-  /* Accent: Apple Music crimson meets YT Music red */
-  --color-accent: #ff2d55;
-  --color-accent-hi: #ff5c7a;
-  --color-accent-lo: #d81b40;
+  /* Warm scarlet keeps the visual language expressive without overpowering artwork. */
+  --color-accent: #ff3d5e;
+  --color-accent-hi: #ff6b82;
+  --color-accent-lo: #d92345;
 
   /* Latin from Inter; Devanagari falls through to Noto (song titles and
      lyrics from the catalogue are frequently Hindi). */
@@ -44,7 +44,10 @@
   #root {
     height: 100%;
     overflow: hidden;
-    background: #000;
+    background:
+      radial-gradient(circle at 92% -12%, rgba(255, 61, 94, 0.15), transparent 31rem),
+      radial-gradient(circle at -10% 108%, rgba(107, 79, 255, 0.14), transparent 36rem),
+      #050507;
     color: #fff;
     font-family: var(--font-sans);
     font-feature-settings: "cv11", "ss01";
@@ -127,23 +130,45 @@
 
 /* ---------------- Materials ---------------- */
 
-/* Spotify-style floating pane */
+/* Floating workspace layers */
 .pane {
   background: var(--color-surface);
   border: 1px solid var(--color-hair);
-  border-radius: 14px;
+  border-radius: 20px;
+}
+
+.app-main {
+  background: linear-gradient(145deg, rgba(25, 25, 33, 0.96), rgba(11, 11, 16, 0.99) 34%, rgba(9, 9, 13, 0.99));
+  box-shadow: 0 24px 70px -42px rgba(0, 0, 0, 0.9);
 }
 
 /* Apple Music translucent chrome */
 .chrome {
-  background: rgba(10, 10, 12, 0.72);
+  background: rgba(13, 13, 18, 0.77);
   backdrop-filter: saturate(180%) blur(28px);
   -webkit-backdrop-filter: saturate(180%) blur(28px);
 }
 
+.brand-mark {
+  background: linear-gradient(145deg, #ff6c81, #e62b4d 62%, #a61238);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.32), 0 10px 28px -12px rgba(255, 61, 94, 0.75);
+}
+
+.nav-circle {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  color: rgba(255,255,255,0.65);
+  background: rgba(255,255,255,0.045);
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.nav-circle:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
 .art {
   background: var(--color-surface-2);
-  box-shadow: 0 8px 28px -6px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 14px 34px -12px rgba(0, 0, 0, 0.76);
 }
 
 /* ---------------- Chips (YT Music) ---------------- */
@@ -154,7 +179,7 @@
   gap: 6px;
   white-space: nowrap;
   border-radius: 999px;
-  padding: 8px 14px;
+  padding: 9px 14px;
   font-size: 12.5px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.72);
@@ -512,5 +537,16 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+
+.hero-frame {
+  box-shadow: 0 28px 70px -38px rgba(0, 0, 0, 0.95);
+}
+
+@media (min-width: 768px) {
+  .hero-frame {
+    min-height: 290px;
   }
 }

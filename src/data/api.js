@@ -1,4 +1,4 @@
-// Music Area data layer.
+// Savan data layer.
 // JioSaavn (unofficial API) for catalogue, streams and suggestions.
 // LRCLIB for time-synced lyrics, with JioSaavn plain lyrics as a fallback.
 
