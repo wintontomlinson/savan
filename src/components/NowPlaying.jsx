@@ -11,8 +11,6 @@ import {
   ChevronDown,
   MicVocal,
   ListMusic,
-  Check,
-  Download,
   Volume1,
   Volume2,
   VolumeX,
@@ -21,7 +19,6 @@ import { usePlayer } from '../context/PlayerContext';
 import { getLyrics } from '../data/api';
 import { formatDuration } from '../data/format';
 import Seekbar from './Seekbar';
-import SleepTimer from './SleepTimer';
 
 export default function NowPlaying() {
   const {
@@ -38,8 +35,6 @@ export default function NowPlaying() {
     cycleRepeat,
     likedSongs,
     toggleLike,
-    downloadedSongs,
-    toggleDownload,
     isExpanded,
     setExpanded,
     queue,
@@ -98,7 +93,6 @@ export default function NowPlaying() {
   if (!isExpanded || !currentSong) return null;
 
   const liked = likedSongs.includes(currentSong.id);
-  const downloaded = downloadedSongs.includes(currentSong.id);
   const VolumeIcon = volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
 
   return (
@@ -124,7 +118,7 @@ export default function NowPlaying() {
         )}
       </div>
 
-      {/* Top bar — doubles as the swipe-down handle */}
+      {/* Top bar, doubles as the swipe-down handle */}
       <div
         className="relative flex h-14 shrink-0 items-center justify-between px-4 sm:px-6"
         onPointerDown={(e) => {
@@ -144,15 +138,15 @@ export default function NowPlaying() {
         <div className="mx-4 min-w-0 flex-1 text-center">
           <p className="text-[9.5px] font-semibold uppercase tracking-[0.22em] text-white/35">Now Playing</p>
           <p className="mx-auto mt-0.5 max-w-[240px] truncate text-[12px] font-medium text-white/60">
-            {currentSong.album || 'Music Area'}
+            {currentSong.album || 'Savan'}
           </p>
         </div>
-        <SleepTimer />
+        <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-white/45">High quality</span>
       </div>
 
       {/* Body */}
       <div className="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-5 pb-5 sm:px-8 lg:flex-row lg:gap-14 lg:px-14 lg:pb-10">
-        {/* Lyrics / queue — above the transport on mobile, beside it on desktop */}
+        {/* Lyrics / queue: above the transport on mobile, beside it on desktop */}
         {panel && (
           <div className="order-first min-h-0 w-full flex-1 lg:order-last lg:h-[68vh] lg:max-w-[600px]">
             {panel === 'lyrics' ? (
@@ -239,7 +233,7 @@ export default function NowPlaying() {
             </button>
           </div>
 
-          {/* Volume — desktop only, phones use hardware keys */}
+          {/* Volume: desktop only, phones use hardware keys */}
           <div className="mb-4 hidden items-center gap-3 lg:flex">
             <button
               onClick={() => setVolume(volume === 0 ? 1 : 0)}
@@ -277,12 +271,6 @@ export default function NowPlaying() {
               badge={queue.length || null}
               active={panel === 'queue'}
               onClick={() => setPanel((p) => (p === 'queue' ? null : 'queue'))}
-            />
-            <Pill
-              icon={downloaded ? Check : Download}
-              label={downloaded ? 'Saved' : 'Save'}
-              active={downloaded}
-              onClick={() => toggleDownload(currentSong)}
             />
           </div>
         </div>
@@ -397,7 +385,7 @@ function SyncedLyrics({ lrc, currentTime }) {
   return <LyricLines lines={lines.map((l) => l.text)} activeIndex={activeIndex} />;
 }
 
-/** No timestamps available — spread lines across the vocal window as an estimate. */
+/** No timestamps available, so spread lines across the vocal window as an estimate. */
 function PlainLyrics({ text, currentTime, duration }) {
   const lines = useMemo(() => text.split('\n').filter((l) => l.trim()), [text]);
   const intro = duration < 150 ? 5 : duration < 240 ? 8 : 12;

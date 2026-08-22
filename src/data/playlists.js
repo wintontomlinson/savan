@@ -18,9 +18,19 @@ function write(list) {
   return list;
 }
 
-/** User playlists only — Liked Songs and Downloads have their own stores. */
+/**
+ * User playlists only. Liked Songs and Downloads have their own stores.
+ * Entries are normalised because earlier versions of the app wrote a
+ * different shape (and an auto "__liked__" playlist) into the same key.
+ */
 export function getPlaylists() {
-  return read().filter((p) => p.id !== '__liked__');
+  return read()
+    .filter((p) => p && typeof p === 'object' && p.id && p.id !== '__liked__')
+    .map((p) => ({
+      ...p,
+      name: typeof p.name === 'string' && p.name ? p.name : 'Untitled playlist',
+      songs: Array.isArray(p.songs) ? p.songs.filter((s) => s && s.id) : [],
+    }));
 }
 
 export function onPlaylistsChange(handler) {

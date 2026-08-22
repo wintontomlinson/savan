@@ -3,7 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import {
   ListMusic,
   Heart,
-  ArrowDownToLine,
   History,
   Plus,
   Play,
@@ -31,21 +30,20 @@ import SongList from '../components/SongList';
 const TABS = [
   { id: 'playlists', label: 'Playlists', icon: ListMusic },
   { id: 'liked', label: 'Liked', icon: Heart },
-  { id: 'downloads', label: 'Downloads', icon: ArrowDownToLine },
   { id: 'history', label: 'History', icon: History },
 ];
 
 function readSongs(key) {
   try {
     const list = JSON.parse(localStorage.getItem(key));
-    return Array.isArray(list) ? list : [];
+    return Array.isArray(list) ? list.filter((s) => s && s.id) : [];
   } catch {
     return [];
   }
 }
 
 export default function Library() {
-  const { playSong, playShuffled, likedSongs, downloadedSongs, showToast } = usePlayer();
+  const { playSong, playShuffled, likedSongs, showToast } = usePlayer();
   const [params, setParams] = useSearchParams();
   const tab = TABS.some((t) => t.id === params.get('tab')) ? params.get('tab') : 'playlists';
 
@@ -58,7 +56,6 @@ export default function Library() {
   useEffect(() => onPlaylistsChange(refresh), [refresh]);
 
   const liked = useMemo(() => readSongs('ma_liked_songs'), [likedSongs]);
-  const downloads = useMemo(() => readSongs('ma_downloaded_songs'), [downloadedSongs]);
   const history = useMemo(() => getHistory(), []);
 
   const setTab = (id) => {
@@ -222,30 +219,6 @@ export default function Library() {
           </>
         ) : (
           <Empty icon={Heart} title="No liked songs yet" hint="Tap the heart on any track to save it here." />
-        ))}
-
-      {/* ---------- Downloads ---------- */}
-      {tab === 'downloads' &&
-        (downloads.length > 0 ? (
-          <>
-            <CollectionHeader
-              kind="Collection"
-              title="Downloads"
-              count={downloads.length}
-              songs={downloads}
-              icon={ArrowDownToLine}
-              gradient="from-sky-400 to-blue-700"
-              onPlay={() => playSong(downloads[0], downloads)}
-              onShuffle={() => playShuffled(downloads)}
-            />
-            <SongList songs={downloads} />
-          </>
-        ) : (
-          <Empty
-            icon={ArrowDownToLine}
-            title="Nothing downloaded"
-            hint="Save a track from the player to keep a copy on your device."
-          />
         ))}
 
       {/* ---------- History ---------- */}

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 import { addToHistory, getNextSongs, resetPlayed } from '../data/algorithm';
-import { refreshStreamUrl, downloadSong } from '../data/api';
+import { refreshStreamUrl } from '../data/api';
 
 const Ctx = createContext();
 export const usePlayer = () => useContext(Ctx);
@@ -12,6 +12,32 @@ const UNITY_GAIN = 1 / PREAMP;
 
 const EQ_FREQS = [31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
 
+const EFFECTS_KEY = 'ma_effects_enabled';
+
+/**
+ * iPadOS reports itself as a Mac, so fall back to a touch check.
+ */
+export function isAppleMobile() {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  if (/iPad|iPhone|iPod/.test(ua)) return true;
+  return /Macintosh/.test(ua) && typeof document !== 'undefined' && 'ontouchend' in document;
+}
+
+/**
+ * Routing an audio element through an AudioContext kills playback as soon as
+ * iOS backgrounds the app or the screen locks, and the element cannot be
+ * detached from the context afterwards. So the equaliser is opt-in on Apple
+ * mobile and background playback wins by default.
+ */
+function readEffectsEnabled() {
+  try {
+    const saved = localStorage.getItem(EFFECTS_KEY);
+    if (saved !== null) return saved === '1';
+  } catch {}
+  return !isAppleMobile();
+}
+
 function getCrossfadeSec() {
   try {
     return parseInt(localStorage.getItem('crossfade_dur'), 10) || 0;
@@ -20,11 +46,13 @@ function getCrossfadeSec() {
   }
 }
 
-function readJson(key, fallback) {
+/** Always hands back an array, so a stale or hand-edited key cannot crash boot. */
+function readList(key) {
   try {
-    return JSON.parse(localStorage.getItem(key)) ?? fallback;
+    const value = JSON.parse(localStorage.getItem(key));
+    return Array.isArray(value) ? value : [];
   } catch {
-    return fallback;
+    return [];
   }
 }
 
@@ -34,6 +62,12 @@ export function PlayerProvider({ children }) {
   const activeRef = useRef('A');
   const fadingRef = useRef(false);
   const fadeTimerRef = useRef(null);
+  const fadeStateRef = useRef(null);
+  const plannedRef = useRef(null);
+  /* The track buffered on the idle element, so a transition that happens while
+     the screen is locked only has to call play() on loaded audio. */
+  const primedRef = useRef(null);
+  const shuffleRef = useRef(false);
   const queueRef = useRef([]);
   const volumeRef = useRef(1.0);
   const historyStack = useRef([]);
@@ -53,8 +87,7 @@ export function PlayerProvider({ children }) {
   const [repeatMode, setRepeat] = useState('none');
   const [isExpanded, setExpanded] = useState(false);
   const [queueOpen, setQueueOpen] = useState(false);
-  const [likedSongs, setLikedSongs] = useState(() => readJson('liked', []));
-  const [downloadedSongs, setDownloadedSongs] = useState(() => readJson('downloads', []));
+  const [likedSongs, setLikedSongs] = useState(() => readList('liked'));
   const [toasts, setToasts] = useState([]);
 
   const cur = () => (activeRef.current === 'A' ? audioA.current : audioB.current);
@@ -84,7 +117,14 @@ export function PlayerProvider({ children }) {
   const enhancedRef = useRef(false);
   const [boostLevel, setBoostLevel] = useState(100);
 
+  const [effectsEnabled, _setEffectsEnabled] = useState(readEffectsEnabled);
+  const effectsRef = useRef(effectsEnabled);
+  useEffect(() => {
+    effectsRef.current = effectsEnabled;
+  }, [effectsEnabled]);
+
   const initEnhancement = useCallback(() => {
+    if (!effectsRef.current) return false;
     if (enhancedRef.current) return true;
     try {
       const AC = window.AudioContext || window.webkitAudioContext;
@@ -196,6 +236,22 @@ export function PlayerProvider({ children }) {
     });
   }, []);
 
+  /**
+   * Turning effects on builds the Web Audio graph on next use. Turning them off
+   * cannot undo it: an element that has been through createMediaElementSource
+   * stays attached to that context for the life of the page.
+   *
+   * @returns {boolean} true when a reload is still needed to restore routing.
+   */
+  const setEffectsEnabled = useCallback((on) => {
+    _setEffectsEnabled(on);
+    effectsRef.current = on;
+    try {
+      localStorage.setItem(EFFECTS_KEY, on ? '1' : '0');
+    } catch {}
+    return !on && enhancedRef.current;
+  }, []);
+
   /* ---------------- Audio element wiring ---------------- */
 
   useEffect(() => {
@@ -213,9 +269,20 @@ export function PlayerProvider({ children }) {
       if (!a || !a.duration) return;
       setCurrentTime(a.currentTime);
 
+      // Crossfade is driven by a timer, and timers are throttled or frozen once
+      // the page is hidden, which would leave a fade stuck half way. Hand over
+      // gaplessly instead while backgrounded.
       const cf = getCrossfadeSec();
       const left = a.duration - a.currentTime;
-      if (cf > 0 && a.duration > cf + 3 && left <= cf && left > 0.3 && !fadingRef.current && queueRef.current.length > 0) {
+      if (
+        cf > 0 &&
+        !document.hidden &&
+        a.duration > cf + 3 &&
+        left <= cf &&
+        left > 0.3 &&
+        !fadingRef.current &&
+        queueRef.current.length > 0
+      ) {
         startCrossfade();
       }
     };
@@ -277,12 +344,6 @@ export function PlayerProvider({ children }) {
   }, [likedSongs]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('downloads', JSON.stringify(downloadedSongs));
-    } catch {}
-  }, [downloadedSongs]);
-
-  useEffect(() => {
     if ('mediaSession' in navigator) navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
   }, [isPlaying]);
 
@@ -301,7 +362,7 @@ export function PlayerProvider({ children }) {
   /* Metadata + related-song prefetch whenever the track changes */
   useEffect(() => {
     if (!currentSong) {
-      document.title = 'Music Area';
+      document.title = 'Savan';
       return;
     }
 
@@ -325,6 +386,23 @@ export function PlayerProvider({ children }) {
       });
       navigator.mediaSession.setActionHandler('previoustrack', () => playPrevRef.current?.());
       navigator.mediaSession.setActionHandler('nexttrack', () => playNextRef.current?.());
+      navigator.mediaSession.setActionHandler('stop', () => {
+        const a = cur();
+        if (a) {
+          a.pause();
+          setIsPlaying(false);
+        }
+      });
+      // Lock screen skip buttons on iOS map to these.
+      const nudge = (delta) => {
+        const a = cur();
+        if (!a?.duration) return;
+        const to = Math.max(0, Math.min(a.duration, a.currentTime + delta));
+        a.currentTime = to;
+        setCurrentTime(to);
+      };
+      navigator.mediaSession.setActionHandler('seekbackward', (d) => nudge(-(d?.seekOffset || 10)));
+      navigator.mediaSession.setActionHandler('seekforward', (d) => nudge(d?.seekOffset || 10));
       navigator.mediaSession.setActionHandler('seekto', (details) => {
         if (details.seekTime == null) return;
         const a = cur();
@@ -335,7 +413,7 @@ export function PlayerProvider({ children }) {
       });
     }
 
-    document.title = `${currentSong.title} · ${currentSong.artist} — Music Area`;
+    document.title = `${currentSong.title} · ${currentSong.artist} | Savan`;
 
     let cancelled = false;
     getNextSongs(currentSong).then((songs) => {
@@ -355,22 +433,111 @@ export function PlayerProvider({ children }) {
     };
   }, [currentSong]);
 
-  /* ---------------- Crossfade ---------------- */
+  /* ---------------- Handover between tracks ---------------- */
+
+  const idleElement = () => (activeRef.current === 'A' ? audioB.current : audioA.current);
+
+  /**
+   * A locked screen can reject the first play() call. Give it one more go before
+   * declaring playback stopped.
+   */
+  function startPlayback(element) {
+    if (!element) return;
+    element
+      .play()
+      .then(() => setIsPlaying(true))
+      .catch(() => {
+        setTimeout(() => {
+          element
+            .play()
+            .then(() => setIsPlaying(true))
+            .catch(() => setIsPlaying(false));
+        }, 350);
+      });
+  }
+
+  /**
+   * Decides the next track up front so it can be buffered ahead of time. With
+   * shuffle on the choice is held steady once made, otherwise the buffered
+   * track would not be the one that actually plays.
+   */
+  function planNext() {
+    const q = queueRef.current;
+    if (!q.length) {
+      plannedRef.current = null;
+      return null;
+    }
+    if (!shuffleRef.current) {
+      plannedRef.current = q[0];
+      return q[0];
+    }
+    const held = plannedRef.current;
+    if (held && q.some((s) => s.id === held.id)) return held;
+    plannedRef.current = q[Math.floor(Math.random() * q.length)];
+    return plannedRef.current;
+  }
+
+  /** Buffers the planned track on the idle element. */
+  function primeNext() {
+    if (fadingRef.current) return;
+    const next = planNext();
+    const idle = idleElement();
+    if (!next?.audio || !idle) return;
+    if (primedRef.current === next.id) return;
+    idle.pause();
+    idle.volume = 0;
+    idle.src = next.audio;
+    primedRef.current = next.id;
+  }
+
+  /** Promotes the idle element to active, which needs no new src assignment. */
+  function adoptIncoming(song, incoming) {
+    const outgoing = cur();
+    activeRef.current = activeRef.current === 'A' ? 'B' : 'A';
+    if (outgoing && outgoing !== incoming) {
+      outgoing.pause();
+      outgoing.src = '';
+    }
+    primedRef.current = null;
+    plannedRef.current = null;
+    incoming.volume = volumeRef.current;
+    if (currentSongRef.current) historyStack.current.push(currentSongRef.current);
+    setQueue((prev) => prev.filter((s) => s.id !== song.id));
+    setCurrentSong(song);
+    setCurrentTime(incoming.currentTime || 0);
+    setDuration(incoming.duration || song.duration || 0);
+    addToHistory(song);
+  }
+
+  function finishFade() {
+    const state = fadeStateRef.current;
+    if (!state) return;
+    if (fadeTimerRef.current) {
+      clearInterval(fadeTimerRef.current);
+      fadeTimerRef.current = null;
+    }
+    fadeStateRef.current = null;
+    fadingRef.current = false;
+    adoptIncoming(state.song, state.incoming);
+  }
 
   function startCrossfade() {
     if (fadingRef.current) return;
-    const q = queueRef.current;
-    const nextSong = q[0];
-    if (!nextSong?.audio) return;
+    const nextSong = planNext();
+    const incoming = idleElement();
+    if (!nextSong?.audio || !incoming) return;
+
     fadingRef.current = true;
+    fadeStateRef.current = { song: nextSong, incoming };
 
-    const outgoing = cur();
-    const incoming = activeRef.current === 'A' ? audioB.current : audioA.current;
-
-    incoming.src = nextSong.audio;
+    if (primedRef.current !== nextSong.id) {
+      incoming.src = nextSong.audio;
+      primedRef.current = nextSong.id;
+    }
     incoming.volume = 0;
     incoming.play().catch(() => {});
 
+    const outgoing = cur();
     const steps = 30;
     const ms = (getCrossfadeSec() * 1000) / steps;
     const vol = volumeRef.current;
@@ -382,23 +549,7 @@ export function PlayerProvider({ children }) {
       const pct = step / steps;
       outgoing.volume = Math.max(0, vol * (1 - pct));
       incoming.volume = Math.min(vol, vol * pct);
-
-      if (step < steps) return;
-
-      clearInterval(fadeTimerRef.current);
-      fadeTimerRef.current = null;
-      outgoing.pause();
-      outgoing.src = '';
-      incoming.volume = vol;
-      activeRef.current = activeRef.current === 'A' ? 'B' : 'A';
-      fadingRef.current = false;
-
-      setQueue((prev) => prev.slice(1));
-      historyStack.current.push(currentSongRef.current);
-      setCurrentSong(nextSong);
-      setCurrentTime(incoming.currentTime);
-      setDuration(incoming.duration || 0);
-      addToHistory(nextSong);
+      if (step >= steps) finishFade();
     }, ms);
   }
 
@@ -407,9 +558,17 @@ export function PlayerProvider({ children }) {
       clearInterval(fadeTimerRef.current);
       fadeTimerRef.current = null;
     }
+    fadeStateRef.current = null;
     fadingRef.current = false;
   }
 
+  /**
+   * Plays a track on the element that is already active. Deliberately does not
+   * jump back to element A: iOS grants playback per element off the back of a
+   * user gesture, so reusing the active one is what keeps a locked screen
+   * playing. The idle element is only cleared if it is not holding a buffered
+   * track we still want.
+   */
   function playDirect(song, { pushHistory = true } = {}) {
     if (!song) return;
     cancelFade();
@@ -417,26 +576,28 @@ export function PlayerProvider({ children }) {
     if (enhancedRef.current && audioCtxRef.current?.state === 'suspended') audioCtxRef.current.resume();
     if (pushHistory && currentSongRef.current) historyStack.current.push(currentSongRef.current);
 
-    audioA.current.pause();
-    audioA.current.src = '';
-    audioB.current.pause();
-    audioB.current.src = '';
-    activeRef.current = 'A';
+    const a = cur();
+    const idle = idleElement();
+    if (idle && primedRef.current !== song.id) {
+      idle.pause();
+      idle.volume = 0;
+    }
+    if (primedRef.current === song.id) primedRef.current = null;
+    plannedRef.current = null;
 
     setCurrentSong(song);
     setCurrentTime(0);
     setDuration(song.duration || 0);
     addToHistory(song);
 
-    if (!song.audio) {
+    if (!song.audio || !a) {
       setIsPlaying(false);
       return;
     }
-    const a = audioA.current;
     a.src = song.audio;
     a.volume = volumeRef.current;
     setIsPlaying(true);
-    a.play().catch(() => setIsPlaying(false));
+    startPlayback(a);
   }
 
   /* ---------------- Public actions ---------------- */
@@ -504,11 +665,20 @@ export function PlayerProvider({ children }) {
       return;
     }
 
-    const q = queueRef.current;
-    if (q.length > 0) {
-      const idx = shuffleMode ? Math.floor(Math.random() * q.length) : 0;
-      const next = q[idx];
-      setQueue((prev) => prev.filter((_, i) => i !== idx));
+    const next = planNext();
+    if (next) {
+      const incoming = idleElement();
+      // In the foreground, promote the element that already holds the buffered
+      // track so the next song starts instantly. While backgrounded, stay on
+      // the active element instead: that is the one iOS has granted playback
+      // to, and switching elements there is what gets refused.
+      if (!document.hidden && next.audio && incoming && primedRef.current === next.id) {
+        adoptIncoming(next, incoming);
+        setIsPlaying(true);
+        startPlayback(incoming);
+        return;
+      }
+      setQueue((prev) => prev.filter((s) => s.id !== next.id));
       playDirect(next);
       return;
     }
@@ -532,11 +702,39 @@ export function PlayerProvider({ children }) {
       }
     }
     setIsPlaying(false);
-  }, [shuffleMode, repeatMode]);
+  }, [repeatMode]);
 
   useEffect(() => {
     playNextRef.current = playNext;
   }, [playNext]);
+
+  /* Keep shuffle readable from the audio callbacks, and keep the next track
+     buffered so a handover never depends on a fresh network request. */
+  useEffect(() => {
+    shuffleRef.current = shuffleMode;
+    plannedRef.current = null;
+    primeNext();
+  }, [shuffleMode]);
+
+  useEffect(() => {
+    primeNext();
+  }, [queue, currentSong]);
+
+  /* A fade cannot continue once timers are frozen, so land it immediately when
+     the app goes to the background, and pick the context back up on return. */
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.hidden) {
+        if (fadingRef.current) finishFade();
+        return;
+      }
+      if (enhancedRef.current && audioCtxRef.current?.state === 'suspended') {
+        audioCtxRef.current.resume().catch(() => {});
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, []);
 
   const playPrev = useCallback(() => {
     const a = cur();
@@ -601,7 +799,7 @@ export function PlayerProvider({ children }) {
 
     setLikedSongs((prev) => {
       const has = prev.includes(id);
-      const saved = readJson('ma_liked_songs', []);
+      const saved = readList('ma_liked_songs');
       try {
         if (has) {
           localStorage.setItem('ma_liked_songs', JSON.stringify(saved.filter((s) => s.id !== id)));
@@ -612,48 +810,6 @@ export function PlayerProvider({ children }) {
       return has ? prev.filter((x) => x !== id) : [...prev, id];
     });
   }, []);
-
-  const downloadToDevice = useCallback(
-    async (song) => {
-      if (!song) return false;
-      showToast(`Downloading "${song.title}"…`);
-      try {
-        const ok = await downloadSong(song);
-        showToast(ok ? `Saved "${song.title}"` : 'Download failed — try again', ok ? 'success' : 'error');
-        return ok;
-      } catch {
-        showToast('Download failed — try again', 'error');
-        return false;
-      }
-    },
-    [showToast],
-  );
-
-  const toggleDownload = useCallback(
-    (song) => {
-      const id = typeof song === 'string' ? song : song?.id;
-      if (!id) return;
-      const full = typeof song === 'object' ? song : currentSongRef.current?.id === id ? currentSongRef.current : null;
-
-      setDownloadedSongs((prev) => {
-        const has = prev.includes(id);
-        const saved = readJson('ma_downloaded_songs', []);
-        try {
-          if (has) {
-            localStorage.setItem('ma_downloaded_songs', JSON.stringify(saved.filter((s) => s.id !== id)));
-          } else if (full) {
-            localStorage.setItem(
-              'ma_downloaded_songs',
-              JSON.stringify([full, ...saved.filter((s) => s.id !== id)].slice(0, 300)),
-            );
-            downloadToDevice(full);
-          }
-        } catch {}
-        return has ? prev.filter((x) => x !== id) : [...prev, id];
-      });
-    },
-    [downloadToDevice],
-  );
 
   return (
     <Ctx.Provider
@@ -672,7 +828,6 @@ export function PlayerProvider({ children }) {
         isExpanded,
         queueOpen,
         likedSongs,
-        downloadedSongs,
         toasts,
         // transport
         playSong,
@@ -689,6 +844,9 @@ export function PlayerProvider({ children }) {
         setEqBand,
         applyEqPreset,
         resetAudio,
+        effectsEnabled,
+        setEffectsEnabled,
+        effectsBreakBackgroundPlayback: isAppleMobile(),
         // queue
         addToQueue,
         playNextInQueue,
@@ -696,8 +854,6 @@ export function PlayerProvider({ children }) {
         clearQueue,
         // library
         toggleLike,
-        toggleDownload,
-        downloadToDevice,
         // ui
         setExpanded,
         setQueueOpen,

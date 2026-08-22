@@ -30,18 +30,24 @@ export default function Explore() {
       setCollections(Object.fromEntries(pairs));
       setLoading(false);
 
-      // Surface the artists that actually appear in these collections.
-      const names = [
-        ...new Set(
-          pairs
-            .flatMap(([, songs]) => songs)
-            .flatMap((song) => (song.artist || '').split(',').map((n) => n.trim()))
-            .filter(Boolean),
-        ),
-      ].slice(0, 14);
+      // Surface the artists that actually appear in these collections, keeping
+      // one of their tracks around as artwork for the avatar.
+      const artwork = {};
+      pairs
+        .flatMap(([, songs]) => songs)
+        .forEach((song) => {
+          (song.artist || '')
+            .split(',')
+            .map((n) => n.trim())
+            .filter(Boolean)
+            .forEach((name) => {
+              if (!artwork[name]) artwork[name] = song.thumbnail;
+            });
+        });
+      const names = Object.keys(artwork).slice(0, 14);
       const profiles = await Promise.all(names.map((name) => searchArtists(name, 1).then((r) => r[0]).catch(() => null)));
       if (cancelled) return;
-      setArtists(profiles.filter(Boolean));
+      setArtists(profiles.filter(Boolean).map((p) => ({ ...p, art: artwork[p.name] || '' })));
       setArtistsLoading(false);
     })();
 
@@ -139,6 +145,7 @@ export default function Explore() {
                 key={a.id || a.name}
                 name={a.name}
                 image={a.img}
+                fallbackImage={a.art}
                 active={activeArtist?.name === a.name}
                 onClick={() => openArtist(a)}
               />
@@ -151,7 +158,11 @@ export default function Explore() {
       {activeArtist && (
         <section ref={detailRef} className="a-fade-up mb-10">
           <div className="mb-4 flex flex-wrap items-center gap-3">
-            <img src={activeArtist.img} alt="" className="h-14 w-14 rounded-full object-cover ring-2 ring-white/10" />
+            <img
+              src={activeArtist.img || activeArtist.art || artistSongs[0]?.thumbnail}
+              alt=""
+              className="h-14 w-14 rounded-full bg-surface-3 object-cover ring-2 ring-white/10"
+            />
             <div className="min-w-0 flex-1">
               <h2 className="truncate text-[19px] font-bold tracking-tight">{activeArtist.name}</h2>
               <p className="text-[11.5px] text-white/35">
