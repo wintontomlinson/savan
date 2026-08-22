@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Shuffle, Play, X, LoaderCircle, Sparkles, ArrowUpRight } from 'lucide-react';
+import { Shuffle, Play, LoaderCircle } from 'lucide-react';
 import { searchSongs, searchArtists, getPlaylistById } from '../data/api';
 import { COLLECTIONS } from '../data/catalog';
 import { usePlayer } from '../context/PlayerContext';
@@ -75,23 +75,11 @@ export default function Explore() {
     detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const everything = [...new Map(Object.values(collections).flat().map((s) => [s.id, s])).values()];
-
   return (
     <div className="discover-page pt-5 sm:pt-7">
-      <header className="discover-intro">
-        <div>
-          <p className="discover-kicker"><Sparkles size={13} /> Beyond your usual</p>
-          <h1>Find a sound that feels new.</h1>
-          <p>Big energy, soft moments, and every corner of music in between.</p>
-        </div>
-        {everything.length > 0 && (
-          <button onClick={() => playShuffled(everything)} className="discover-mix-button press"><Shuffle size={15} /> Start discovery mix</button>
-        )}
-      </header>
+      <header className="discover-intro"><h1>Discover</h1></header>
 
       <section className="discover-genre-section">
-        <div className="discover-section-heading"><span>Browse by feeling</span><h2>Pick a lane, or leave it to chance.</h2></div>
         <div className="discover-genre-grid">
           {COLLECTIONS.map((c, index) => (
             <button
@@ -100,12 +88,9 @@ export default function Explore() {
               className={`discover-genre-card lift ${index === 0 ? 'discover-genre-card-featured' : ''}`}
               style={{ background: `linear-gradient(145deg, ${c.from} 0%, ${c.to} 100%)` }}
             >
-              <span className="discover-genre-number">{String(index + 1).padStart(2, '0')}</span>
               <p>{c.label}</p>
-              <small>Start a station</small>
               {collections[c.id]?.[0]?.thumbnail && <img src={collections[c.id][0].thumbnail} alt="" loading="lazy" />}
               <span className="discover-genre-shade" />
-              <ArrowUpRight size={18} className="discover-genre-arrow" />
             </button>
           ))}
         </div>
@@ -113,12 +98,8 @@ export default function Explore() {
 
       {/* Artists */}
       <section className="mb-10">
-        <div className="mb-3.5 flex items-end justify-between">
-          <div>
-            <h2 className="text-[17px] font-bold tracking-tight sm:text-[19px]">Artists in rotation</h2>
-            <p className="mt-0.5 text-[11.5px] text-white/35">Tap one to load their tracks below.</p>
-          </div>
-          {!artistsLoading && <span className="text-[11.5px] text-white/30">{artists.length} artists</span>}
+        <div className="mb-3.5">
+          <h2 className="text-[17px] font-bold tracking-tight sm:text-[19px]">Artists</h2>
         </div>
         {artistsLoading ? (
           <div className="flex gap-4 overflow-hidden">
@@ -173,16 +154,6 @@ export default function Explore() {
                   className="press flex items-center gap-2 rounded-full bg-accent px-4 py-2.5 text-[12px] font-bold text-white"
                 >
                   <Play size={13} fill="white" /> Play all
-                </button>
-                <button
-                  onClick={() => {
-                    setActiveArtist(null);
-                    setArtistSongs([]);
-                  }}
-                  aria-label="Close artist"
-                  className="press flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.08] text-white/55 hover:bg-white/[0.14]"
-                >
-                  <X size={14} />
                 </button>
               </div>
             )}

@@ -118,13 +118,9 @@ export default function Library() {
   return (
     <div className="library-page pt-5 sm:pt-7">
       <header className="library-intro">
-        <div>
-          <p className="library-kicker">Your collection</p>
-          <h1>All the music that is yours.</h1>
-          <p>Playlists, favourites, and every track you come back to.</p>
-        </div>
+        <h1>Library</h1>
         {tab === 'playlists' && (
-          <button onClick={() => setCreating(true)} className="library-create-button press"><Plus size={15} /> New playlist</button>
+          <button onClick={() => setCreating(true)} aria-label="New playlist" title="New playlist" className="library-create-button press"><Plus size={15} /></button>
         )}
       </header>
 
@@ -202,7 +198,6 @@ export default function Library() {
         (liked.length > 0 ? (
           <>
             <CollectionHeader
-              kind="Playlist"
               title="Liked Songs"
               count={liked.length}
               songs={liked}
@@ -222,7 +217,6 @@ export default function Library() {
         (history.length > 0 ? (
           <>
             <CollectionHeader
-              kind="Collection"
               title="Recently Played"
               count={history.length}
               songs={history}
@@ -242,7 +236,7 @@ export default function Library() {
 
 /* ---------------- Pieces ---------------- */
 
-function CollectionHeader({ kind, title, count, songs, icon: Icon, gradient, onPlay, onShuffle }) {
+function CollectionHeader({ title, count, songs, icon: Icon, gradient, onPlay, onShuffle }) {
   return (
     <div className="mb-6 flex flex-wrap items-end gap-4">
       <div
@@ -251,8 +245,7 @@ function CollectionHeader({ kind, title, count, songs, icon: Icon, gradient, onP
         <Icon size={38} className="text-white/90" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-white/35">{kind}</p>
-        <h2 className="mt-1 text-[24px] font-bold leading-tight tracking-tight sm:text-[32px]">{title}</h2>
+        <h2 className="text-[24px] font-bold leading-tight tracking-tight sm:text-[32px]">{title}</h2>
         <p className="mt-1.5 text-[12.5px] text-white/45">{count} {count === 1 ? 'track' : 'tracks'}</p>
         {songs.length > 0 && (
           <div className="mt-4 flex items-center gap-2">

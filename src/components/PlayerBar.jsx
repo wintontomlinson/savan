@@ -15,7 +15,6 @@ import {
   ChevronUp,
 } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
-import Equalizer from './Equalizer';
 import Seekbar from './Seekbar';
 import { formatDuration } from '../data/format';
 
@@ -125,11 +124,6 @@ export default function PlayerBar() {
           >
             <Heart size={17} fill={liked ? 'currentColor' : 'none'} strokeWidth={liked ? 0 : 1.8} />
           </button>
-          {isPlaying && (
-            <span className="hidden shrink-0 lg:block">
-              <Equalizer />
-            </span>
-          )}
         </div>
 
         {/* Transport */}
@@ -223,13 +217,6 @@ export default function PlayerBar() {
             />
           </div>
 
-          <button
-            onClick={() => setExpanded(true)}
-            aria-label="Full screen player"
-            className="press rounded-lg p-2 text-white/45 transition-colors hover:text-white"
-          >
-            <ChevronUp size={18} />
-          </button>
         </div>
       </div>
     </>

@@ -141,7 +141,7 @@ export default function NowPlaying() {
             {currentSong.album || 'Savan'}
           </p>
         </div>
-        <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-white/45">High quality</span>
+        <span className="h-9 w-9" aria-hidden="true" />
       </div>
 
       {/* Body */}

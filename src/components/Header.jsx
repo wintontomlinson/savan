@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { ChevronLeft, Search } from 'lucide-react';
 
 const TITLES = { '/': 'Home', '/explore': 'Discover', '/search': 'Search', '/library': 'Library' };
 
@@ -19,16 +19,12 @@ export default function Header() {
     <header className="chrome sticky top-0 z-30 flex h-[68px] shrink-0 items-center gap-3 border-b border-hair px-4 sm:px-6 lg:px-9">
       <div className="hidden items-center gap-1 md:flex">
         <button onClick={() => navigate(-1)} aria-label="Go back" className="press nav-circle"><ChevronLeft size={18} /></button>
-        <button onClick={() => navigate(1)} aria-label="Go forward" className="press nav-circle"><ChevronRight size={18} /></button>
       </div>
       <Link to="/" className="flex items-center gap-2.5 md:hidden">
         <div className="brand-mark flex h-9 w-9 items-center justify-center rounded-xl"><span className="text-[19px] font-black">s</span></div>
         <span className="text-[17px] font-extrabold tracking-[-0.05em]">savan</span>
       </Link>
-      <div className="hidden md:block">
-        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/28">Savan</p>
-        <h1 className="text-[15px] font-bold tracking-tight text-white/90">{TITLES[pathname] || 'Savan'}</h1>
-      </div>
+      <h1 className="hidden text-[15px] font-bold tracking-tight text-white/90 md:block">{TITLES[pathname] || 'Savan'}</h1>
       <div className="flex-1" />
       {pathname !== '/search' && <form onSubmit={submit} className="hidden md:block">
         <div className="flex h-10 w-[250px] items-center gap-2 rounded-2xl border border-hair bg-white/[0.045] px-3.5 transition-colors focus-within:border-white/20 focus-within:bg-white/[0.075] lg:w-[320px]">
