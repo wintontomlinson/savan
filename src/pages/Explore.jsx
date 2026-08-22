@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Shuffle, Play, X, LoaderCircle } from 'lucide-react';
+import { Shuffle, Play, X, LoaderCircle, Sparkles, ArrowUpRight } from 'lucide-react';
 import { searchSongs, searchArtists, getPlaylistById } from '../data/api';
 import { COLLECTIONS } from '../data/catalog';
 import { usePlayer } from '../context/PlayerContext';
@@ -78,44 +78,34 @@ export default function Explore() {
   const everything = [...new Map(Object.values(collections).flat().map((s) => [s.id, s])).values()];
 
   return (
-    <div className="pt-6">
-      <header className="mb-7 flex flex-wrap items-end justify-between gap-4">
+    <div className="discover-page pt-5 sm:pt-7">
+      <header className="discover-intro">
         <div>
-          <p className="mb-1 text-[10.5px] font-bold uppercase tracking-[0.18em] text-accent">Browse</p>
-          <h1 className="text-[26px] font-bold tracking-tight sm:text-[32px]">Explore music</h1>
-          <p className="mt-1 text-[13px] text-white/40">Genres, moods and the artists behind them.</p>
+          <p className="discover-kicker"><Sparkles size={13} /> Beyond your usual</p>
+          <h1>Find a sound that feels new.</h1>
+          <p>Big energy, soft moments, and every corner of music in between.</p>
         </div>
         {everything.length > 0 && (
-          <button
-            onClick={() => playShuffled(everything)}
-            className="press flex shrink-0 items-center gap-2 rounded-full bg-white px-4 py-2.5 text-[12px] font-bold text-black transition-transform hover:scale-[1.03]"
-          >
-            <Shuffle size={14} /> Discovery mix
-          </button>
+          <button onClick={() => playShuffled(everything)} className="discover-mix-button press"><Shuffle size={15} /> Start discovery mix</button>
         )}
       </header>
 
-      {/* Genre tiles */}
-      <section className="mb-10">
-        <h2 className="mb-3.5 text-[17px] font-bold tracking-tight sm:text-[19px]">Browse all</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {COLLECTIONS.map((c) => (
+      <section className="discover-genre-section">
+        <div className="discover-section-heading"><span>Browse by feeling</span><h2>Pick a lane, or leave it to chance.</h2></div>
+        <div className="discover-genre-grid">
+          {COLLECTIONS.map((c, index) => (
             <button
               key={c.id}
               onClick={() => openCollection(c)}
-              className="lift relative h-[112px] overflow-hidden rounded-xl p-3.5 text-left"
+              className={`discover-genre-card lift ${index === 0 ? 'discover-genre-card-featured' : ''}`}
               style={{ background: `linear-gradient(145deg, ${c.from} 0%, ${c.to} 100%)` }}
             >
-              <p className="relative z-10 max-w-[70%] text-[14.5px] font-bold leading-tight drop-shadow">{c.label}</p>
-              {collections[c.id]?.[0]?.thumbnail && (
-                <img
-                  src={collections[c.id][0].thumbnail}
-                  alt=""
-                  className="absolute -bottom-2 -right-4 h-[72px] w-[72px] rotate-[25deg] rounded-md object-cover shadow-2xl shadow-black/50"
-                  loading="lazy"
-                />
-              )}
-              <span className="absolute inset-0 bg-black/10" />
+              <span className="discover-genre-number">{String(index + 1).padStart(2, '0')}</span>
+              <p>{c.label}</p>
+              <small>Start a station</small>
+              {collections[c.id]?.[0]?.thumbnail && <img src={collections[c.id][0].thumbnail} alt="" loading="lazy" />}
+              <span className="discover-genre-shade" />
+              <ArrowUpRight size={18} className="discover-genre-arrow" />
             </button>
           ))}
         </div>

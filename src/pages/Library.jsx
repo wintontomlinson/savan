@@ -116,19 +116,15 @@ export default function Library() {
   }
 
   return (
-    <div className="pt-6">
-      <header className="mb-5 flex flex-wrap items-end justify-between gap-4">
+    <div className="library-page pt-5 sm:pt-7">
+      <header className="library-intro">
         <div>
-          <h1 className="text-[26px] font-bold tracking-tight sm:text-[32px]">Library</h1>
-          <p className="mt-1 text-[13px] text-white/40">Everything you saved, in one place.</p>
+          <p className="library-kicker">Your collection</p>
+          <h1>All the music that is yours.</h1>
+          <p>Playlists, favourites, and every track you come back to.</p>
         </div>
         {tab === 'playlists' && (
-          <button
-            onClick={() => setCreating(true)}
-            className="press flex shrink-0 items-center gap-2 rounded-full bg-white px-4 py-2.5 text-[12px] font-bold text-black transition-transform hover:scale-[1.03]"
-          >
-            <Plus size={14} /> New playlist
-          </button>
+          <button onClick={() => setCreating(true)} className="library-create-button press"><Plus size={15} /> New playlist</button>
         )}
       </header>
 
