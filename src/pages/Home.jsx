@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ArrowUpRight,
   Heart,
   Moon,
   Music2,
@@ -15,7 +14,6 @@ import {
 import { usePlayer } from '../context/PlayerContext';
 import { getHistory, getHomeQueries } from '../data/algorithm';
 import { searchArtists, searchSongs } from '../data/api';
-import { getGreeting } from '../data/format';
 import ArtistCircle from '../components/ArtistCircle';
 import ChartList from '../components/ChartList';
 import Shelf from '../components/Shelf';
@@ -23,16 +21,16 @@ import SongCard from '../components/SongCard';
 
 const LEAD = { id: 'trending', query: 'trending hindi songs' };
 const FEATURE_SHELVES = [
-  { id: 'new', query: 'new hindi songs', title: 'New music for you', subtitle: 'Fresh releases worth your time' },
-  { id: 'viral', query: 'viral hindi songs', title: 'On repeat everywhere', subtitle: 'The songs pulling everyone back in' },
+  { id: 'new', query: 'new hindi songs', title: 'New music' },
+  { id: 'viral', query: 'viral hindi songs', title: 'Trending' },
 ];
 const MOODS = [
-  { id: 'chill', title: 'Soft focus', subtitle: 'Lo-fi and calm', icon: Moon, query: 'lofi chill hindi', color: 'from-sky-400/80 via-indigo-500/70 to-violet-700/70' },
-  { id: 'energy', title: 'High energy', subtitle: 'Turn it all the way up', icon: Zap, query: 'workout motivation songs', color: 'from-orange-400/80 via-rose-500/70 to-fuchsia-700/70' },
-  { id: 'romance', title: 'Love songs', subtitle: 'For softer moments', icon: Heart, query: 'romantic hindi songs', color: 'from-rose-300/80 via-pink-500/70 to-red-700/70' },
-  { id: 'party', title: 'Dance floor', subtitle: 'Big hooks, no skips', icon: Sparkles, query: 'dance party bollywood', color: 'from-yellow-300/80 via-orange-500/70 to-red-600/70' },
-  { id: 'feels', title: 'In my feels', subtitle: 'A little emotional', icon: Radio, query: 'sad hindi heartbreak', color: 'from-blue-500/80 via-indigo-600/70 to-slate-900/80' },
-  { id: 'focus', title: 'Deep work', subtitle: 'Instrumental focus', icon: Music2, query: 'study instrumental focus', color: 'from-emerald-400/80 via-teal-600/70 to-cyan-900/80' },
+  { id: 'chill', title: 'Chill', icon: Moon, query: 'lofi chill hindi', color: 'from-sky-400/80 via-indigo-500/70 to-violet-700/70' },
+  { id: 'energy', title: 'Energy', icon: Zap, query: 'workout motivation songs', color: 'from-orange-400/80 via-rose-500/70 to-fuchsia-700/70' },
+  { id: 'romance', title: 'Romance', icon: Heart, query: 'romantic hindi songs', color: 'from-rose-300/80 via-pink-500/70 to-red-700/70' },
+  { id: 'party', title: 'Party', icon: Sparkles, query: 'dance party bollywood', color: 'from-yellow-300/80 via-orange-500/70 to-red-600/70' },
+  { id: 'feels', title: 'Feels', icon: Radio, query: 'sad hindi heartbreak', color: 'from-blue-500/80 via-indigo-600/70 to-slate-900/80' },
+  { id: 'focus', title: 'Focus', icon: Music2, query: 'study instrumental focus', color: 'from-emerald-400/80 via-teal-900/80 to-cyan-900/80' },
 ];
 
 function signature(song) {
@@ -100,7 +98,7 @@ function uniqueFresh(list, used) {
 }
 
 export default function Home() {
-  const { playSong, playShuffled, currentSong, upNext } = usePlayer();
+  const { playSong, playShuffled, currentSong } = usePlayer();
   const history = useMemo(getHistory, []);
   const [queries, setQueries] = useState(() => getHomeQueries(currentSong));
   const [nonce, setNonce] = useState(0);
@@ -183,19 +181,14 @@ export default function Home() {
 
   const heroSong = history[0] || feed.chart[0];
   const heroQueue = history.length ? history.slice(0, 40) : feed.chart;
-  const quickPicks = currentSong && upNext.length ? upNext.slice(0, 6) : (history.length ? history.slice(0, 6) : feed.chart.slice(1, 7));
   const moodArt = feed.chart.length ? feed.chart : lead;
 
   return (
     <div className="home-page pb-5 pt-5 sm:pt-7">
       <header className="home-intro">
-        <div>
-          <p className="home-kicker">{getGreeting()} · Savan</p>
-          <h1>Your listening, beautifully arranged.</h1>
-        </div>
-        <button onClick={refresh} aria-label="Refresh your recommendations" className="home-refresh press" title="Refresh your recommendations">
+        <h1>Home</h1>
+        <button onClick={refresh} aria-label="Refresh recommendations" className="home-refresh press" title="Refresh recommendations">
           <RefreshCw size={16} className={status === 'loading' ? 'animate-spin' : ''} />
-          <span>Refresh</span>
         </button>
       </header>
 
@@ -217,12 +210,11 @@ export default function Home() {
           <div className="home-stage-orb home-stage-orb-one" />
           <div className="home-stage-orb home-stage-orb-two" />
           <div className="home-stage-copy">
-            <div className="home-stage-eyebrow"><Sparkles size={13} /> {history.length ? 'Continue where you left off' : 'Your daily mix'}</div>
-            <h2>{history.length ? 'Pick up the thread.' : 'Start with something you will love.'}</h2>
-            <p>{history.length ? `${history[0].title} is ready when you are.` : 'A living mix of what is moving right now, tuned into your next play.'}</p>
+            <div className="home-stage-eyebrow">{history.length ? 'Continue listening' : 'Daily mix'}</div>
+            <h2>{heroSong.title}</h2>
+            <p>{heroSong.artist}</p>
             <div className="home-stage-actions">
-              <button onClick={() => playSong(heroSong, heroQueue)} className="home-primary-button press"><Play size={15} fill="currentColor" /> Play now</button>
-              <button onClick={() => playShuffled(heroQueue)} className="home-secondary-button press"><Shuffle size={15} /> Shuffle</button>
+              <button onClick={() => playSong(heroSong, heroQueue)} className="home-primary-button press"><Play size={15} fill="currentColor" /> Play</button>
             </div>
           </div>
           <div className="home-stage-art" aria-hidden="true">
@@ -230,27 +222,11 @@ export default function Home() {
             {feed.chart[1]?.thumbnail && <img src={feed.chart[1].thumbnail} alt="" className="home-stage-art-mid" />}
             <img src={heroSong.thumbnail} alt="" className="home-stage-art-main" />
           </div>
-          <div className="home-stage-note"><span className="home-stage-pulse" /> Highest available quality</div>
-        </section>
-      )}
-
-      {quickPicks.length > 0 && (
-        <section className="home-listen-section">
-          <SectionTitle eyebrow="Jump back in" title={currentSong && upNext.length ? 'Ready when this song ends' : 'Easy starts for right now'} />
-          <div className="home-quick-grid">
-            {quickPicks.map((song, index) => (
-              <button key={`${song.id}-${index}`} onClick={() => playSong(song, quickPicks)} className="home-quick-card">
-                <img src={song.thumbnail} alt="" loading="lazy" />
-                <span className="home-quick-copy"><strong>{song.title}</strong><small>{song.artist}</small></span>
-                <span className="home-quick-play"><Play size={14} fill="currentColor" /></span>
-              </button>
-            ))}
-          </div>
         </section>
       )}
 
       <section className="home-mood-section">
-        <SectionTitle eyebrow="Choose a mood" title="A station for every version of today" />
+        <SectionTitle title="Moods" />
         <div className="home-mood-grid">
           {MOODS.map((mood, index) => {
             const Icon = mood.icon;
@@ -265,8 +241,7 @@ export default function Home() {
                 {art && <img src={art} alt="" loading="lazy" />}
                 <span className="home-mood-overlay" />
                 <span className="home-mood-icon"><Icon size={17} /></span>
-                <span className="home-mood-copy"><strong>{mood.title}</strong><small>{activeMood === mood.id ? 'Your mix is playing' : mood.subtitle}</small></span>
-                <ArrowUpRight size={17} className="home-mood-arrow" />
+                <span className="home-mood-copy"><strong>{mood.title}</strong></span>
               </button>
             );
           })}
@@ -276,15 +251,15 @@ export default function Home() {
       {feed.chart.length > 0 && (
         <section className="home-chart-shell">
           <div className="home-chart-heading">
-            <SectionTitle eyebrow="Savan charts" title="The pulse right now" description="The tracks keeping people in the moment today." />
-            <button onClick={() => playShuffled(feed.chart)} className="home-chart-shuffle press"><Shuffle size={14} /> Play the chart</button>
+            <SectionTitle title="Charts" />
+            <button onClick={() => playShuffled(feed.chart)} aria-label="Play chart" className="home-chart-shuffle press"><Shuffle size={14} /></button>
           </div>
           <ChartList songs={feed.chart} className="home-chart-list" />
         </section>
       )}
 
       {artists.length > 0 && (
-        <Shelf title="Artists in your orbit" subtitle="A little closer to the voices shaping your day" className="home-artist-shelf">
+        <Shelf title="Artists" className="home-artist-shelf">
           {artists.map((artist) => (
             <ArtistCircle key={artist.id || artist.name} name={artist.name} image={artist.img} fallbackImage={artist.art} onClick={() => playArtist(artist)} />
           ))}
@@ -292,7 +267,7 @@ export default function Home() {
       )}
 
       {feed.shelves.map((section) => (
-        <Shelf key={section.id} title={section.title} subtitle={section.subtitle} seeAllTo={`/search?q=${encodeURIComponent(section.query)}`} className="home-song-shelf">
+        <Shelf key={section.id} title={section.title} seeAllTo={`/search?q=${encodeURIComponent(section.query)}`} className="home-song-shelf">
           {section.songs.map((song) => <SongCard key={song.id} song={song} songList={section.songs} />)}
         </Shelf>
       ))}
@@ -305,7 +280,7 @@ export default function Home() {
 function SectionTitle({ eyebrow, title, description }) {
   return (
     <div className="home-section-title">
-      <p>{eyebrow}</p>
+      {eyebrow && <p>{eyebrow}</p>}
       <h2>{title}</h2>
       {description && <span>{description}</span>}
     </div>

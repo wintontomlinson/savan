@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Compass, Heart, History, House, Library, Search } from 'lucide-react';
+import { Compass, House, Library, Search } from 'lucide-react';
 
 const PRIMARY = [
   { to: '/', icon: House, label: 'Home' },
@@ -8,12 +8,7 @@ const PRIMARY = [
   { to: '/library', icon: Library, label: 'Library' },
 ];
 
-const SHORTCUTS = [
-  { to: '/library?tab=liked', icon: Heart, label: 'Liked Songs', tint: 'text-accent' },
-  { to: '/library?tab=history', icon: History, label: 'Recently Played', tint: 'text-amber-300' },
-];
-
-function Row({ to, icon: Icon, label, tint, active }) {
+function Row({ to, icon: Icon, label, active }) {
   return (
     <Link
       to={to}
@@ -23,7 +18,7 @@ function Row({ to, icon: Icon, label, tint, active }) {
       title={label}
     >
       {active && <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-accent" />}
-      <Icon size={19} strokeWidth={active ? 2.3 : 1.8} className={`shrink-0 ${active ? 'text-accent' : `${tint || 'text-white/45'} group-hover:text-white/85`}`} />
+      <Icon size={19} strokeWidth={active ? 2.3 : 1.8} className={`shrink-0 ${active ? 'text-accent' : 'text-white/45 group-hover:text-white/85'}`} />
       <span className="hidden truncate lg:block">{label}</span>
     </Link>
   );
@@ -47,10 +42,6 @@ export default function Sidebar() {
         <span className="hidden text-[18px] font-extrabold tracking-[-0.05em] lg:block">savan</span>
       </Link>
       <nav className="space-y-1">{PRIMARY.map((item) => <Row key={item.to} {...item} active={isPrimary(item.to)} />)}</nav>
-      <div className="mx-2 my-5 border-t border-hair" />
-      <p className="hidden px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/25 lg:block">Your music</p>
-      <nav className="space-y-1">{SHORTCUTS.map((item) => <Row key={item.to} {...item} active={pathname === '/library' && tab === new URL(item.to, window.location.origin).searchParams.get('tab')} />)}</nav>
-      <p className="mt-auto hidden px-3 pb-2 text-[10px] font-medium leading-relaxed text-white/20 lg:block">High fidelity sound, always on.</p>
     </aside>
   );
 }

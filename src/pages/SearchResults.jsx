@@ -7,7 +7,6 @@ import {
   LoaderCircle,
   SearchX,
   Clock,
-  Trash2,
   Shuffle,
   ChevronLeft,
   Disc3,
@@ -15,12 +14,8 @@ import {
   UserRound,
 } from 'lucide-react';
 import { searchSongs, searchArtists, searchAlbums, getAlbumById } from '../data/api';
-import { COLLECTIONS } from '../data/catalog';
 import { usePlayer } from '../context/PlayerContext';
-import { getHistory } from '../data/algorithm';
 import SongList from '../components/SongList';
-import SongCard from '../components/SongCard';
-import Shelf from '../components/Shelf';
 import ChipRow from '../components/ChipRow';
 import ArtistCircle from '../components/ArtistCircle';
 
@@ -55,21 +50,6 @@ export default function SearchResults() {
   const inputRef = useRef(null);
   const requestId = useRef(0);
   const suggestTimer = useRef(null);
-
-  const history = getHistory();
-  const historyArtists = (() => {
-    const seen = new Set();
-    const out = [];
-    for (const song of history.slice(0, 60)) {
-      const name = song.artist?.split(',')[0]?.trim();
-      if (name && !seen.has(name)) {
-        seen.add(name);
-        out.push({ name, img: song.thumbnail });
-      }
-      if (out.length >= 10) break;
-    }
-    return out;
-  })();
 
   useEffect(() => setQuery(q), [q]);
   useEffect(() => {
@@ -233,15 +213,6 @@ export default function SearchResults() {
                 <h2 className="flex items-center gap-2 text-[13px] font-bold text-white/60">
                   <Clock size={13} /> Recent searches
                 </h2>
-                <button
-                  onClick={() => {
-                    setRecents([]);
-                    localStorage.removeItem('ma_recent_searches');
-                  }}
-                  className="press flex items-center gap-1 text-[11.5px] text-white/30 hover:text-white/60"
-                >
-                  <Trash2 size={11} /> Clear
-                </button>
               </div>
               <div className="flex flex-wrap gap-2">
                 {recents.map((term) => (
@@ -267,46 +238,6 @@ export default function SearchResults() {
               </div>
             </section>
           )}
-
-          {historyArtists.length > 0 && (
-            <section>
-              <h2 className="mb-3.5 text-[17px] font-bold tracking-tight">Your artists</h2>
-              <div className="scroll-x flex gap-4 pb-1">
-                {historyArtists.map((a) => (
-                  <ArtistCircle
-                    key={a.name}
-                    name={a.name}
-                    fallbackImage={a.img}
-                    onClick={() => jumpTo(a.name)}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {history.length > 0 && (
-            <Shelf title="Recently played">
-              {history.slice(0, 12).map((song) => (
-                <SongCard key={song.id} song={song} songList={history.slice(0, 12)} />
-              ))}
-            </Shelf>
-          )}
-
-          <section>
-            <h2 className="mb-3.5 text-[17px] font-bold tracking-tight">Browse categories</h2>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              {COLLECTIONS.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => jumpTo(c.query)}
-                  className="lift relative h-[96px] overflow-hidden rounded-xl p-3.5 text-left"
-                  style={{ background: `linear-gradient(145deg, ${c.from} 0%, ${c.to} 100%)` }}
-                >
-                  <p className="text-[14px] font-bold leading-tight drop-shadow">{c.label}</p>
-                </button>
-              ))}
-            </div>
-          </section>
         </div>
       )}
 
@@ -366,40 +297,7 @@ export default function SearchResults() {
             </div>
           )}
 
-          {!loading && tab === 'songs' && songs.length > 0 && (
-            <>
-              <section className="mb-6">
-                <p className="mb-2 text-[10.5px] font-bold uppercase tracking-[0.16em] text-white/30">Top result</p>
-                <div className="search-featured-result flex flex-wrap items-center gap-4 rounded-2xl border border-hair bg-surface-2/60 p-4">
-                  <img src={songs[0].thumbnail} alt="" className="art h-20 w-20 rounded-xl object-cover" />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[19px] font-bold tracking-tight">{songs[0].title}</p>
-                    <p className="mt-1 truncate text-[12.5px] text-white/45">{songs[0].artist}</p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <button
-                      onClick={() => playShuffled(songs)}
-                      aria-label="Shuffle results"
-                      className="press flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.08] hover:bg-white/[0.14]"
-                    >
-                      <Shuffle size={15} />
-                    </button>
-                    <button
-                      onClick={() => playSong(songs[0], songs)}
-                      className="press flex items-center gap-2 rounded-full bg-accent px-5 py-3 text-[12.5px] font-bold text-white"
-                    >
-                      <Play size={14} fill="white" /> Play
-                    </button>
-                  </div>
-                </div>
-              </section>
-
-              <p className="mb-2 text-[10.5px] font-bold uppercase tracking-[0.16em] text-white/30">
-                All songs · {songs.length}
-              </p>
-              <SongList songs={songs} />
-            </>
-          )}
+          {!loading && tab === 'songs' && songs.length > 0 && <SongList songs={songs} />}
 
           {!loading && tab === 'artists' && results.artists.length > 0 && (
             <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 lg:grid-cols-6">
