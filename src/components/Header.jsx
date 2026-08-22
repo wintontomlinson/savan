@@ -21,7 +21,7 @@ export default function Header() {
       <div className="hidden items-center gap-3 md:flex">
         <button onClick={() => navigate(-1)} aria-label="Go back" className="press nav-circle"><ChevronLeft size={18} /></button>
         <div>
-          <p className="header-overline">Savan radio</p>
+          <p className="header-overline">Your daily soundtrack</p>
           <h1 className="text-[15px] font-bold tracking-tight text-white">{TITLES[pathname] || 'Savan'}</h1>
         </div>
       </div>

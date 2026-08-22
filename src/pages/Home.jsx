@@ -170,7 +170,7 @@ export default function Home() {
       <header className="home-intro">
         <div>
           <p className="page-kicker"><Sparkles size={12} /> Sound, selected for you</p>
-          <h1>Every listen shapes<br className="hidden sm:block" /> what comes next.</h1>
+          <h1>Music that moves<br className="hidden sm:block" /> with your mood.</h1>
         </div>
         <button onClick={refresh} aria-label="Refresh recommendations" className="home-refresh press" title="Refresh recommendations">
           <RefreshCw size={16} className={status === 'loading' ? 'animate-spin' : ''} /> <span>Refresh mix</span>

@@ -36,7 +36,7 @@ export default function Sidebar() {
       <p className="sidebar-caption hidden lg:block">Your space</p>
       <nav className="space-y-1.5">{PRIMARY.map((item) => <Row key={item.to} {...item} active={isPrimary(item.to)} />)}</nav>
       <div className="sidebar-pro hidden mt-auto lg:block">
-        <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 text-[#e9d7ff]"><Sparkles size={15} /></div>
+        <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 text-[#ffd5dd]"><Sparkles size={15} /></div>
         <p className="text-[12px] font-bold text-white">Listening is personal.</p>
         <p className="mt-1 text-[10.5px] leading-relaxed text-white/45">The more you play, the sharper your mixes become.</p>
       </div>
