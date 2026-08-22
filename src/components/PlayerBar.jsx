@@ -51,9 +51,8 @@ export default function PlayerBar() {
 
   return (
     <>
-      {/* ---------- Mobile: compact bar, tap or swipe up to open ---------- */}
       <div
-        className="chrome border-t border-hair md:hidden"
+        className="player-dock chrome border-t border-hair md:hidden"
         onPointerDown={(e) => {
           touchStart.current = e.clientY;
         }}
@@ -97,8 +96,7 @@ export default function PlayerBar() {
         </div>
       </div>
 
-      {/* ---------- Desktop: three-zone transport ---------- */}
-      <div className="chrome hidden h-[82px] items-center gap-4 border-t border-hair px-4 md:flex lg:px-7">
+      <div className="player-dock chrome hidden h-[88px] items-center gap-4 border-t border-hair px-5 md:flex lg:px-8">
         {/* Now playing */}
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <button
