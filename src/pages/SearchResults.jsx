@@ -164,9 +164,9 @@ export default function SearchResults() {
   const songs = results.songs;
 
   return (
-    <div className="pt-6">
+    <div className="search-page pt-5 sm:pt-7">
       {/* Search field */}
-      <div className="sticky top-0 z-20 -mx-4 mb-6 bg-surface/95 px-4 pb-4 pt-1 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      <div className="search-query-shell sticky top-0 z-20 -mx-4 mb-6 bg-surface/95 px-4 pb-4 pt-1 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <form onSubmit={submit} className="relative">
           <div className="flex items-center rounded-2xl border border-hair bg-surface-2 transition-colors focus-within:border-hair-strong focus-within:bg-surface-3">
             <Search size={18} className="ml-4 shrink-0 text-white/35" />
@@ -370,7 +370,7 @@ export default function SearchResults() {
             <>
               <section className="mb-6">
                 <p className="mb-2 text-[10.5px] font-bold uppercase tracking-[0.16em] text-white/30">Top result</p>
-                <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-hair bg-surface-2/60 p-4">
+                <div className="search-featured-result flex flex-wrap items-center gap-4 rounded-2xl border border-hair bg-surface-2/60 p-4">
                   <img src={songs[0].thumbnail} alt="" className="art h-20 w-20 rounded-xl object-cover" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[19px] font-bold tracking-tight">{songs[0].title}</p>
