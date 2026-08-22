@@ -40,13 +40,13 @@ export default function App() {
   return (
     <PlayerProvider>
       <BrowserRouter>
-        <div className="fixed inset-0 flex flex-col bg-ink">
-          <div className="flex min-h-0 flex-1 gap-2 p-0 md:p-2 md:pb-0">
+        <div className="app-shell fixed inset-0 flex flex-col">
+          <div className="app-workspace flex min-h-0 flex-1 gap-3 p-0 md:p-3 md:pb-2">
             <Sidebar />
-            <div className="app-main flex min-w-0 flex-1 flex-col overflow-hidden border-hair bg-surface md:rounded-3xl md:border">
+            <div className="app-main flex min-w-0 flex-1 flex-col overflow-hidden">
               <Header />
               <main id="main-scroll" className="scroll-y flex-1">
-                <div className="mx-auto w-full max-w-[1480px] px-4 pb-14 sm:px-6 lg:px-9">
+                <div className="mx-auto w-full max-w-[1560px] px-4 pb-10 sm:px-7 lg:px-10">
                   <ScrollToTop />
                   <Pages />
                 </div>
@@ -54,7 +54,7 @@ export default function App() {
             </div>
             <QueuePanel />
           </div>
-          <div className="shrink-0">
+          <div className="player-region shrink-0">
             <PlayerBar />
             <MobileNav />
           </div>

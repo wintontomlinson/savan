@@ -10,7 +10,7 @@ const ITEMS = [
 
 export default function MobileNav() {
   return (
-    <nav className="chrome border-t border-hair pb-[env(safe-area-inset-bottom)] md:hidden">
+    <nav className="mobile-dock chrome border-t border-hair pb-[env(safe-area-inset-bottom)] md:hidden">
       <div className="flex h-[58px] items-stretch justify-around">
         {ITEMS.map((item) => (
           <NavLink
